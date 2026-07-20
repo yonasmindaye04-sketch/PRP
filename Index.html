@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<style>
+:root{
+  --ink:#1F2B29;--ink-soft:#5B6D69;--bg:#F5F8F7;--surface:#FFFFFF;--line:#E1E9E6;
+  --primary:#0E6E5C;--primary-dark:#0A5347;--primary-tint:#E4F1EC;
+  --warn:#B5762A;--warn-tint:#FBEEDF;--danger:#B23A3A;--danger-tint:#FBEAEA;--radius:10px;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);}
+button{font-family:inherit;cursor:pointer;}
+input,select{font-family:inherit;}
+
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(160deg,var(--primary-dark),var(--primary) 60%,#12876f);}
+.login-card{background:var(--surface);width:340px;max-width:90vw;padding:32px 28px;border-radius:14px;box-shadow:0 20px 50px rgba(10,40,32,.25);}
+.login-card .brand{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+.brand-mark{width:36px;height:36px;border-radius:9px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;}
+.brand-name{font-weight:700;font-size:17px;}
+.login-card h1{font-size:15px;font-weight:600;color:var(--ink-soft);margin:0 0 18px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:5px;font-weight:600;}
+.field input,.field select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fbfdfc;}
+.field input:focus,.field select:focus{outline:2px solid var(--primary);outline-offset:0;border-color:var(--primary);}
+.btn{border:none;border-radius:8px;padding:11px 16px;font-size:14px;font-weight:600;background:var(--primary);color:#fff;width:100%;transition:background .15s;}
+.btn:hover{background:var(--primary-dark);}
+.btn.secondary{background:var(--primary-tint);color:var(--primary-dark);}
+.btn.danger{background:var(--danger-tint);color:var(--danger);}
+.btn:disabled{opacity:.55;cursor:not-allowed;}
+.msg{font-size:13px;padding:9px 11px;border-radius:8px;margin-bottom:14px;}
+.msg.error{background:var(--danger-tint);color:var(--danger);}
+.msg.success{background:var(--primary-tint);color:var(--primary-dark);}
+.hint{font-size:12px;color:var(--ink-soft);margin-top:14px;text-align:center;}
+
+#app-shell{display:none;min-height:100vh;}
+#app-shell.active{display:flex;}
+.sidebar{width:212px;background:var(--primary-dark);color:#fff;flex-shrink:0;display:flex;flex-direction:column;padding:16px 10px;overflow-y:auto;}
+.sidebar .brand{display:flex;align-items:center;gap:9px;padding:6px 8px 18px;}
+.sidebar .brand-mark{background:#fff;color:var(--primary-dark);}
+.sidebar .brand-name{color:#fff;font-size:15px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;color:#cfe8e0;font-size:13.5px;font-weight:500;margin-bottom:1px;background:none;border:none;text-align:left;width:100%;}
+.nav-item .dot{width:6px;height:6px;border-radius:50%;background:transparent;flex-shrink:0;}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+.nav-item.active{background:rgba(255,255,255,.16);color:#fff;}
+.nav-item.active .dot{background:#7FE0C4;}
+.nav-section{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#8fc3b5;padding:14px 12px 4px;}
+.sidebar-footer{margin-top:auto;padding:10px 8px;}
+.user-chip{font-size:12.5px;color:#cfe8e0;margin-bottom:8px;line-height:1.4;}
+.user-chip b{color:#fff;display:block;font-size:13.5px;}
+.logout-btn{background:rgba(255,255,255,.1);color:#fff;border:none;border-radius:8px;padding:8px 10px;font-size:13px;width:100%;font-weight:600;}
+.logout-btn:hover{background:rgba(255,255,255,.18);}
+
+.main{flex:1;padding:24px 30px;overflow-y:auto;max-height:100vh;}
+.view{display:none;}
+.view.active{display:block;animation:fadein .15s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+.view-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+.view-header h2{margin:0;font-size:19px;font-weight:700;}
+.view-header p{margin:2px 0 0;color:var(--ink-soft);font-size:13px;}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:22px;}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;}
+.card .label{font-size:12px;color:var(--ink-soft);font-weight:600;margin-bottom:5px;}
+.card .value{font-size:22px;font-weight:700;}
+.card.warn .value{color:var(--warn);}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
+.panel h3{margin:0 0 12px;font-size:14px;}
+.panel-note{font-size:12.5px;color:var(--ink-soft);}
+
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;color:var(--ink-soft);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;}
+td{padding:9px 10px;border-bottom:1px solid var(--line);}
+tr:last-child td{border-bottom:none;}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;}
+.pill.low{background:var(--warn-tint);color:var(--warn);}
+.pill.ok{background:var(--primary-tint);color:var(--primary-dark);}
+.pill.bad{background:var(--danger-tint);color:var(--danger);}
+.row-actions button{background:none;border:none;color:var(--primary-dark);font-size:12px;font-weight:600;margin-right:8px;padding:2px;}
+.row-actions button.danger{color:var(--danger);}
+
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+.toolbar input[type=text],.toolbar input[type=search]{padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;min-width:200px;background:#fbfdfc;}
+.btn.small{width:auto;padding:8px 14px;font-size:12.5px;}
+
+.pos-layout{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;align-items:start;}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:9px;}
+.product-tile{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:11px;text-align:left;}
+.product-tile:hover{border-color:var(--primary);}
+.product-tile .p-name{font-weight:700;font-size:13px;margin-bottom:3px;}
+.product-tile .p-meta{font-size:11.5px;color:var(--ink-soft);margin-bottom:7px;}
+.product-tile .p-price{font-weight:700;color:var(--primary-dark);font-size:13.5px;}
+.product-tile:disabled{opacity:.4;cursor:not-allowed;}
+
+.cart-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+.cart-item:last-child{border-bottom:none;}
+.qty-controls{display:flex;align-items:center;gap:6px;}
+.qty-controls button{width:22px;height:22px;border-radius:6px;border:1px solid var(--line);background:#fff;font-weight:700;}
+.cart-total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;}
+.cart-total-row.grand{font-size:15px;font-weight:700;border-top:1px solid var(--line);margin-top:6px;padding-top:10px;}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,30,25,.45);z-index:50;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.active{display:flex;}
+.modal{background:#fff;border-radius:12px;padding:22px;width:460px;max-width:94vw;max-height:88vh;overflow-y:auto;}
+.modal.wide{width:620px;}
+.modal.xwide{width:780px;}
+.modal h3{margin:0 0 14px;font-size:15.5px;}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-actions{display:flex;gap:10px;margin-top:14px;}
+
+.empty-state{text-align:center;color:var(--ink-soft);font-size:13px;padding:26px 10px;}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--ink);color:#fff;padding:12px 18px;border-radius:8px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:99;display:none;max-width:340px;}
+.toast.active{display:block;}
+.toast.error{background:var(--danger);}
+.tag{display:inline-block;background:var(--primary-tint);color:var(--primary-dark);border-radius:6px;padding:2px 7px;font-size:11px;font-weight:600;margin-right:4px;}
+.line-item-row{border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-bottom:10px;background:#fbfdfc;}
+.line-item-row .li-top{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+.line-item-row .li-top select{flex:1;}
+.line-item-row .li-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;}
+.line-item-row select,.line-item-row input{padding:8px 9px;border:1px solid var(--line);border-radius:7px;font-size:12.5px;width:100%;}
+.line-item-row .li-remove{flex-shrink:0;width:30px;height:34px;border:1px solid var(--line);background:#fff;border-radius:7px;color:var(--danger);font-weight:700;}
+.mini-btn{border:1px solid var(--line);background:#fff;border-radius:7px;padding:8px 10px;font-size:12px;}
+.tabs{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--line);}
+.tab{padding:9px 14px;font-size:13px;font-weight:600;color:var(--ink-soft);background:none;border:none;border-bottom:2px solid transparent;}
+.tab.active{color:var(--primary-dark);border-bottom-color:var(--primary);}
+
+.charts-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:1000px){.charts-grid{grid-template-columns:1fr;}}
+.vbar-chart{display:flex;align-items:flex-end;gap:5px;height:150px;padding-top:16px;}
+.vbar-chart .vbar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative;}
+.vbar-chart .vbar{width:100%;max-width:22px;background:var(--primary);border-radius:4px 4px 0 0;min-height:2px;transition:height .2s;}
+.vbar-chart .vbar-label{font-size:10px;color:var(--ink-soft);margin-top:6px;white-space:nowrap;}
+.vbar-chart .vbar-value{font-size:9.5px;color:var(--primary-dark);font-weight:700;position:absolute;top:-14px;}
+.hbar-row{display:grid;grid-template-columns:110px 1fr 70px;align-items:center;gap:8px;margin-bottom:10px;font-size:12.5px;}
+.hbar-row .hbar-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hbar-track{background:var(--primary-tint);border-radius:6px;height:14px;overflow:hidden;}
+.hbar-fill{background:var(--primary);height:100%;border-radius:6px;min-width:3px;}
+.hbar-row .hbar-value{text-align:right;font-weight:600;color:var(--ink-soft);}
+
+.topbar{display:none;}
+.sidebar-backdrop{display:none;}
+
+@media(max-width:860px){
+  .pos-layout{grid-template-columns:1fr;}
+  .topbar{display:flex;align-items:center;gap:10px;background:var(--primary-dark);color:#fff;height:52px;padding:0 14px;position:fixed;top:0;left:0;right:0;z-index:45;}
+  .topbar .brand-mark{width:30px;height:30px;font-size:13px;background:#fff;color:var(--primary-dark);flex-shrink:0;}
+  .topbar-title{font-weight:700;font-size:15px;}
+  .hamburger{background:none;border:none;color:#fff;font-size:22px;line-height:1;padding:4px 6px;margin-right:2px;}
+  .sidebar{position:fixed;top:0;left:0;bottom:0;width:230px;transform:translateX(-100%);transition:transform .2s ease;z-index:60;box-shadow:10px 0 30px rgba(0,0,0,.25);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(10,20,18,.45);z-index:55;}
+  .sidebar-backdrop.active{display:block;}
+  .main{padding:68px 16px 16px;}
+  .field-grid{grid-template-columns:1fr;}
+  .modal.xwide{width:94vw;}
+  .cards{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:480px){
+  .cards{grid-template-columns:1fr 1fr;}
+  .view-header{flex-direction:column;align-items:flex-start;}
+}
+
+/* ── Receipt (print only) ─────────────────────────────────────────────── */
+#receipt-print-area{display:none;}
+.receipt{width:280px;font-family:'Courier New',Courier,monospace;font-size:12px;color:#000;}
+.receipt h2{text-align:center;margin:0 0 2px;font-size:15px;}
+.receipt .center{text-align:center;}
+.receipt hr{border:none;border-top:1px dashed #000;margin:8px 0;}
+.receipt table{width:100%;border-collapse:collapse;font-size:11.5px;}
+.receipt td{padding:1px 0;}
+.receipt .r{text-align:right;}
+@media print{
+  body *{visibility:hidden;}
+  #receipt-print-area,#receipt-print-area *{visibility:visible;}
+  #receipt-print-area{display:block;position:absolute;top:0;left:0;width:100%;}
+}
+
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="brand"><div class="brand-mark">Rx</div><div class="brand-name">Pharmacy ERP</div></div>
+    <h1>Sign in to continue</h1>
+    <div id="login-msg"></div>
+    <form id="login-form">
+      <div class="field"><label>Username</label><input type="text" id="login-username" autocomplete="username" required></div>
+      <div class="field"><label>Password</label><input type="password" id="login-password" autocomplete="current-password" required></div>
+      <button type="submit" class="btn" id="login-btn">Sign in</button>
+    </form>
+    <div class="hint">First run? default is admin / ChangeMe123</div>
+  </div>
+</div>
+
+<!-- ══════════════ APP SHELL ══════════════ -->
+<div id="app-shell">
+  <div class="topbar">
+    <button class="hamburger" id="hamburger-btn">☰</button>
+    <div class="brand-mark">Rx</div>
+    <div class="topbar-title">Pharmacy ERP</div>
+  </div>
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+  <aside class="sidebar" id="sidebar">
+
+    <div class="brand"><div class="brand-mark">Rx</div><div class="brand-name">Pharmacy ERP</div></div>
+
+    <button class="nav-item active" data-view="dashboard"><span class="dot"></span><span class="label">Dashboard</span></button>
+    <button class="nav-item" data-view="pos" data-perm="PERM_SELL"><span class="dot"></span><span class="label">Sales (POS)</span></button>
+    <button class="nav-item" data-view="salesHistory"><span class="dot"></span><span class="label">Sales History</span></button>
+
+    <div class="nav-section">Inventory</div>
+    <button class="nav-item" data-view="inventory" data-perm="PERM_VIEW_PRODUCTS"><span class="dot"></span><span class="label">Products</span></button>
+    <button class="nav-item" data-view="purchases" data-perm="PERM_MANAGE_PURCHASES"><span class="dot"></span><span class="label">Purchases</span></button>
+    <button class="nav-item" data-view="suppliers" data-perm="PERM_MANAGE_SUPPLIERS"><span class="dot"></span><span class="label">Suppliers</span></button>
+
+    <div class="nav-section">Business</div>
+    <button class="nav-item" data-view="customers" data-perm="PERM_MANAGE_CUSTOMERS"><span class="dot"></span><span class="label">Customers</span></button>
+    <button class="nav-item" data-view="finance" data-perm="PERM_MANAGE_EXPENSES"><span class="dot"></span><span class="label">Finance</span></button>
+    <button class="nav-item" data-view="cashdrawer" data-perm="PERM_MANAGE_CASHDRAWER"><span class="dot"></span><span class="label">Cash Drawer</span></button>
+
+    <div class="nav-section">Admin</div>
+    <button class="nav-item" data-view="users" data-perm="PERM_MANAGE_USERS"><span class="dot"></span><span class="label">Users</span></button>
+    <button class="nav-item" data-view="settings" data-perm="PERM_MANAGE_SETTINGS"><span class="dot"></span><span class="label">Settings</span></button>
+
+    <div class="sidebar-footer">
+      <div class="user-chip"><b id="chip-name">—</b><span id="chip-role">—</span></div>
+      <button class="logout-btn" id="logout-btn">Sign out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <section class="view active" id="view-dashboard">
+      <div class="view-header"><div><h2>Dashboard</h2><p>Today at a glance</p></div></div>
+      <div class="cards" id="dashboard-cards"></div>
+      <div class="charts-grid">
+        <div class="panel">
+          <h3>Sales trend — last 14 days</h3>
+          <div id="chart-sales-trend"></div>
+        </div>
+        <div class="panel">
+          <h3>Top products — last 30 days</h3>
+          <div id="chart-top-products"></div>
+        </div>
+      </div>
+      <div class="panel" id="panel-category-breakdown" style="display:none;">
+        <h3>Sales by category — last 30 days</h3>
+        <div id="chart-category-breakdown"></div>
+      </div>
+      <div class="panel"><h3>Low stock</h3><div id="dashboard-lowstock"></div></div>
+      <div class="panel"><h3>Expiring within 90 days</h3><div id="dashboard-expiring"></div></div>
+    </section>
+
+    <!-- POS -->
+    <section class="view" id="view-pos">
+      <div class="view-header"><div><h2>Sales (POS)</h2><p>Tap a product to add it to the cart</p></div></div>
+      <div class="pos-layout">
+        <div>
+          <div class="toolbar"><input type="search" id="pos-search" placeholder="Search products…"></div>
+          <div class="product-grid" id="pos-product-grid"></div>
+        </div>
+        <div class="panel">
+          <h3>Cart</h3>
+          <div id="pos-cart"><div class="empty-state">Cart is empty</div></div>
+          <div id="pos-totals" style="margin-top:8px;"></div>
+          <div class="field" style="margin-top:10px;"><label>Customer (optional)</label>
+            <select id="pos-customer"><option value="">Walk-in</option></select>
+          </div>
+          <div class="field"><label>Payment method</label>
+            <select id="pos-payment"><option>Cash</option><option>Card</option><option>Mobile Money</option></select>
+          </div>
+          <div class="field"><label>Discount</label><input type="text" id="pos-discount" placeholder="0"></div>
+          <div id="pos-checkout-msg"></div>
+          <button class="btn" id="pos-checkout-btn">Charge</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SALES HISTORY -->
+    <section class="view" id="view-salesHistory">
+      <div class="view-header"><div><h2>Sales History</h2><p>Recent transactions — click a row to view/return items</p></div></div>
+      <div class="panel" style="padding:0;">
+        <table><thead><tr><th>Sale ID</th><th>Date</th><th>Cashier</th><th>Payment</th><th>Total</th><th></th></tr></thead>
+        <tbody id="sales-tbody"></tbody></table>
+      </div>
+    </section>
+
+    <!-- INVENTORY -->
+    <section class="view" id="view-inventory">
+      <div class="view-header">
+        <div><h2>Products</h2><p>Catalog &amp; live stock (from batches)</p></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn small secondary" id="manage-categories-btn">Categories</button>
+          <button class="btn small" id="add-product-btn">+ Add product</button>
+        </div>
+      </div>
+      <div class="toolbar"><input type="search" id="inventory-search" placeholder="Search products…"></div>
+      <div class="panel" style="padding:0;">
+        <table><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr></thead>
+        <tbody id="inventory-tbody"></tbody></table>
+      </div>
+    </section>
+
+    <!-- PURCHASES -->
+    <section class="view" id="view-purchases">
+      <div class="view-header">
+        <div><h2>Purchases</h2><p>Goods received from suppliers</p></div>
+        <button class="btn small" id="add-purchase-btn">+ New purchase</button>
+      </div>
+      <div class="panel" style="padding:0;">
+        <table><thead><tr><th>Purchase ID</th><th>Date</th><th>Supplier</th><th>Grand Total</th><th>Status</th><th>Balance</th><th></th></tr></thead>
+        <tbody id="purchases-tbody"></tbody></table>
+      </div>
+    </section>
+
+    <!-- SUPPLIERS -->
+    <section class="view" id="view-suppliers">
+      <div class="view-header">
+        <div><h2>Suppliers</h2><p>Vendors &amp; running balances</p></div>
+        <button class="btn small" id="add-supplier-btn">+ Add supplier</button>
+      </div>
+      <div class="panel" style="padding:0;">
+        <table><thead><tr><th>Name</th><th>Contact</th><th>Phone</th><th>Balance</th><th></th></tr></thead>
+        <tbody id="suppliers-tbody"></tbody></table>
+      </div>
+    </section>
+
+    <!-- CUSTOMERS -->
+    <section class="view" id="view-customers">
+      <div class="view-header">
+        <div><h2>Customers</h2><p>Loyalty &amp; credit balances</p></div>
+        <button class="btn small" id="add-customer-btn">+ Add customer</button>
+      </div>
+      <div class="panel" style="padding:0;">
+        <table><thead><tr><th>Name</th><th>Phone</th><th>Loyalty pts</th><th>Credit balance</th><th></th></tr></thead>
+        <tbody id="customers-tbody"></tbody></table>
+      </div>
+    </section>
+
+    <!-- FINANCE -->
+    <section class="view" id="view-finance">
+      <div class="view-header"><div><h2>Finance</h2><p>Expenses, income &amp; supplier payments</p></div></div>
+      <div class="tabs">
+        <button class="tab active" data-tab="expenses">Expenses</button>
+        <button class="tab" data-tab="income">Income</button>
+        <button class="tab" data-tab="payments">Supplier Payments</button>
+      </div>
+      <div class="finance-tab" id="finance-expenses">
+        <div class="toolbar"><button class="btn small" id="add-expense-btn">+ Add expense</button></div>
+        <div class="panel" style="padding:0;"><table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Method</th></tr></thead><tbody id="expenses-tbody"></tbody></table></div>
+      </div>
+      <div class="finance-tab" id="finance-income" style="display:none;">
+        <div class="toolbar"><button class="btn small" id="add-income-btn">+ Add income</button></div>
+        <div class="panel" style="padding:0;"><table><thead><tr><th>Date</th><th>Source</th><th>Description</th><th>Amount</th></tr></thead><tbody id="income-tbody"></tbody></table></div>
+      </div>
+      <div class="finance-tab" id="finance-payments" style="display:none;">
+        <div class="toolbar"><button class="btn small" id="add-payment-btn">+ Record payment</button></div>
+        <div class="panel" style="padding:0;"><table><thead><tr><th>Date</th><th>Supplier</th><th>Amount</th><th>Method</th></tr></thead><tbody id="payments-tbody"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- CASH DRAWER -->
+    <section class="view" id="view-cashdrawer">
+      <div class="view-header"><div><h2>Cash Drawer</h2><p>Your shift</p></div></div>
+      <div class="panel" id="drawer-panel"></div>
+    </section>
+
+    <!-- USERS -->
+    <section class="view" id="view-users">
+      <div class="view-header">
+        <div><h2>Users</h2><p>Staff logins &amp; roles</p></div>
+        <button class="btn small" id="add-user-btn">+ Add user</button>
+      </div>
+      <div class="panel" style="padding:0;">
+        <table><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Last login</th><th></th></tr></thead>
+        <tbody id="users-tbody"></tbody></table>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="view-settings">
+      <div class="view-header"><div><h2>Settings</h2><p>Business info &amp; system defaults</p></div></div>
+      <div class="panel">
+        <h3>Business information</h3>
+        <div class="field-grid">
+          <div class="field"><label>Business name</label><input type="text" id="bi-name"></div>
+          <div class="field"><label>Owner</label><input type="text" id="bi-owner"></div>
+          <div class="field"><label>License number</label><input type="text" id="bi-license"></div>
+          <div class="field"><label>Tax ID</label><input type="text" id="bi-tax"></div>
+          <div class="field"><label>Phone</label><input type="text" id="bi-phone"></div>
+          <div class="field"><label>Email</label><input type="text" id="bi-email"></div>
+        </div>
+        <div class="field"><label>Address</label><input type="text" id="bi-address"></div>
+        <button class="btn small" id="save-business-btn">Save business info</button>
+      </div>
+      <div class="panel">
+        <h3>System settings</h3>
+        <div class="field-grid">
+          <div class="field"><label>Currency</label><input type="text" id="s-currency"></div>
+          <div class="field"><label>VAT rate (%)</label><input type="text" id="s-vat"></div>
+          <div class="field"><label>Low stock alert threshold</label><input type="text" id="s-lowstock"></div>
+          <div class="field"><label>Expiry alert days</label><input type="text" id="s-expirydays"></div>
+        </div>
+        <div class="field"><label>Receipt header</label><input type="text" id="s-receiptheader"></div>
+        <div class="field"><label>Receipt footer</label><input type="text" id="s-receiptfooter"></div>
+        <button class="btn small" id="save-settings-btn">Save settings</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ══════════════ MODALS ══════════════ -->
+<div class="modal-overlay" id="product-modal"><div class="modal wide">
+  <h3 id="product-modal-title">Add product</h3>
+  <div id="product-modal-msg"></div>
+  <div class="field-grid">
+    <div class="field"><label>Product name</label><input type="text" id="pf-name"></div>
+    <div class="field"><label>Generic name</label><input type="text" id="pf-generic"></div>
+    <div class="field"><label>Brand</label><input type="text" id="pf-brand"></div>
+    <div class="field"><label>Category</label><select id="pf-category"></select></div>
+    <div class="field"><label>Unit</label><input type="text" id="pf-unit" placeholder="tablet, box…"></div>
+    <div class="field"><label>Strength</label><input type="text" id="pf-strength" placeholder="500mg"></div>
+    <div class="field"><label>Dosage form</label><input type="text" id="pf-dosageform" placeholder="Tablet"></div>
+    <div class="field"><label>Supplier</label><select id="pf-supplier"><option value="">—</option></select></div>
+    <div class="field"><label>Purchase price</label><input type="text" id="pf-purchaseprice"></div>
+    <div class="field"><label>Selling price</label><input type="text" id="pf-sellingprice"></div>
+    <div class="field"><label>Tax rate (%)</label><input type="text" id="pf-taxrate"></div>
+    <div class="field"><label>Reorder level</label><input type="text" id="pf-reorderlevel"></div>
+    <div class="field"><label>Minimum stock</label><input type="text" id="pf-minstock"></div>
+    <div class="field"><label>Maximum stock</label><input type="text" id="pf-maxstock"></div>
+    <div class="field" id="pf-openingqty-field"><label>Opening stock</label><input type="text" id="pf-openingqty"></div>
+    <div class="field" id="pf-expiry-field"><label>Batch expiry date</label><input type="text" id="pf-expiry" placeholder="YYYY-MM-DD"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn secondary" id="product-modal-cancel">Cancel</button>
+    <button class="btn" id="product-modal-save">Save</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="category-modal"><div class="modal">
+  <h3>Categories</h3>
+  <div id="category-modal-msg"></div>
+  <div id="category-list" style="margin-bottom:14px;"></div>
+  <div class="field-grid">
+    <div class="field"><label>New category name</label><input type="text" id="cat-name"></div>
+    <div class="field"><label>Description</label><input type="text" id="cat-desc"></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn secondary" id="category-modal-close">Close</button>
+    <button class="btn" id="category-modal-add">Add category</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="supplier-modal"><div class="modal">
+  <h3 id="supplier-modal-title">Add supplier</h3>
+  <div id="supplier-modal-msg"></div>
+  <div class="field"><label>Supplier name</label><input type="text" id="sf-name"></div>
+  <div class="field-grid">
+    <div class="field"><label>Contact person</label><input type="text" id="sf-contact"></div>
+    <div class="field"><label>Phone</label><input type="text" id="sf-phone"></div>
+    <div class="field"><label>Email</label><input type="text" id="sf-email"></div>
+    <div class="field"><label>Tax number</label><input type="text" id="sf-taxnumber"></div>
+    <div class="field"><label>Payment terms</label><input type="text" id="sf-paymentterms"></div>
+    <div class="field" id="sf-opening-field"><label>Opening balance</label><input type="text" id="sf-opening"></div>
+  </div>
+  <div class="field"><label>Address</label><input type="text" id="sf-address"></div>
+  <div class="modal-actions">
+    <button class="btn secondary" id="supplier-modal-cancel">Cancel</button>
+    <button class="btn" id="supplier-modal-save">Save</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="customer-modal"><div class="modal">
+  <h3 id="customer-modal-title">Add customer</h3>
+  <div id="customer-modal-msg"></div>
+  <div class="field"><label>Full name</label><input type="text" id="cf-name"></div>
+  <div class="field-grid">
+    <div class="field"><label>Phone</label><input type="text" id="cf-phone"></div>
+    <div class="field"><label>Email</label><input type="text" id="cf-email"></div>
+  </div>
+  <div class="field"><label>Address</label><input type="text" id="cf-address"></div>
+  <div class="modal-actions">
+    <button class="btn secondary" id="customer-modal-cancel">Cancel</button>
+    <button class="btn" id="customer-modal-save">Save</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="purchase-modal"><div class="modal xwide">
+  <h3>New purchase</h3>
+  <div id="purchase-modal-msg"></div>
+  <div class="field-grid">
+    <div class="field"><label>Supplier</label><select id="pu-supplier"></select></div>
+    <div class="field"><label>Invoice number</label><input type="text" id="pu-invoice"></div>
+  </div>
+  <h3 style="margin-top:10px;">Line items</h3>
+  <div id="purchase-lines"></div>
+  <button class="mini-btn" id="add-purchase-line">+ Add line</button>
+  <div class="field-grid" style="margin-top:14px;">
+    <div class="field"><label>Discount</label><input type="text" id="pu-discount" value="0"></div>
+    <div class="field"><label>Tax</label><input type="text" id="pu-tax" value="0"></div>
+    <div class="field"><label>Paid amount</label><input type="text" id="pu-paid" value="0"></div>
+  </div>
+  <div class="panel" style="background:var(--primary-tint);margin-top:4px;margin-bottom:0;">
+    <div class="cart-total-row"><span>Items subtotal</span><span id="pu-calc-subtotal">$0.00</span></div>
+    <div class="cart-total-row"><span>Discount</span><span id="pu-calc-discount">$0.00</span></div>
+    <div class="cart-total-row"><span>Tax</span><span id="pu-calc-tax">$0.00</span></div>
+    <div class="cart-total-row grand"><span>Grand total</span><span id="pu-calc-grandtotal">$0.00</span></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn secondary" id="purchase-modal-cancel">Cancel</button>
+    <button class="btn" id="purchase-modal-save">Save purchase</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="user-modal"><div class="modal">
+  <h3>Add user</h3>
+  <div id="user-modal-msg"></div>
+  <div class="field"><label>Full name</label><input type="text" id="uf-name"></div>
+  <div class="field"><label>Username</label><input type="text" id="uf-username"></div>
+  <div class="field"><label>Password</label><input type="text" id="uf-password"></div>
+  <div class="field"><label>Role</label><select id="uf-role"></select></div>
+  <div class="modal-actions">
+    <button class="btn secondary" id="user-modal-cancel">Cancel</button>
+    <button class="btn" id="user-modal-save">Save</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="expense-modal"><div class="modal">
+  <h3 id="expense-modal-title">Add expense</h3>
+  <div id="expense-modal-msg"></div>
+  <div class="field"><label>Category</label><input type="text" id="ef-category" placeholder="Rent, Electricity…"></div>
+  <div class="field"><label>Description</label><input type="text" id="ef-description"></div>
+  <div class="field-grid">
+    <div class="field"><label>Amount</label><input type="text" id="ef-amount"></div>
+    <div class="field"><label>Payment method</label><select id="ef-method"><option>Cash</option><option>Card</option><option>Mobile Money</option><option>Bank</option></select></div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn secondary" id="expense-modal-cancel">Cancel</button>
+    <button class="btn" id="expense-modal-save">Save</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="income-modal"><div class="modal">
+  <h3>Add income</h3>
+  <div id="income-modal-msg"></div>
+  <div class="field"><label>Source</label><input type="text" id="if-source"></div>
+  <div class="field"><label>Description</label><input type="text" id="if-description"></div>
+  <div class="field"><label>Amount</label><input type="text" id="if-amount"></div>
+  <div class="modal-actions">
+    <button class="btn secondary" id="income-modal-cancel">Cancel</button>
+    <button class="btn" id="income-modal-save">Save</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="payment-modal"><div class="modal">
+  <h3>Record supplier payment</h3>
+  <div id="payment-modal-msg"></div>
+  <div class="field"><label>Supplier</label><select id="pf-pay-supplier"></select></div>
+  <div class="field"><label>Order / Purchase (optional)</label><select id="pf-pay-purchase"><option value="">General payment — not tied to a specific order</option></select></div>
+  <div class="field-grid">
+    <div class="field"><label>Amount</label><input type="text" id="pf-pay-amount"></div>
+    <div class="field"><label>Method</label><select id="pf-pay-method"><option>Cash</option><option>Bank</option><option>Mobile Money</option></select></div>
+  </div>
+  <div class="field"><label>Reference</label><input type="text" id="pf-pay-reference"></div>
+  <div class="modal-actions">
+    <button class="btn secondary" id="payment-modal-cancel">Cancel</button>
+    <button class="btn" id="payment-modal-save">Save</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="purchase-details-modal"><div class="modal xwide">
+  <h3>Purchase <span id="pd-purchase-id"></span></h3>
+  <div id="pd-msg"></div>
+  <div id="pd-meta" style="font-size:13px;color:var(--ink-soft);margin-bottom:10px;"></div>
+  <div id="pd-items"></div>
+  <div id="pd-totals" style="margin-top:10px;"></div>
+  <div id="pd-deleted-banner"></div>
+  <div class="modal-actions">
+    <button class="btn secondary" id="purchase-details-close">Close</button>
+    <button class="btn danger" id="purchase-details-delete">Delete this order</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="sale-details-modal"><div class="modal wide">
+  <h3>Sale <span id="sd-sale-id"></span></h3>
+  <div id="sd-msg"></div>
+  <div id="sd-items"></div>
+  <div class="modal-actions">
+    <button class="btn secondary" id="sale-details-close">Close</button>
+    <button class="btn" id="sale-details-print">Print receipt</button>
+  </div>
+</div></div>
+
+<div id="receipt-print-area"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var session = null;
+var allProducts = [], allCategories = [], allSuppliers = [], allCustomers = [], allRoles = [], allPurchases = [];
+var cart = [];
+var editingProductId = null;
+var purchaseLineCount = 0;
+var currentSaleDetailsId = null;
+var cachedSettings = null, cachedBusiness = null;
+
+function call(fn){
+  var args = Array.prototype.slice.call(arguments,1);
+  return new Promise(function(resolve,reject){
+    google.script.run.withSuccessHandler(resolve).withFailureHandler(function(err){
+      reject(err && err.message ? err.message : String(err));
+    })[fn].apply(null,args);
+  });
+}
+function toast(msg,isError){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast active'+(isError?' error':'');
+  setTimeout(function(){t.className='toast';},3200);
+}
+function money(n){ return Number(n||0).toFixed(2); }
+function esc(str){ return String(str==null?'':str).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];}); }
+function can(permId){ return session && session.permissions && session.permissions.indexOf(permId) > -1; }
+
+// ── Login ──────────────────────────────────────────────────────────────
+document.getElementById('login-form').addEventListener('submit', function(e){
+  e.preventDefault();
+  var btn=document.getElementById('login-btn'), msgEl=document.getElementById('login-msg');
+  msgEl.innerHTML=''; btn.disabled=true; btn.textContent='Signing in…';
+  var username=document.getElementById('login-username').value.trim();
+  var password=document.getElementById('login-password').value;
+  call('login',username,password).then(function(res){
+    btn.disabled=false; btn.textContent='Sign in';
+    if(!res.success){ msgEl.innerHTML='<div class="msg error">'+res.message+'</div>'; return; }
+    session={userId:res.userId,name:res.name,roleId:res.roleId,roleName:res.roleName,permissions:res.permissions};
+    enterApp();
+  }).catch(function(err){ btn.disabled=false; btn.textContent='Sign in'; msgEl.innerHTML='<div class="msg error">'+err+'</div>'; });
+});
+document.getElementById('logout-btn').addEventListener('click', function(){
+  session=null;
+  document.getElementById('app-shell').classList.remove('active');
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-password').value='';
+});
+
+function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-backdrop').classList.add('active'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-backdrop').classList.remove('active'); }
+document.getElementById('hamburger-btn').addEventListener('click', openSidebar);
+document.getElementById('sidebar-backdrop').addEventListener('click', closeSidebar);
+
+function enterApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-shell').classList.add('active');
+  document.getElementById('chip-name').textContent=session.name;
+  document.getElementById('chip-role').textContent=session.roleName;
+
+  document.querySelectorAll('.nav-item[data-perm]').forEach(function(btn){
+    btn.style.display = can(btn.getAttribute('data-perm')) ? 'flex' : 'none';
+  });
+  document.getElementById('add-product-btn').style.display = can('PERM_CREATE_PRODUCT') ? 'inline-block' : 'none';
+
+  loadDashboard();
+  loadCategories();
+  loadSuppliers();
+  loadCustomers();
+  loadProducts();
+}
+
+document.querySelectorAll('.nav-item[data-view]').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    if(btn.style.display==='none') return;
+    document.querySelectorAll('.nav-item').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    var view=btn.getAttribute('data-view');
+    document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
+    document.getElementById('view-'+view).classList.add('active');
+    if(view==='dashboard') loadDashboard();
+    if(view==='pos') loadProducts();
+    if(view==='inventory') loadProducts();
+    if(view==='salesHistory') loadSalesHistory();
+    if(view==='purchases') loadPurchases();
+    if(view==='suppliers') loadSuppliers(true);
+    if(view==='customers') loadCustomers(true);
+    if(view==='finance') { loadExpenses(); loadIncome(); loadPayments(); }
+    if(view==='cashdrawer') loadDrawer();
+    if(view==='users') loadUsers();
+    if(view==='settings') loadSettings();
+    closeSidebar();
+  });
+});
+
+// ── Dashboard ────────────────────────────────────────────────────────────
+function loadDashboard(){
+  call('getDashboardSummary',session.userId).then(function(res){
+    if(!res.success) return toast(res.message,true);
+    var s=res.summary;
+    var html =
+      '<div class="card"><div class="label">Today\'s Sales</div><div class="value">'+money(s.todaysSalesTotal)+'</div></div>'+
+      '<div class="card"><div class="label">Transactions Today</div><div class="value">'+s.todaysTransactionCount+'</div></div>'+
+      '<div class="card"><div class="label">Active Products</div><div class="value">'+s.totalProducts+'</div></div>'+
+      '<div class="card '+(s.lowStockCount>0?'warn':'')+'"><div class="label">Low Stock</div><div class="value">'+s.lowStockCount+'</div></div>'+
+      '<div class="card '+(s.expiringSoonCount>0?'warn':'')+'"><div class="label">Expiring Soon</div><div class="value">'+s.expiringSoonCount+'</div></div>';
+    if(s.todaysProfit!==undefined) html+='<div class="card"><div class="label">Today\'s Profit</div><div class="value">'+money(s.todaysProfit)+'</div></div>';
+    document.getElementById('dashboard-cards').innerHTML=html;
+  }).catch(function(err){toast(err,true);});
+
+  call('getLowStockProducts',session.userId).then(function(res){
+    var el=document.getElementById('dashboard-lowstock');
+    if(!res.success){el.innerHTML='';return;}
+    if(!res.products.length){el.innerHTML='<div class="empty-state">Nothing low on stock</div>';return;}
+    el.innerHTML='<table><thead><tr><th>Product</th><th>Stock</th><th>Reorder level</th></tr></thead><tbody>'+
+      res.products.map(function(p){return '<tr><td>'+esc(p.ProductName)+'</td><td>'+p.CurrentStock+'</td><td>'+p.ReorderLevel+'</td></tr>';}).join('')+'</tbody></table>';
+  });
+
+  call('getExpiringBatches',session.userId,90).then(function(res){
+    var el=document.getElementById('dashboard-expiring');
+    if(!res.success){el.innerHTML='';return;}
+    if(!res.batches.length){el.innerHTML='<div class="empty-state">No batches expiring soon</div>';return;}
+    el.innerHTML='<table><thead><tr><th>Product</th><th>Batch</th><th>Qty</th><th>Expiry</th></tr></thead><tbody>'+
+      res.batches.map(function(b){return '<tr><td>'+esc(b.ProductName)+'</td><td>'+b.BatchNumber+'</td><td>'+b.Quantity+'</td><td>'+b.ExpiryDate+'</td></tr>';}).join('')+'</tbody></table>';
+  });
+
+  call('getSalesTrend',session.userId,14).then(function(res){
+    if(!res.success) return;
+    renderVBarChart('chart-sales-trend', res.trend, 'label', 'total');
+  }).catch(function(){});
+
+  call('getTopProducts',session.userId,30,5).then(function(res){
+    if(!res.success) return;
+    renderHBarChart('chart-top-products', res.products, 'name', 'total');
+  }).catch(function(){});
+
+  if(can('PERM_VIEW_PROFIT')){
+    call('getCategoryBreakdown',session.userId,30).then(function(res){
+      if(!res.success) return;
+      document.getElementById('panel-category-breakdown').style.display = res.breakdown.length ? 'block' : 'none';
+      renderHBarChart('chart-category-breakdown', res.breakdown, 'name', 'total');
+    }).catch(function(){});
+  }
+}
+
+// Minimal dependency-free bar charts built from plain divs.
+function renderVBarChart(containerId, items, labelKey, valueKey){
+  var el=document.getElementById(containerId);
+  if(!items || !items.length){ el.innerHTML='<div class="empty-state">No data yet</div>'; return; }
+  var max=Math.max.apply(null, items.map(function(i){return Number(i[valueKey])||0;}))||1;
+  el.innerHTML='<div class="vbar-chart">'+items.map(function(i){
+    var v=Number(i[valueKey])||0;
+    var pct=Math.max(2, Math.round(v/max*100));
+    return '<div class="vbar-col"><span class="vbar-value">'+(v>0?money(v):'')+'</span><div class="vbar" style="height:'+pct+'%;"></div><div class="vbar-label">'+esc(i[labelKey])+'</div></div>';
+  }).join('')+'</div>';
+}
+function renderHBarChart(containerId, items, labelKey, valueKey){
+  var el=document.getElementById(containerId);
+  if(!items || !items.length){ el.innerHTML='<div class="empty-state">No data yet</div>'; return; }
+  var max=Math.max.apply(null, items.map(function(i){return Number(i[valueKey])||0;}))||1;
+  el.innerHTML=items.map(function(i){
+    var v=Number(i[valueKey])||0;
+    var pct=Math.max(2, Math.round(v/max*100));
+    return '<div class="hbar-row"><div class="hbar-label" title="'+esc(i[labelKey])+'">'+esc(i[labelKey])+'</div>'+
+      '<div class="hbar-track"><div class="hbar-fill" style="width:'+pct+'%;"></div></div>'+
+      '<div class="hbar-value">'+money(v)+'</div></div>';
+  }).join('');
+}
+
+// ── Shared master data loaders ───────────────────────────────────────────
+function loadCategories(){
+  call('getCategories',session.userId).then(function(res){
+    if(!res.success) return;
+    allCategories=res.categories;
+    var sel=document.getElementById('pf-category');
+    sel.innerHTML=allCategories.map(function(c){return '<option value="'+c.CategoryID+'">'+esc(c.CategoryName)+'</option>';}).join('');
+    renderCategoryList();
+  });
+}
+function loadSuppliers(renderTable){
+  call('getSuppliers',session.userId).then(function(res){
+    if(!res.success) return;
+    allSuppliers=res.suppliers;
+    ['pf-supplier','pu-supplier','pf-pay-supplier'].forEach(function(id){
+      var sel=document.getElementById(id);
+      var keepFirst = id==='pf-supplier';
+      sel.innerHTML=(keepFirst?'<option value="">—</option>':'')+allSuppliers.map(function(s){return '<option value="'+s.SupplierID+'">'+esc(s.SupplierName)+'</option>';}).join('');
+    });
+    if(renderTable) renderSuppliersTable();
+  });
+}
+function loadCustomers(renderTable){
+  call('getCustomers',session.userId).then(function(res){
+    if(!res.success) return;
+    allCustomers=res.customers;
+    var sel=document.getElementById('pos-customer');
+    sel.innerHTML='<option value="">Walk-in</option>'+allCustomers.map(function(c){return '<option value="'+c.CustomerID+'">'+esc(c.FullName)+'</option>';}).join('');
+    if(renderTable) renderCustomersTable();
+  });
+}
+
+// ── Products (POS + Inventory) ───────────────────────────────────────────
+function loadProducts(){
+  call('getProducts',session.userId).then(function(res){
+    if(!res.success) return toast(res.message,true);
+    allProducts=res.products;
+    renderPosGrid(); renderInventoryTable();
+  }).catch(function(err){toast(err,true);});
+}
+function renderPosGrid(){
+  var grid=document.getElementById('pos-product-grid');
+  var filter=(document.getElementById('pos-search').value||'').toLowerCase();
+  var list=allProducts.filter(function(p){return p.ProductName.toLowerCase().indexOf(filter)>-1;});
+  if(!list.length){grid.innerHTML='<div class="empty-state">No products found</div>';return;}
+  grid.innerHTML=list.map(function(p){
+    var out=p.CurrentStock<=0;
+    return '<button class="product-tile" '+(out?'disabled':'')+' onclick="addToCart(\''+p.ProductID+'\')">'+
+      '<div class="p-name">'+esc(p.ProductName)+'</div>'+
+      '<div class="p-meta">'+(out?'Out of stock':p.CurrentStock+' in stock')+'</div>'+
+      '<div class="p-price">$'+money(p.SellingPrice)+'</div></button>';
+  }).join('');
+}
+document.getElementById('pos-search').addEventListener('input',renderPosGrid);
+
+function addToCart(productId){
+  var product=allProducts.filter(function(p){return p.ProductID===productId;})[0];
+  if(!product) return;
+  var existing=cart.filter(function(c){return c.productId===productId;})[0];
+  var currentQty=existing?existing.qty:0;
+  if(currentQty+1>product.CurrentStock){toast('Not enough stock.',true);return;}
+  if(existing) existing.qty+=1;
+  else cart.push({productId:product.ProductID,name:product.ProductName,price:Number(product.SellingPrice),taxRate:Number(product.TaxRate)||0,qty:1,stock:product.CurrentStock});
+  renderCart();
+}
+function changeCartQty(productId,delta){
+  var item=cart.filter(function(c){return c.productId===productId;})[0];
+  if(!item) return;
+  var newQty=item.qty+delta;
+  if(newQty<=0) cart=cart.filter(function(c){return c.productId!==productId;});
+  else if(newQty>item.stock){toast('Not enough stock.',true);return;}
+  else item.qty=newQty;
+  renderCart();
+}
+function renderCart(){
+  var el=document.getElementById('pos-cart');
+  if(!cart.length){el.innerHTML='<div class="empty-state">Cart is empty</div>';}
+  else{
+    el.innerHTML=cart.map(function(c){
+      return '<div class="cart-item"><div>'+esc(c.name)+'<br><span style="color:var(--ink-soft);font-size:11px;">$'+money(c.price)+' each</span></div>'+
+        '<div class="qty-controls"><button onclick="changeCartQty(\''+c.productId+'\',-1)">−</button><span>'+c.qty+'</span><button onclick="changeCartQty(\''+c.productId+'\',1)">+</button></div></div>';
+    }).join('');
+  }
+  var subtotal=cart.reduce(function(s,c){return s+c.qty*c.price;},0);
+  var tax=cart.reduce(function(s,c){return s+c.qty*c.price*c.taxRate/100;},0);
+  var discount=Number(document.getElementById('pos-discount').value)||0;
+  var total=Math.max(0,subtotal-discount+tax);
+  document.getElementById('pos-totals').innerHTML=
+    '<div class="cart-total-row"><span>Subtotal</span><span>$'+money(subtotal)+'</span></div>'+
+    '<div class="cart-total-row"><span>Tax</span><span>$'+money(tax)+'</span></div>'+
+    '<div class="cart-total-row"><span>Discount</span><span>$'+money(discount)+'</span></div>'+
+    '<div class="cart-total-row grand"><span>Total</span><span>$'+money(total)+'</span></div>';
+}
+document.getElementById('pos-discount').addEventListener('input',renderCart);
+
+document.getElementById('pos-checkout-btn').addEventListener('click',function(){
+  var msgEl=document.getElementById('pos-checkout-msg'); msgEl.innerHTML='';
+  if(!cart.length){msgEl.innerHTML='<div class="msg error">Cart is empty.</div>';return;}
+  var btn=this; btn.disabled=true; btn.textContent='Processing…';
+  var payload=cart.map(function(c){return {productId:c.productId,qty:c.qty};});
+  var options={
+    discount:Number(document.getElementById('pos-discount').value)||0,
+    paymentMethod:document.getElementById('pos-payment').value,
+    customerId:document.getElementById('pos-customer').value
+  };
+  call('createSale',session.userId,payload,options).then(function(res){
+    btn.disabled=false; btn.textContent='Charge';
+    if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
+    toast('Sale '+res.saleId+' completed — $'+money(res.total));
+    msgEl.innerHTML='<div class="msg success">Sale '+res.saleId+' completed. <button class="mini-btn" onclick="printReceipt(\''+res.saleId+'\')">Print receipt</button></div>';
+    cart=[]; document.getElementById('pos-discount').value=''; renderCart();
+    loadProducts(); loadDashboard();
+  }).catch(function(err){btn.disabled=false; btn.textContent='Charge'; msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+});
+
+// ── Inventory table ───────────────────────────────────────────────────────
+function renderInventoryTable(){
+  var tbody=document.getElementById('inventory-tbody');
+  var filter=(document.getElementById('inventory-search').value||'').toLowerCase();
+  var list=allProducts.filter(function(p){return p.ProductName.toLowerCase().indexOf(filter)>-1;});
+  if(!list.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state">No products yet</div></td></tr>';return;}
+  tbody.innerHTML=list.map(function(p){
+    var low=p.CurrentStock<=Number(p.ReorderLevel||0);
+    var actions='';
+    if(can('PERM_EDIT_PRODUCT')) actions+='<button onclick="openProductModal(\''+p.ProductID+'\')">Edit</button>';
+    if(can('PERM_DELETE_PRODUCT')) actions+='<button class="danger" onclick="removeProduct(\''+p.ProductID+'\')">Delete</button>';
+    return '<tr><td>'+esc(p.ProductName)+'</td><td>'+esc(p.CategoryName)+'</td><td>$'+money(p.SellingPrice)+'</td><td>'+p.CurrentStock+'</td>'+
+      '<td><span class="pill '+(low?'low':'ok')+'">'+(low?'Low stock':'In stock')+'</span></td><td class="row-actions">'+actions+'</td></tr>';
+  }).join('');
+}
+document.getElementById('inventory-search').addEventListener('input',renderInventoryTable);
+
+function openProductModal(productId){
+  editingProductId=productId||null;
+  var product=productId?allProducts.filter(function(p){return p.ProductID===productId;})[0]:null;
+  document.getElementById('product-modal-title').textContent=product?'Edit product':'Add product';
+  document.getElementById('product-modal-msg').innerHTML='';
+  document.getElementById('pf-name').value=product?product.ProductName:'';
+  document.getElementById('pf-generic').value=product?product.GenericName:'';
+  document.getElementById('pf-brand').value=product?product.Brand:'';
+  document.getElementById('pf-category').value=product?product.CategoryID:'';
+  document.getElementById('pf-unit').value=product?product.Unit:'';
+  document.getElementById('pf-strength').value=product?product.Strength:'';
+  document.getElementById('pf-dosageform').value=product?product.DosageForm:'';
+  document.getElementById('pf-supplier').value=product?product.SupplierID:'';
+  document.getElementById('pf-purchaseprice').value=product?product.PurchasePrice:'';
+  document.getElementById('pf-sellingprice').value=product?product.SellingPrice:'';
+  document.getElementById('pf-taxrate').value=product?product.TaxRate:'0';
+  document.getElementById('pf-reorderlevel').value=product?product.ReorderLevel:'';
+  document.getElementById('pf-minstock').value=product?product.MinimumStock:'';
+  document.getElementById('pf-maxstock').value=product?product.MaximumStock:'';
+  document.getElementById('pf-openingqty').value='';
+  document.getElementById('pf-expiry').value='';
+  document.getElementById('pf-openingqty-field').style.display=product?'none':'block';
+  document.getElementById('pf-expiry-field').style.display=product?'none':'block';
+  document.getElementById('product-modal').classList.add('active');
+}
+document.getElementById('add-product-btn').addEventListener('click',function(){openProductModal(null);});
+document.getElementById('product-modal-cancel').addEventListener('click',function(){document.getElementById('product-modal').classList.remove('active');});
+document.getElementById('product-modal-save').addEventListener('click',function(){
+  var msgEl=document.getElementById('product-modal-msg');
+  var payload={
+    productId:editingProductId,
+    productName:document.getElementById('pf-name').value.trim(),
+    genericName:document.getElementById('pf-generic').value.trim(),
+    brand:document.getElementById('pf-brand').value.trim(),
+    categoryId:document.getElementById('pf-category').value,
+    unit:document.getElementById('pf-unit').value.trim(),
+    strength:document.getElementById('pf-strength').value.trim(),
+    dosageForm:document.getElementById('pf-dosageform').value.trim(),
+    supplierId:document.getElementById('pf-supplier').value,
+    purchasePrice:document.getElementById('pf-purchaseprice').value,
+    sellingPrice:document.getElementById('pf-sellingprice').value,
+    taxRate:document.getElementById('pf-taxrate').value,
+    reorderLevel:document.getElementById('pf-reorderlevel').value,
+    minimumStock:document.getElementById('pf-minstock').value,
+    maximumStock:document.getElementById('pf-maxstock').value,
+    openingStock:document.getElementById('pf-openingqty').value,
+    expiryDate:document.getElementById('pf-expiry').value.trim()
+  };
+  if(!payload.productName||payload.sellingPrice===''){msgEl.innerHTML='<div class="msg error">Name and selling price are required.</div>';return;}
+  var promise=editingProductId?call('updateProduct',session.userId,payload):call('createProduct',session.userId,payload);
+  promise.then(function(res){
+    if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
+    document.getElementById('product-modal').classList.remove('active');
+    toast('Product saved.'); loadProducts(); loadDashboard();
+  }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+});
+function removeProduct(productId){
+  if(!confirm('Deactivate this product?')) return;
+  call('deleteProduct',session.userId,productId).then(function(res){
+    if(!res.success) return toast(res.message,true);
+    toast('Product deactivated.'); loadProducts(); loadDashboard();
+  }).catch(function(err){toast(err,true);});
+}
+
+// ── Categories modal ─────────────────────────────────────────────────────
+document.getElementById('manage-categories-btn').addEventListener('click',function(){
+  document.getElementById('category-modal-msg').innerHTML='';
+  document.getElementById('category-modal').classList.add('active');
+});
+document.getElementById('category-modal-close').addEventListener('click',function(){document.getElementById('category-modal').classList.remove('active');});
+function renderCategoryList(){
+  var el=document.getElementById('category-list');
+  if(!allCategories.length){el.innerHTML='<div class="empty-state">No categories yet</div>';return;}
+  el.innerHTML=allCategories.map(function(c){return '<span class="tag">'+esc(c.CategoryName)+'</span>';}).join(' ');
+}
+document.getElementById('category-modal-add').addEventListener('click',function(){
+  var msgEl=document.getElementById('category-modal-msg');
+  var name=document.getElementById('cat-name').value.trim();
+  if(!name){msgEl.innerHTML='<div class="msg error">Category name is required.</div>';return;}
+  call('createCategory',session.userId,{categoryName:name,description:document.getElementById('cat-desc').value.trim()}).then(function(res){
+    if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
+    document.getElementById('cat-name').value=''; document.getElementById('cat-desc').value='';
+    toast('Category added.'); loadCategories();
+  }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+});
+
+// ── Suppliers ─────────────────────────────────────────────────────────────
+function renderSuppliersTable(){
+  var tbody=document.getElementById('suppliers-tbody');
+  if(!allSuppliers.length){tbody.innerHTML='<tr><td colspan="5"><div class="empty-state">No suppliers yet</div></td></tr>';return;}
+  tbody.innerHTML=allSuppliers.map(function(s){
+    return '<tr><td>'+esc(s.SupplierName)+'</td><td>'+esc(s.ContactPerson||'—')+'</td><td>'+esc(s.Phone||'—')+'</td><td>$'+money(s.CurrentBalance)+'</td>'+
+      '<td class="row-actions"><button onclick="openSupplierModal(\''+s.SupplierID+'\')">Edit</button></td></tr>';
+  }).join('');
+}
+function openSupplierModal(supplierId){
+  var s=supplierId?allSuppliers.filter(function(x){return x.SupplierID===supplierId;})[0]:null;
+  document.getElementById('supplier-modal-title').textContent=s?'Edit supplier':'Add supplier';
+  document.getElementById('supplier-modal-msg').innerHTML='';
+  document.getElementById('sf-name').value=s?s.SupplierName:'';
+  document.getElementById('sf-contact').value=s?s.ContactPerson:'';
+  document.getElementById('sf-phone').value=s?s.Phone:'';
+  document.getElementById('sf-email').value=s?s.Email:'';
+  document.getElementById('sf-taxnumber').value=s?s.TaxNumber:'';
+  document.getElementById('sf-paymentterms').value=s?s.PaymentTerms:'';
+  document.getElementById('sf-address').value=s?s.Address:'';
+  document.getElementById('sf-opening').value='';
+  document.getElementById('sf-opening-field').style.display=s?'none':'block';
+  document.getElementById('supplier-modal').dataset.editing=supplierId||'';
+  document.getElementById('supplier-modal').classList.add('active');
+}
+document.getElementById('add-supplier-btn').addEventListener('click',function(){openSupplierModal(null);});
+document.getElementById('supplier-modal-cancel').addEventListener('click',function(){document.getElementById('supplier-modal').classList.remove('active');});
+document.getElementById('supplier-modal-save').addEventListener('click',function(){
+  var msgEl=document.getElementById('supplier-modal-msg');
+  var editing=document.getElementById('supplier-modal').dataset.editing;
+  var payload={
+    supplierId:editing||undefined, supplierName:document.getElementById('sf-name').value.trim(),
+    contactPerson:document.getElementById('sf-contact').value.trim(), phone:document.getElementById('sf-phone').value.trim(),
+    email:document.getElementById('sf-email').value.trim(), taxNumber:document.getElementById('sf-taxnumber').value.trim(),
+    paymentTerms:document.getElementById('sf-paymentterms').value.trim(), address:document.getElementById('sf-address').value.trim(),
+    openingBalance:document.getElementById('sf-opening').value
+  };
+  if(!payload.supplierName){msgEl.innerHTML='<div class="msg error">Supplier name is required.</div>';return;}
+  var promise=editing?call('updateSupplier',session.userId,payload):call('createSupplier',session.userId,payload);
+  promise.then(function(res){
+    if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
+    document.getElementById('supplier-modal').classList.remove('active');
+    toast('Supplier saved.'); loadSuppliers(true);
+  }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+});
+
+// ── Customers ─────────────────────────────────────────────────────────────
+function renderCustomersTable(){
+  var tbody=document.getElementById('customers-tbody');
+  if(!allCustomers.length){tbody.innerHTML='<tr><td colspan="5"><div class="empty-state">No customers yet</div></td></tr>';return;}
+  tbody.innerHTML=allCustomers.map(function(c){
+    return '<tr><td>'+esc(c.FullName)+'</td><td>'+esc(c.Phone||'—')+'</td><td>'+(c.LoyaltyPoints||0)+'</td><td>$'+money(c.CreditBalance)+'</td>'+
+      '<td class="row-actions"><button onclick="openCustomerModal(\''+c.CustomerID+'\')">Edit</button></td></tr>';
+  }).join('');
+}
+function openCustomerModal(customerId){
+  var c=customerId?allCustomers.filter(function(x){return x.CustomerID===customerId;})[0]:null;
+  document.getElementById('customer-modal-title').textContent=c?'Edit customer':'Add customer';
+  document.getElementById('customer-modal-msg').innerHTML='';
+  document.getElementById('cf-name').value=c?c.FullName:'';
+  document.getElementById('cf-phone').value=c?c.Phone:'';
+  document.getElementById('cf-email').value=c?c.Email:'';
+  document.getElementById('cf-address').value=c?c.Address:'';
+  document.getElementById('customer-modal').dataset.editing=customerId||'';
+  document.getElementById('customer-modal').classList.add('active');
+}
+document.getElementById('add-customer-btn').addEventListener('click',function(){openCustomerModal(null);});
+document.getElementById('customer-modal-cancel').addEventListener('click',function(){document.getElementById('customer-modal').classList.remove('active');});
+document.getElementById('customer-modal-save').addEventListener('click',function(){
+  var msgEl=document.getElementById('customer-modal-msg');
+  var editing=document.getElementById('customer-modal').dataset.editing;
+  var payload={
+    customerId:editing||undefined, fullName:document.getElementById('cf-name').value.trim(),
+    phone:document.getElementById('cf-phone').value.trim(), email:document.getElementById('cf-email').value.trim(),
+    address:document.getElementById('cf-address').value.trim()
+  };
+  if(!payload.fullName){msgEl.innerHTML='<div class="msg error">Customer name is required.</div>';return;}
+  var promise=editing?call('updateCustomer',session.userId,payload):call('createCustomer',session.userId,payload);
+  promise.then(function(res){
+    if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
+    document.getElementById('customer-modal').classList.remove('active');
+    toast('Customer saved.'); loadCustomers(true);
+  }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+});
+
+// ── Purchases ─────────────────────────────────────────────────────────────
+function loadPurchases(){
+  call('getPurchases',session.userId,100).then(function(res){
+    var tbody=document.getElementById('purchases-tbody');
+    if(!res.success){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state">'+res.message+'</div></td></tr>';return;}
+    allPurchases=res.purchases;
+    if(!res.purchases.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state">No purchases yet</div></td></tr>';return;}
+    tbody.innerHTML=res.purchases.map(function(p){
+      var isDeleted=p.RecordStatus==='Deleted';
+      var statusLabel=isDeleted?'Deleted':p.PaymentStatus;
+      var statusClass=isDeleted?'bad':(p.PaymentStatus==='Paid'?'ok':'low');
+      var actions='<button onclick="openPurchaseDetails(\''+p.PurchaseID+'\')">View</button>';
+      return '<tr style="'+(isDeleted?'opacity:.55;':'')+'"><td>'+p.PurchaseID+'</td><td>'+new Date(p.PurchaseDate).toLocaleDateString()+'</td><td>'+esc(p.SupplierName)+'</td>'+
+        '<td>$'+money(p.GrandTotal)+'</td><td><span class="pill '+statusClass+'">'+statusLabel+'</span></td><td>$'+money(p.Balance)+'</td>'+
+        '<td class="row-actions">'+actions+'</td></tr>';
+    }).join('');
+  }).catch(function(err){toast(err,true);});
+}
+function openPurchaseDetails(purchaseId){
+  document.getElementById('pd-purchase-id').textContent=purchaseId;
+  document.getElementById('pd-msg').innerHTML='';
+  document.getElementById('pd-meta').innerHTML='';
+  document.getElementById('pd-items').innerHTML='';
+  document.getElementById('pd-totals').innerHTML='';
+  document.getElementById('pd-deleted-banner').innerHTML='';
+  document.getElementById('purchase-details-modal').dataset.purchaseId=purchaseId;
+  document.getElementById('purchase-details-modal').classList.add('active');
+  call('getPurchaseDetails',session.userId,purchaseId).then(function(res){
+    if(!res.success){document.getElementById('pd-msg').innerHTML='<div class="msg error">'+res.message+'</div>';return;}
+    var pur=res.purchase, items=res.items;
+    document.getElementById('pd-meta').innerHTML=
+      'Supplier: <b>'+esc(pur.SupplierName)+'</b> &nbsp;·&nbsp; Invoice: '+esc(pur.InvoiceNumber||'—')+
+      ' &nbsp;·&nbsp; Date: '+new Date(pur.PurchaseDate).toLocaleString()+
+      ' &nbsp;·&nbsp; Received by: '+esc(pur.ReceivedByName||pur.ReceivedBy);
+
+    document.getElementById('pd-items').innerHTML='<table><thead><tr><th>Product</th><th>Batch / Expiry</th><th>Qty</th><th>Purchase price</th><th>Selling price</th><th>Line total</th></tr></thead><tbody>'+
+      items.map(function(i){
+        var detail=[i.Strength,i.DosageForm,i.Unit].filter(Boolean).join(' · ');
+        return '<tr><td>'+esc(i.ProductName)+(detail?'<br><span style="color:var(--ink-soft);font-size:11.5px;">'+esc(detail)+'</span>':'')+'</td>'+
+          '<td>'+esc(i.BatchNumber||'—')+(i.ExpiryDate?'<br><span style="color:var(--ink-soft);font-size:11.5px;">exp '+i.ExpiryDate+'</span>':'')+'</td>'+
+          '<td>'+i.Quantity+'</td><td>$'+money(i.PurchasePrice)+'</td><td>$'+money(i.SellingPrice)+'</td><td>$'+money(i.Total)+'</td></tr>';
+      }).join('')+'</tbody></table>';
+
+    document.getElementById('pd-totals').innerHTML=
+      '<div class="cart-total-row"><span>Subtotal</span><span>$'+money(pur.TotalAmount)+'</span></div>'+
+      '<div class="cart-total-row"><span>Discount</span><span>$'+money(pur.Discount)+'</span></div>'+
+      '<div class="cart-total-row"><span>Tax</span><span>$'+money(pur.Tax)+'</span></div>'+
+      '<div class="cart-total-row grand"><span>Grand total</span><span>$'+money(pur.GrandTotal)+'</span></div>'+
+      '<div class="cart-total-row"><span>Paid</span><span>$'+money(pur.PaidAmount)+'</span></div>'+
+      '<div class="cart-total-row"><span>Balance</span><span>$'+money(pur.Balance)+'</span></div>';
+
+    var deleteBtn=document.getElementById('purchase-details-delete');
+    if(pur.RecordStatus==='Deleted'){
+      document.getElementById('pd-deleted-banner').innerHTML='<div class="msg error">Deleted by '+esc(pur.DeletedByName||pur.DeletedBy)+' on '+new Date(pur.DeletedDate).toLocaleString()+'. Reason: '+esc(pur.DeletedReason)+'</div>';
+      deleteBtn.style.display='none';
+    } else {
+      deleteBtn.style.display = (session.roleName==='Owner') ? 'inline-block' : 'none';
+    }
+  }).catch(function(err){document.getElementById('pd-msg').innerHTML='<div class="msg error">'+err+'</div>';});
+}
+document.getElementById('purchase-details-close').addEventListener('click',function(){document.getElementById('purchase-details-modal').classList.remove('active');});
+document.getElementById('purchase-details-delete').addEventListener('click',function(){
+  var purchaseId=document.getElementById('purchase-details-modal').dataset.purchaseId;
+  var reason=prompt('Reason for deleting this purchase order?');
+  if(!reason||!reason.trim()) return;
+  call('deletePurchase',session.userId,purchaseId,reason.trim()).then(function(res){
+    if(!res.success) return toast(res.message,true);
+    toast(res.partialReversal ? 'Order deleted. Note: some stock from this order was already sold and could not be reversed.' : 'Order deleted.');
+    document.getElementById('purchase-details-modal').classList.remove('active');
+    loadPurchases(); loadProducts(); loadSuppliers(true); loadDashboard();
+  }).catch(function(err){toast(err,true);});
+});
+document.getElementById('add-purchase-btn').addEventListener('click',function(){
+  document.getElementById('purchase-modal-msg').innerHTML='';
+  document.getElementById('purchase-lines').innerHTML='';
+  document.getElementById('pu-invoice').value='';
+  document.getElementById('pu-discount').value='0';
+  document.getElementById('pu-tax').value='0';
+  document.getElementById('pu-paid').value='0';
+  purchaseLineCount=0;
+  addPurchaseLine();
+  document.getElementById('purchase-modal').classList.add('active');
+});
+document.getElementById('purchase-modal-cancel').addEventListener('click',function(){document.getElementById('purchase-modal').classList.remove('active');});
+document.getElementById('add-purchase-line').addEventListener('click',addPurchaseLine);
+function addPurchaseLine(){
+  var idx=purchaseLineCount++;
+  var div=document.createElement('div');
+  div.className='line-item-row'; div.dataset.idx=idx;
+  div.innerHTML=
+    '<div class="li-top">'+
+      '<select class="pl-product">'+allProducts.map(function(p){return '<option value="'+p.ProductID+'">'+esc(p.ProductName)+'</option>';}).join('')+'</select>'+
+      '<button type="button" class="li-remove" onclick="this.closest(\'.line-item-row\').remove();recalcPurchaseTotals();">✕</button>'+
+    '</div>'+
+    '<div class="li-grid">'+
+      '<input class="pl-qty" type="text" placeholder="Qty">'+
+      '<input class="pl-cost" type="text" placeholder="Purchase price">'+
+      '<input class="pl-price" type="text" placeholder="Selling price">'+
+      '<input class="pl-expiry" type="text" placeholder="Expiry YYYY-MM-DD">'+
+    '</div>'+
+    '<div class="pl-line-total" style="text-align:right;font-size:12px;color:var(--ink-soft);margin-top:4px;">Line total: <b>$0.00</b></div>';
+  document.getElementById('purchase-lines').appendChild(div);
+  recalcPurchaseTotals();
+}
+function recalcPurchaseTotals(){
+  var subtotal=0;
+  document.querySelectorAll('#purchase-lines .line-item-row').forEach(function(rowEl){
+    var qty=Number(rowEl.querySelector('.pl-qty').value)||0;
+    var cost=Number(rowEl.querySelector('.pl-cost').value)||0;
+    var lineTotal=qty*cost;
+    subtotal+=lineTotal;
+    var totalEl=rowEl.querySelector('.pl-line-total b');
+    if(totalEl) totalEl.textContent='$'+money(lineTotal);
+  });
+  var discount=Number(document.getElementById('pu-discount').value)||0;
+  var tax=Number(document.getElementById('pu-tax').value)||0;
+  var grandTotal=Math.max(0, subtotal-discount+tax);
+  document.getElementById('pu-calc-subtotal').textContent='$'+money(subtotal);
+  document.getElementById('pu-calc-discount').textContent='$'+money(discount);
+  document.getElementById('pu-calc-tax').textContent='$'+money(tax);
+  document.getElementById('pu-calc-grandtotal').textContent='$'+money(grandTotal);
+}
+document.getElementById('purchase-lines').addEventListener('input', function(e){
+  if(e.target.classList.contains('pl-qty')||e.target.classList.contains('pl-cost')) recalcPurchaseTotals();
+});
+document.getElementById('pu-discount').addEventListener('input', recalcPurchaseTotals);
+document.getElementById('pu-tax').addEventListener('input', recalcPurchaseTotals);
+document.getElementById('purchase-modal-save').addEventListener('click',function(){
+  var msgEl=document.getElementById('purchase-modal-msg');
+  var supplierId=document.getElementById('pu-supplier').value;
+  if(!supplierId){msgEl.innerHTML='<div class="msg error">Select a supplier.</div>';return;}
+  var items=[];
+  document.querySelectorAll('#purchase-lines .line-item-row').forEach(function(row){
+    var qty=Number(row.querySelector('.pl-qty').value);
+    if(qty>0){
+      items.push({
+        productId:row.querySelector('.pl-product').value, quantity:qty,
+        purchasePrice:Number(row.querySelector('.pl-cost').value)||0,
+        sellingPrice:Number(row.querySelector('.pl-price').value)||0,
+        expiryDate:row.querySelector('.pl-expiry').value.trim()
+      });
+    }
+  });
+  if(!items.length){msgEl.innerHTML='<div class="msg error">Add at least one line item with a quantity.</div>';return;}
+  var payload={
+    supplierId:supplierId, invoiceNumber:document.getElementById('pu-invoice').value.trim(), items:items,
+    discount:Number(document.getElementById('pu-discount').value)||0, tax:Number(document.getElementById('pu-tax').value)||0,
+    paidAmount:Number(document.getElementById('pu-paid').value)||0
+  };
+  call('createPurchase',session.userId,payload).then(function(res){
+    if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
+    document.getElementById('purchase-modal').classList.remove('active');
+    toast('Purchase '+res.purchaseId+' recorded — $'+money(res.grandTotal));
+    loadPurchases(); loadProducts(); loadSuppliers(true); loadDashboard();
+  }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+});
+
+// ── Sales history + returns ───────────────────────────────────────────────
+function loadSalesHistory(){
+  call('getSales',session.userId,100).then(function(res){
+    var tbody=document.getElementById('sales-tbody');
+    if(!res.success){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state">'+res.message+'</div></td></tr>';return;}
+    if(!res.sales.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state">No sales yet</div></td></tr>';return;}
+    tbody.innerHTML=res.sales.map(function(s){
+      return '<tr><td>'+s.SaleID+'</td><td>'+new Date(s.SaleDate).toLocaleString()+'</td><td>'+esc(s.CashierName)+'</td>'+
+        '<td>'+esc(s.PaymentMethod)+'</td><td>$'+money(s.GrandTotal)+'</td>'+
+        '<td class="row-actions"><button onclick="openSaleDetails(\''+s.SaleID+'\')">View</button></td></tr>';
+    }).join('');
+  }).catch(function(err){toast(err,true);});
+}
+function openSaleDetails(saleId){
+  currentSaleDetailsId=saleId;
+  document.getElementById('sd-sale-id').textContent=saleId;
+  document.getElementById('sd-msg').innerHTML='';
+  document.getElementById('sale-details-modal').classList.add('active');
+  call('getSaleDetails',session.userId,saleId).then(function(res){
+    var el=document.getElementById('sd-items');
+    if(!res.success){el.innerHTML='<div class="empty-state">'+res.message+'</div>';return;}
+    el.innerHTML='<table><thead><tr><th>Product</th><th>Qty</th><th>Unit price</th><th>Total</th>'+(can('PERM_REFUND')?'<th></th>':'')+'</tr></thead><tbody>'+
+      res.items.map(function(i){
+        var returnBtn=can('PERM_REFUND')?'<button onclick="promptReturn(\''+saleId+'\',\''+i.ProductID+'\',\''+esc(i.ProductName)+'\','+i.Quantity+')">Return</button>':'';
+        return '<tr><td>'+esc(i.ProductName)+'</td><td>'+i.Quantity+'</td><td>$'+money(i.UnitPrice)+'</td><td>$'+money(i.Total)+'</td><td class="row-actions">'+returnBtn+'</td></tr>';
+      }).join('')+'</tbody></table>';
+  });
+}
+document.getElementById('sale-details-close').addEventListener('click',function(){document.getElementById('sale-details-modal').classList.remove('active');});
+document.getElementById('sale-details-print').addEventListener('click',function(){ if(currentSaleDetailsId) printReceipt(currentSaleDetailsId); });
+function promptReturn(saleId,productId,productName,maxQty){
+  var qty=prompt('Return how many units of "'+productName+'"? (max '+maxQty+')','1');
+  if(!qty) return;
+  var reason=prompt('Reason? (e.g. Wrong Item, Customer Changed Mind, Damaged, Expired)','Customer Changed Mind');
+  if(!reason) return;
+  call('createReturn',session.userId,saleId,productId,Number(qty),reason).then(function(res){
+    if(!res.success) return toast(res.message,true);
+    toast('Refund of $'+money(res.refundAmount)+' recorded.');
+    document.getElementById('sale-details-modal').classList.remove('active');
+    loadProducts(); loadDashboard();
+  }).catch(function(err){toast(err,true);});
+}
+
+// ── Finance tabs ──────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(function(tab){
+  tab.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+    tab.classList.add('active');
+    document.querySelectorAll('.finance-tab').forEach(function(el){el.style.display='none';});
+    document.getElementById('finance-'+tab.getAttribute('data-tab')).style.display='block';
+  });
+});
+function loadExpenses(){
+  call('getExpenses',session.userId,100).then(function(res){
+    var tbody=document.getElementById('expenses-tbody');
+    if(!res.success){tbody.innerHTML='<tr><td colspan="5"><div class="empty-state">'+res.message+'</div></td></tr>';return;}
+    if(!res.expenses.length){tbody.innerHTML='<tr><td colspan="5"><div class="empty-state">No expenses yet</div></td></tr>';return;}
+    tbody.innerHTML=res.expenses.map(function(e){
+      return '<tr><td>'+new Date(e.ExpenseDate).toLocaleDateString()+'</td><td>'+esc(e.Category)+'</td><td>'+esc(e.Description||'—')+'</td><td>$'+money(e.Amount)+'</td><td>'+esc(e.PaymentMethod)+'</td></tr>';
+    }).join('');
+  });
+}
+function loadIncome(){
+  call('getIncome',session.userId,100).then(function(res){
+    var tbody=document.getElementById('income-tbody');
+    if(!res.success){tbody.innerHTML='<tr><td colspan="4"><div class="empty-state">'+res.message+'</div></td></tr>';return;}
+    if(!res.income.length){tbody.innerHTML='<tr><td colspan="4"><div class="empty-state">No income entries yet</div></td></tr>';return;}
+    tbody.innerHTML=res.income.map(function(i){
+      return '<tr><td>'+new Date(i.Date).toLocaleDateString()+'</td><td>'+esc(i.Source)+'</td><td>'+esc(i.Description||'—')+'</td><td>$'+money(i.Amount)+'</td></tr>';
+    }).join('');
+  });
+}
+function loadPayments(){
+  call('getPayments',session.userId,100).then(function(res){
+    var tbody=document.getElementById('payments-tbody');
+    if(!res.success){tbody.innerHTML='<tr><td colspan="4"><div class="empty-state">'+res.message+'</div></td></tr>';return;}
+    if(!res.payments.length){tbody.innerHTML='<tr><td colspan="4"><div class="empty-state">No payments recorded yet</div></td></tr>';return;}
+    var nameById={}; allSuppliers.forEach(function(s){nameById[s.SupplierID]=s.SupplierName;});
+    tbody.innerHTML=res.payments.map(function(p){
+      return '<tr><td>'+new Date(p.Date).toLocaleDateString()+'</td><td>'+esc(nameById[p.SupplierID]||p.SupplierID)+'</td><td>$'+money(p.Amount)+'</td><td>'+esc(p.Method)+'</td></tr>';
+    }).join('');
+  });
+}
+document.getElementById('add-expense-btn').addEventListener('click',function(){
+  document.getElementById('expense-modal-msg').innerHTML='';
+  document.getElementById('ef-category').value=''; document.getElementById('ef-description').value=''; document.getElementById('ef-amount').value='';
+  document.getElementById('expense-modal').classList.add('active');
+});
+document.getElementById('expense-modal-cancel').addEventListener('click',function(){document.getElementById('expense-modal').classList.remove('active');});
+document.getElementById('expense-modal-save').addEventListener('click',function(){
+  var msgEl=document.getElementById('expense-modal-msg');
+  var payload={category:document.getElementById('ef-category').value.trim(),description:document.getElementById('ef-description').value.trim(),
+    amount:document.getElementById('ef-amount').value, paymentMethod:document.getElementById('ef-method').value};
+  if(!payload.category||!payload.amount){msgEl.innerHTML='<div class="msg error">Category and amount are required.</div>';return;}
+  call('createExpense',session.userId,payload).then(function(res){
+    if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
+    document.getElementById('expense-modal').classList.remove('active');
+    toast('Expense recorded.'); loadExpenses(); loadDashboard();
+  }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+});
+document.getElementById('add-income-btn').addEventListener('click',function(){
+  document.getElementById('income-modal-msg').innerHTML='';
+  document.getElementById('if-source').value=''; document.getElementById('if-description').value=''; document.getElementById('if-amount').value='';
+  document.getElementById('income-modal').classList.add('active');
+});
+document.getElementById('income-modal-cancel').addEventListener('click',function(){document.getElementById('income-modal').classList.remove('active');});
+document.getElementById('income-modal-save').addEventListener('click',function(){
+  var msgEl=document.getElementById('income-modal-msg');
+  var payload={source:document.getElementById('if-source').value.trim(),description:document.getElementById('if-description').value.trim(),amount:document.getElementById('if-amount').value};
+  if(!payload.source||!payload.amount){msgEl.innerHTML='<div class="msg error">Source and amount are required.</div>';return;}
+  call('createIncome',session.userId,payload).then(function(res){
+    if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
+    document.getElementById('income-modal').classList.remove('active');
+    toast('Income recorded.'); loadIncome();
+  }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+});
+document.getElementById('add-payment-btn').addEventListener('click',function(){
+  document.getElementById('payment-modal-msg').innerHTML='';
+  document.getElementById('pf-pay-amount').value=''; document.getElementById('pf-pay-reference').value='';
+  loadPurchases(); // ensure allPurchases is fresh before populating the order dropdown
+  refreshPayableOrders();
+  document.getElementById('payment-modal').classList.add('active');
+});
+function refreshPayableOrders(){
+  var supplierId=document.getElementById('pf-pay-supplier').value;
+  var sel=document.getElementById('pf-pay-purchase');
+  var payable=allPurchases.filter(function(p){ return p.SupplierID===supplierId && p.RecordStatus!=='Deleted' && Number(p.Balance)>0.01; });
+  sel.innerHTML='<option value="">General payment — not tied to a specific order</option>'+
+    payable.map(function(p){ return '<option value="'+p.PurchaseID+'" data-balance="'+p.Balance+'">'+p.PurchaseID+' — owes $'+money(p.Balance)+'</option>'; }).join('');
+}
+document.getElementById('pf-pay-supplier').addEventListener('change', refreshPayableOrders);
+document.getElementById('pf-pay-purchase').addEventListener('change', function(){
+  var opt=this.options[this.selectedIndex];
+  var balance=opt.getAttribute('data-balance');
+  document.getElementById('pf-pay-amount').value = balance ? balance : '';
+});
+document.getElementById('payment-modal-cancel').addEventListener('click',function(){document.getElementById('payment-modal').classList.remove('active');});
+document.getElementById('payment-modal-save').addEventListener('click',function(){
+  var msgEl=document.getElementById('payment-modal-msg');
+  var payload={supplierId:document.getElementById('pf-pay-supplier').value,
+    purchaseId:document.getElementById('pf-pay-purchase').value,
+    amount:document.getElementById('pf-pay-amount').value,
+    method:document.getElementById('pf-pay-method').value, reference:document.getElementById('pf-pay-reference').value.trim()};
+  if(!payload.supplierId||!payload.amount){msgEl.innerHTML='<div class="msg error">Supplier and amount are required.</div>';return;}
+  call('createPayment',session.userId,payload).then(function(res){
+    if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
+    document.getElementById('payment-modal').classList.remove('active');
+    toast('Payment recorded.'); loadPayments(); loadSuppliers(true); loadPurchases();
+  }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+});
+
+// ── Cash Drawer ────────────────────────────────────────────────────────────
+function loadDrawer(){
+  call('getCurrentDrawer',session.userId).then(function(res){
+    var el=document.getElementById('drawer-panel');
+    if(!res.success){el.innerHTML='<div class="empty-state">'+res.message+'</div>';return;}
+    if(!res.drawer){
+      el.innerHTML='<h3>No open shift</h3><div class="field"><label>Opening balance</label><input type="text" id="drawer-opening" value="0"></div>'+
+        '<button class="btn small" id="open-drawer-btn">Open shift</button>';
+      document.getElementById('open-drawer-btn').addEventListener('click',function(){
+        call('openDrawer',session.userId,document.getElementById('drawer-opening').value).then(function(r){
+          if(!r.success) return toast(r.message,true);
+          toast('Shift opened.'); loadDrawer();
+        }).catch(function(err){toast(err,true);});
+      });
+    } else {
+      var d=res.drawer;
+      el.innerHTML='<h3>Shift open since '+d.Date+'</h3>'+
+        '<div class="cards" style="margin-bottom:16px;">'+
+        '<div class="card"><div class="label">Opening balance</div><div class="value">$'+money(d.OpeningBalance)+'</div></div>'+
+        '<div class="card"><div class="label">Cash sales</div><div class="value">$'+money(d.CashSales)+'</div></div>'+
+        '<div class="card"><div class="label">Card sales</div><div class="value">$'+money(d.CardSales)+'</div></div>'+
+        '<div class="card"><div class="label">Mobile money</div><div class="value">$'+money(d.MobileMoney)+'</div></div>'+
+        '</div><div class="field"><label>Counted cash (to close shift)</label><input type="text" id="drawer-closing" value="0"></div>'+
+        '<button class="btn small" id="close-drawer-btn">Close shift</button>';
+      document.getElementById('close-drawer-btn').addEventListener('click',function(){
+        call('closeDrawer',session.userId,document.getElementById('drawer-closing').value).then(function(r){
+          if(!r.success) return toast(r.message,true);
+          toast('Shift closed. Difference: $'+money(r.difference)); loadDrawer();
+        }).catch(function(err){toast(err,true);});
+      });
+    }
+  }).catch(function(err){toast(err,true);});
+}
+
+// ── Users ──────────────────────────────────────────────────────────────────
+function loadUsers(){
+  call('getUsers',session.userId).then(function(res){
+    if(!res.success){document.getElementById('users-tbody').innerHTML='<tr><td colspan="6"><div class="empty-state">'+res.message+'</div></td></tr>';return;}
+    allRoles=res.roles;
+    document.getElementById('uf-role').innerHTML=allRoles.map(function(r){return '<option value="'+r.RoleID+'">'+esc(r.RoleName)+'</option>';}).join('');
+    var tbody=document.getElementById('users-tbody');
+    if(!res.users.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state">No users yet</div></td></tr>';return;}
+    tbody.innerHTML=res.users.map(function(u){
+      var active=u.Active!==false&&u.Active!=='FALSE';
+      return '<tr><td>'+esc(u.FullName)+'</td><td>'+esc(u.Username)+'</td><td>'+esc(u.RoleName)+'</td>'+
+        '<td><span class="pill '+(active?'ok':'bad')+'">'+(active?'Active':'Disabled')+'</span></td><td>'+(u.LastLogin?new Date(u.LastLogin).toLocaleString():'—')+'</td>'+
+        '<td class="row-actions"><button onclick="toggleUser(\''+u.UserID+'\','+(!active)+')">'+(active?'Disable':'Enable')+'</button>'+
+        '<button onclick="resetPassword(\''+u.UserID+'\')">Reset password</button></td></tr>';
+    }).join('');
+  }).catch(function(err){toast(err,true);});
+}
+function toggleUser(userId,setActive){
+  call('setUserActive',session.userId,userId,setActive).then(function(res){
+    if(!res.success) return toast(res.message,true);
+    toast('Updated.'); loadUsers();
+  }).catch(function(err){toast(err,true);});
+}
+function resetPassword(userId){
+  var pw=prompt('New password (min 4 characters):');
+  if(!pw) return;
+  call('resetUserPassword',session.userId,userId,pw).then(function(res){
+    if(!res.success) return toast(res.message,true);
+    toast('Password reset.');
+  }).catch(function(err){toast(err,true);});
+}
+document.getElementById('add-user-btn').addEventListener('click',function(){
+  document.getElementById('user-modal-msg').innerHTML='';
+  document.getElementById('uf-name').value=''; document.getElementById('uf-username').value=''; document.getElementById('uf-password').value='';
+  document.getElementById('user-modal').classList.add('active');
+});
+document.getElementById('user-modal-cancel').addEventListener('click',function(){document.getElementById('user-modal').classList.remove('active');});
+document.getElementById('user-modal-save').addEventListener('click',function(){
+  var msgEl=document.getElementById('user-modal-msg');
+  var payload={fullName:document.getElementById('uf-name').value.trim(),username:document.getElementById('uf-username').value.trim(),
+    password:document.getElementById('uf-password').value, roleId:document.getElementById('uf-role').value};
+  if(!payload.fullName||!payload.username||!payload.password){msgEl.innerHTML='<div class="msg error">All fields are required.</div>';return;}
+  call('createUser',session.userId,payload).then(function(res){
+    if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
+    document.getElementById('user-modal').classList.remove('active');
+    toast('User created.'); loadUsers();
+  }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+});
+
+// ── Settings ───────────────────────────────────────────────────────────────
+function loadSettings(){
+  call('getSettings',session.userId).then(function(res){
+    if(!res.success) return toast(res.message,true);
+    var s=res.settings, b=res.business;
+    document.getElementById('bi-name').value=b.BusinessName||'';
+    document.getElementById('bi-owner').value=b.Owner||'';
+    document.getElementById('bi-license').value=b.LicenseNumber||'';
+    document.getElementById('bi-tax').value=b.TaxID||'';
+    document.getElementById('bi-phone').value=b.Phone||'';
+    document.getElementById('bi-email').value=b.Email||'';
+    document.getElementById('bi-address').value=b.Address||'';
+    document.getElementById('s-currency').value=s.Currency||'';
+    document.getElementById('s-vat').value=s.VATRate||'';
+    document.getElementById('s-lowstock').value=s.LowStockAlertThreshold||'';
+    document.getElementById('s-expirydays').value=s.ExpiryAlertDays||'';
+    document.getElementById('s-receiptheader').value=s.ReceiptHeader||'';
+    document.getElementById('s-receiptfooter').value=s.ReceiptFooter||'';
+  }).catch(function(err){toast(err,true);});
+}
+document.getElementById('save-business-btn').addEventListener('click',function(){
+  var payload={BusinessName:document.getElementById('bi-name').value.trim(),Owner:document.getElementById('bi-owner').value.trim(),
+    LicenseNumber:document.getElementById('bi-license').value.trim(),TaxID:document.getElementById('bi-tax').value.trim(),
+    Phone:document.getElementById('bi-phone').value.trim(),Email:document.getElementById('bi-email').value.trim(),
+    Address:document.getElementById('bi-address').value.trim(),LogoURL:''};
+  call('updateBusinessInfo',session.userId,payload).then(function(res){
+    if(!res.success) return toast(res.message,true);
+    toast('Business info saved.');
+  }).catch(function(err){toast(err,true);});
+});
+document.getElementById('save-settings-btn').addEventListener('click',function(){
+  var payload={Currency:document.getElementById('s-currency').value.trim(),VATRate:document.getElementById('s-vat').value.trim(),
+    LowStockAlertThreshold:document.getElementById('s-lowstock').value.trim(),ExpiryAlertDays:document.getElementById('s-expirydays').value.trim(),
+    ReceiptHeader:document.getElementById('s-receiptheader').value.trim(),ReceiptFooter:document.getElementById('s-receiptfooter').value.trim()};
+  call('updateSettings',session.userId,payload).then(function(res){
+    if(!res.success) return toast(res.message,true);
+    toast('Settings saved.');
+  }).catch(function(err){toast(err,true);});
+});
+
+// ── Receipt printing ─────────────────────────────────────────────────────
+function ensureSettingsLoaded(){
+  if(cachedSettings) return Promise.resolve();
+  return call('getSettings',session.userId).then(function(res){
+    if(res.success){ cachedSettings=res.settings; cachedBusiness=res.business; }
+  }).catch(function(){});
+}
+function printReceipt(saleId){
+  Promise.all([ensureSettingsLoaded(), call('getSaleDetails',session.userId,saleId)]).then(function(results){
+    var res=results[1];
+    if(!res.success){ toast(res.message,true); return; }
+    renderReceiptHtml(res.sale, res.items);
+    setTimeout(function(){ window.print(); }, 60);
+  }).catch(function(err){ toast(err,true); });
+}
+function renderReceiptHtml(sale, items){
+  var b=cachedBusiness||{}, s=cachedSettings||{};
+  var currency=s.Currency||'';
+  var rows=items.map(function(i){
+    return '<tr><td colspan="2">'+esc(i.ProductName)+'</td></tr>'+
+      '<tr><td>'+i.Quantity+' x '+money(i.UnitPrice)+'</td><td class="r">'+currency+' '+money(i.Total)+'</td></tr>';
+  }).join('');
+  document.getElementById('receipt-print-area').innerHTML=
+    '<div class="receipt">'+
+      (s.ReceiptHeader?'<div class="center">'+esc(s.ReceiptHeader)+'</div>':'')+
+      '<h2>'+esc(b.BusinessName||'Pharmacy')+'</h2>'+
+      (b.Address?'<div class="center">'+esc(b.Address)+'</div>':'')+
+      (b.Phone?'<div class="center">'+esc(b.Phone)+'</div>':'')+
+      '<hr>'+
+      '<div>Sale: '+esc(sale.SaleID)+'</div>'+
+      '<div>Date: '+new Date(sale.SaleDate).toLocaleString()+'</div>'+
+      '<hr>'+
+      '<table>'+rows+'</table>'+
+      '<hr>'+
+      '<table>'+
+        '<tr><td>Subtotal</td><td class="r">'+currency+' '+money(sale.TotalAmount)+'</td></tr>'+
+        '<tr><td>Discount</td><td class="r">'+currency+' '+money(sale.Discount)+'</td></tr>'+
+        '<tr><td>Tax</td><td class="r">'+currency+' '+money(sale.Tax)+'</td></tr>'+
+        '<tr><td><b>Total</b></td><td class="r"><b>'+currency+' '+money(sale.GrandTotal)+'</b></td></tr>'+
+        '<tr><td>Paid ('+esc(sale.PaymentMethod)+')</td><td class="r">'+currency+' '+money(sale.AmountReceived)+'</td></tr>'+
+        '<tr><td>Change</td><td class="r">'+currency+' '+money(sale.ChangeGiven)+'</td></tr>'+
+      '</table>'+
+      '<hr>'+
+      '<div class="center">'+esc(s.ReceiptFooter||'Thank you for your purchase')+'</div>'+
+    '</div>';
+}
+</script>
+</body>
+</html>
