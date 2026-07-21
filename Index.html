@@ -314,7 +314,18 @@ tr:last-child td{border-bottom:none;}
           <button class="btn small" id="add-product-btn">+ Add product</button>
         </div>
       </div>
-      <div class="toolbar"><input type="search" id="inventory-search" placeholder="Search products…"></div>
+      <div class="toolbar">
+        <input type="search" id="inventory-search" placeholder="Search products…">
+        <select id="inventory-category-filter" style="margin-left: 10px; max-width: 200px;">
+          <option value="">All categories</option>
+        </select>
+        <select id="inventory-stock-filter" style="margin-left: 10px; max-width: 200px;">
+          <option value="">All stock status</option>
+          <option value="in_stock">In stock</option>
+          <option value="low_stock">Low stock</option>
+          <option value="out_of_stock">Out of stock</option>
+        </select>
+      </div>
       <div class="panel" style="padding:0;">
         <table><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr></thead>
         <tbody id="inventory-tbody"></tbody></table>
@@ -873,6 +884,8 @@ function loadCategories(){
     sel.innerHTML=allCategories.map(function(c){return '<option value="'+c.CategoryID+'">'+esc(c.CategoryName)+'</option>';}).join('');
     var posSel=document.getElementById('pos-category-filter');
     posSel.innerHTML='<option value="">All categories</option>'+allCategories.map(function(c){return '<option value="'+c.CategoryID+'">'+esc(c.CategoryName)+'</option>';}).join('');
+    var invSel=document.getElementById('inventory-category-filter');
+    if(invSel) invSel.innerHTML='<option value="">All categories</option>'+allCategories.map(function(c){return '<option value="'+c.CategoryID+'">'+esc(c.CategoryName)+'</option>';}).join('');
     renderCategoryList();
   });
 }
@@ -958,18 +971,23 @@ function addToCart(productId){
   if(!product) return;
   var existing=cart.filter(function(c){return c.productId===productId;})[0];
   var currentQty=existing?existing.qty:0;
-  var step=product.SellByPill&&product.PillsPerUnit>0?1:1;
+  var step=1;
   if(currentQty+step>product.DisplayStock){toast('Not enough stock.',true);return;}
   var margin=Number(product.DefaultMargin)||0;
-  var calcPrice=margin>0?Number(product.PurchasePrice)*(1+margin/100):Number(product.SellingPrice);
+  var unitPurchasePrice=Number(product.PurchasePrice)||0;
+  var unitCatalogPrice=Number(product.SellingPrice)||0;
+  var isPill=product.SellByPill===true||product.SellByPill==='TRUE';
+  var ppu=isPill?Number(product.PillsPerUnit)||1:1;
+  var pillPrice=margin>0?unitPurchasePrice*(1+margin/100):unitCatalogPrice;
+  if(isPill) pillPrice=pillPrice/ppu;
   if(existing) existing.qty+=step;
   else cart.push({
     productId:product.ProductID,name:product.ProductName,
-    price:calcPrice, catalogPrice:Number(product.SellingPrice),
+    price:pillPrice, catalogPrice:isPill?unitCatalogPrice/ppu:unitCatalogPrice,
     taxRate:Number(product.TaxRate)||0, qty:step, stock:product.DisplayStock,
-    marginUsed:margin, purchasePrice:Number(product.PurchasePrice)||0,
-    pillsPerUnit:Number(product.PillsPerUnit)||0,
-    sellByPill:product.SellByPill===true||product.SellByPill==='TRUE'
+    marginUsed:margin, purchasePrice:isPill?unitPurchasePrice/ppu:unitPurchasePrice,
+    pillsPerUnit:ppu,
+    sellByPill:isPill
   });
   renderCart();
 }
@@ -990,19 +1008,50 @@ function changeCartMargin(productId,newMargin){
   item.price=margin>0?item.purchasePrice*(1+margin/100):item.catalogPrice;
   renderCart();
 }
+function ppuFor(item){return item.pillsPerUnit||1;}
+function updateSellByPillQty(productId){
+  var item=cart.filter(function(c){return c.productId===productId;})[0];
+  if(!item) return;
+  var ppu=ppuFor(item);
+  var unitsInput=document.getElementById('sbp-u-'+productId);
+  var pillsInput=document.getElementById('sbp-p-'+productId);
+  var u=Number(unitsInput.value)||0;
+  var p=Number(pillsInput.value)||0;
+  if(p>=ppu){u+=Math.floor(p/ppu);p=p%ppu;}
+  var total=u*ppu+p;
+  if(total<=0) cart=cart.filter(function(c){return c.productId!==productId;});
+  else if(total>item.stock){toast('Not enough stock.',true);return;}
+  else item.qty=total;
+  renderCart();
+}
 function renderCart(){
   var el=document.getElementById('pos-cart');
   if(!cart.length){el.innerHTML='<div class="empty-state">Cart is empty</div>';}
   else{
     el.innerHTML=cart.map(function(c,idx){
       var marginOpts=marginPresets.map(function(m){return '<option value="'+m+'"'+(c.marginUsed==m?' selected':'')+'>'+m+'%</option>';}).join('');
-      var stockInfo=c.sellByPill&&c.pillsPerUnit>0
-        ? c.qty+' pills of '+c.stock
-        : c.qty+' / '+c.stock;
+      var priceLabel='$'+money(c.price)+' per pill';
+      var controls='';
+      if(c.sellByPill&&c.pillsPerUnit>0){
+        var ppu=c.pillsPerUnit;
+        var units=Math.floor(c.qty/ppu);
+        var pills=c.qty%ppu;
+        controls=
+          '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">'+
+            '<label style="font-size:11px;font-weight:600;">Units</label>'+
+            '<input id="sbp-u-'+c.productId+'" type="number" min="0" value="'+units+'" style="width:50px;font-size:12px;padding:2px 4px;border:1px solid var(--line);border-radius:4px;" onchange="updateSellByPillQty(\''+c.productId+'\')" oninput="updateSellByPillQty(\''+c.productId+'\')">'+
+            '<label style="font-size:11px;font-weight:600;">Pills</label>'+
+            '<input id="sbp-p-'+c.productId+'" type="number" min="0" max="'+(ppu-1)+'" value="'+pills+'" style="width:50px;font-size:12px;padding:2px 4px;border:1px solid var(--line);border-radius:4px;" onchange="updateSellByPillQty(\''+c.productId+'\')" oninput="updateSellByPillQty(\''+c.productId+'\')">'+
+            '<span style="font-size:10.5px;color:var(--ink-soft);">= '+c.qty+' pills</span>'+
+          '</div>';
+        priceLabel='$'+money(c.price)+' per pill · $'+money(c.price*ppu)+' per unit';
+      } else {
+        controls='<div class="qty-controls"><button onclick="changeCartQty(\''+c.productId+'\',-1)">−</button><span>'+c.qty+'</span><button onclick="changeCartQty(\''+c.productId+'\',1)">+</button></div>';
+      }
       return '<div class="cart-item" style="flex-direction:column;align-items:stretch;gap:4px;">'+
         '<div style="display:flex;justify-content:space-between;align-items:center;">'+
-          '<div><b>'+esc(c.name)+'</b><br><span style="color:var(--ink-soft);font-size:11px;">$'+money(c.price)+' each · '+stockInfo+'</span></div>'+
-          '<div class="qty-controls"><button onclick="changeCartQty(\''+c.productId+'\',-1)">−</button><span>'+c.qty+'</span><button onclick="changeCartQty(\''+c.productId+'\',1)">+</button></div>'+
+          '<div><b>'+esc(c.name)+'</b><br><span style="color:var(--ink-soft);font-size:11px;">'+priceLabel+'</span></div>'+
+          controls+
         '</div>'+
         '<div style="display:flex;gap:6px;align-items:center;">'+
           '<select style="font-size:11px;padding:2px 4px;border:1px solid var(--line);border-radius:4px;" onchange="changeCartMargin(\''+c.productId+'\',this.value)">'+marginOpts+'</select>'+
@@ -1049,10 +1098,26 @@ document.getElementById('pos-checkout-btn').addEventListener('click',function(){
 function renderInventoryTable(){
   var tbody=document.getElementById('inventory-tbody');
   var filter=(document.getElementById('inventory-search').value||'').toLowerCase();
-  var list=allProducts.filter(function(p){return p.ProductName.toLowerCase().indexOf(filter)>-1;});
-  if(!list.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state">No products yet</div></td></tr>';return;}
+  var catFilter=document.getElementById('inventory-category-filter').value;
+  var stockFilter=document.getElementById('inventory-stock-filter').value;
+  var defaultLowStock=Number(document.getElementById('s-lowstock').value||0);
+
+  var list=allProducts.filter(function(p){
+    if(filter && p.ProductName.toLowerCase().indexOf(filter)===-1 && (p.GenericName||'').toLowerCase().indexOf(filter)===-1) return false;
+    if(catFilter && p.CategoryID!==catFilter) return false;
+    
+    var threshold = (p.ReorderLevel !== undefined && p.ReorderLevel !== '' && Number(p.ReorderLevel) > 0) ? Number(p.ReorderLevel) : defaultLowStock;
+    if(stockFilter==='out_of_stock' && p.CurrentStock>0) return false;
+    if(stockFilter==='low_stock' && (p.CurrentStock<=0 || p.CurrentStock>threshold)) return false;
+    if(stockFilter==='in_stock' && p.CurrentStock<=threshold) return false;
+    
+    return true;
+  });
+
+  if(!list.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state">No products found</div></td></tr>';return;}
   tbody.innerHTML=list.map(function(p){
-    var low=p.CurrentStock<=Number(p.ReorderLevel||0);
+    var threshold = (p.ReorderLevel !== undefined && p.ReorderLevel !== '' && Number(p.ReorderLevel) > 0) ? Number(p.ReorderLevel) : defaultLowStock;
+    var low=p.CurrentStock<=threshold;
     var actions='';
     if(can('PERM_EDIT_PRODUCT')) actions+='<button onclick="openProductModal(\''+p.ProductID+'\')">Edit</button>';
     if(can('PERM_DELETE_PRODUCT')) actions+='<button class="danger" onclick="removeProduct(\''+p.ProductID+'\')">Delete</button>';
@@ -1061,6 +1126,8 @@ function renderInventoryTable(){
   }).join('');
 }
 document.getElementById('inventory-search').addEventListener('input',renderInventoryTable);
+document.getElementById('inventory-category-filter').addEventListener('change',renderInventoryTable);
+document.getElementById('inventory-stock-filter').addEventListener('change',renderInventoryTable);
 
 function openProductModal(productId){
   editingProductId=productId||null;

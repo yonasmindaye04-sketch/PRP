@@ -13,14 +13,19 @@ function getDashboardSummary(userId) {
   var inventory = readTable(SHEETS.INVENTORY).rows;
   var expenses = readTable(SHEETS.EXPENSES).rows;
 
-  var todayStr = today();
+  var todayStr = new Date().toDateString();
   var todaysSales = sales.filter(function (s) { return new Date(s.SaleDate).toDateString() === todayStr; });
   var todaysTotal = todaysSales.reduce(function (sum, s) { return sum + Number(s.GrandTotal || 0); }, 0);
   var todaysExpenses = expenses.filter(function (e) { return new Date(e.ExpenseDate).toDateString() === todayStr; })
     .reduce(function (sum, e) { return sum + Number(e.Amount || 0); }, 0);
 
+  var settings = getSettingsMap();
+  var defaultLowStock = Number(settings.LowStockAlertThreshold || 0);
   var stockByProduct = {}; inventory.forEach(function (inv) { stockByProduct[inv.ProductID] = Number(inv.CurrentStock); });
-  var lowStockCount = products.filter(function (p) { return (stockByProduct[p.ProductID] || 0) <= Number(p.ReorderLevel || 0); }).length;
+  var lowStockCount = products.filter(function (p) {
+    var threshold = (p.ReorderLevel !== undefined && p.ReorderLevel !== '' && Number(p.ReorderLevel) > 0) ? Number(p.ReorderLevel) : defaultLowStock;
+    return (stockByProduct[p.ProductID] || 0) <= threshold;
+  }).length;
 
   var expiringSoon = readTable(SHEETS.BATCHES).rows.filter(function (b) {
     if (Number(b.Quantity) <= 0 || !b.ExpiryDate) return false;

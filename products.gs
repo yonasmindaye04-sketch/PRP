@@ -117,7 +117,12 @@ function getLowStockProducts(userId) {
   authorize(userId, PERMISSIONS.VIEW_PRODUCTS);
   var res = getProducts(userId);
   if (!res.success) return res;
-  var low = res.products.filter(function (p) { return p.CurrentStock <= Number(p.ReorderLevel || 0); });
+  var settings = getSettingsMap();
+  var defaultLowStock = Number(settings.LowStockAlertThreshold || 0);
+  var low = res.products.filter(function (p) {
+    var threshold = (p.ReorderLevel !== undefined && p.ReorderLevel !== '' && Number(p.ReorderLevel) > 0) ? Number(p.ReorderLevel) : defaultLowStock;
+    return p.CurrentStock <= threshold;
+  });
   return ok({ products: low });
   })();
 }

@@ -5,11 +5,11 @@
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    BROWSER (SPA)                        │
-│  Index.html — 1770 lines of vanilla HTML/CSS/JS         │
+│  Index.html — ~1940 lines of vanilla HTML/CSS/JS        │
 │  No framework, no build step, no external dependencies  │
 │                                                         │
 │  ┌────────────┐  ┌────────────┐  ┌──────────────────┐  │
-│  │ Login      │  │ App Shell  │  │ 11 Modals        │  │
+│  │ Login      │  │ App Shell  │  │ Modals           │  │
 │  │ Screen     │  │ + Sidebar  │  │ (CRUD forms,     │  │
 │  │            │  │ + 11 Views │  │  detail views)   │  │
 │  └────────────┘  └────────────┘  └──────────────────┘  │
@@ -28,9 +28,9 @@
 │  │ constants.gs │  │ database.gs  │  │ utilities.gs │  │
 │  │ Schema, IDs, │  │ ONLY file    │  │ nextId, hash,│  │
 │  │ permissions  │  │ touching     │  │ audit log,   │  │
-│  │              │  │ Range objects│  │ ok(), fail() │  │
-│  └─────────────┘  └──────────────┘  └──────────────┘  │
-│                                                         │
+│  │              │  │ Range objects│  │ safe(), ok() │  │
+│  └─────────────┘  └──────────────┘  │ fail()       │  │
+│                                      └──────────────┘  │
 │  ┌────────────┐  ┌──────────────┐  ┌──────────────┐   │
 │  │ auth.gs    │  │ setup.gs     │  │ settings.gs  │   │
 │  │ Login +    │  │ initialize   │  │ Key/value +  │   │
@@ -43,7 +43,9 @@
 │  │products.gs │  │ sales.gs     │  │purchases.gs  │   │
 │  │ Catalog +  │  │ POS + FEFO   │  │ PO → batches │   │
 │  │ Batches +  │  │ batch pick + │  │ → stock →    │   │
-│  │ Inventory  │  │ cash drawer  │  │ supplier bal │   │
+│  │ Inventory  │  │ pill support +│  │ supplier bal │   │
+│  │ + pill     │  │ dynamic      │  │ + supplier   │   │
+│  │ deduction  │  │ pricing      │  │ details      │   │
 │  └────────────┘  └──────────────┘  └──────────────┘   │
 │                                                         │
 │  ┌────────────┐  ┌──────────────┐  ┌──────────────┐   │
@@ -60,10 +62,6 @@
 │  │ disable    │  │ alerts,      │                      │
 │  └────────────┘  │ profit       │                      │
 │                   └──────────────┘                      │
-│                                                         │
-│  ┌──────────────┐  ┌────────────────────────────────┐  │
-│  │ inventory.gs │  │ (legacy v0 — see §10)          │  │
-│  └──────────────┘  └────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────┘
                           │
                           ▼
@@ -102,6 +100,11 @@ Defines every constant the system references:
 - **`PERMISSIONS`** — 21 permission constants (`PERM_VIEW_DASHBOARD`, `PERM_SELL`, `PERM_MANAGE_PURCHASES`, etc.)
 - **`CACHE_TTL_SECONDS`** — 1800 (30 minutes), used for permissions and settings cache
 
+Notable schema fields added for new features:
+- **Products**: `DefaultMargin`, `PillsPerUnit`, `SellByPill`
+- **Inventory**: `LoosePills`, `LoosePillsBatchID`
+- **SaleItems**: `MarginUsed`
+
 ### 2.2 `database.gs` — Database Layer (the swap seam)
 
 The only file that touches `SpreadsheetApp` Range objects. Every other module reads/writes through these functions:
@@ -127,6 +130,7 @@ login(username, password)
   → find user in Users sheet by Username
   → verify PasswordHash matches hashPassword(password)
   → update LastLogin timestamp
+  → logAudit(userId, 'Logged in')
   → return { userId, name, roleId, roleName, permissions[] }
 
 authorize(userId, permissionId)    ← called at top of every privileged function
@@ -137,17 +141,29 @@ authorize(userId, permissionId)    ← called at top of every privileged functio
 
 Permissions are **data-driven**: Roles, Permissions, and RolePermissions live in the sheet. The role→permissions map is cached in `CacheService` for 30 minutes. `clearPermissionCache()` invalidates immediately.
 
-### 2.4 `products.gs` — Product Catalog, Batches & Inventory
+### 2.4 `utilities.gs` — Shared Helpers
+
+| Function | Purpose |
+|---|---|
+| `nextId(prefix, sheetName, idField)` | Sequential, human-readable IDs (e.g., `MED000042`). Scans sheet for highest existing number. |
+| `nowIso()` | Current timestamp in ISO format. |
+| `hashPassword(plain)` | SHA-256 hash via `Utilities.computeDigest`. |
+| `logAudit(userId, action, details)` | Writes to AuditLogs sheet with UUID, timestamp, user, action, details. |
+| `ok(data)` | Returns `{ success: true, ...data }`. |
+| `fail(message)` | Returns `{ success: false, message: '...' }`. |
+| `safe(fn)` | Wraps a function body in try/catch. Returns a callable that catches exceptions and returns `fail()` instead of throwing. Used by every module function. |
+
+### 2.5 `products.gs` — Product Catalog, Batches & Inventory
 
 The most complex module. Three tables work together:
 
-- **Products** — the catalog row (name, pricing, reorder levels, supplier)
+- **Products** — the catalog row (name, pricing, reorder levels, supplier, default margin, pill config)
 - **Batches** — individual deliveries with their own expiry date and purchase price
-- **Inventory** — a derived rollup: `CurrentStock = SUM(Batches.Quantity WHERE ProductID = X)`
+- **Inventory** — a derived rollup: `CurrentStock = SUM(Batches.Quantity WHERE ProductID = X)`, plus `LoosePills` and `LoosePillsBatchID` for pill-selling products
 
 **Key invariant:** `Inventory.CurrentStock` is **never edited directly**. Every stock change goes through:
 
-1. A batch quantity change (via `receiveBatch` or `deductStockFEFO`)
+1. A batch quantity change (via `receiveBatch` or `deductStockFEFO` or `deductPillsFEFO`)
 2. `recalculateInventory()` recomputes from batches and writes the new total
 3. A `StockMovements` row is appended describing the change
 
@@ -165,27 +181,60 @@ recalculateInventory(productId, ...)
 return consumed[]
 ```
 
-### 2.5 `sales.gs` — Point of Sale
+**Pill FEFO deduction (`deductPillsFEFO`):**
+```
+get product.PillsPerUnit, Inventory.LoosePills, Inventory.CurrentStock
+
+Case 1: loose pills ≥ pills wanted
+  → decrement LoosePills, log StockMovement, return
+
+Case 2: need to break new strips
+  → pillsStillNeeded = pillsWanted - loosePills
+  → unitsToBreak = ceil(pillsStillNeeded / pillsPerUnit)
+  → deductStockFEFO(productId, unitsToBreak, ...)  ← breaks whole units via FEFO
+  → newLoosePills = loosePills + (unitsToBreak × pillsPerUnit) - pillsWanted
+  → update Inventory.LoosePills and LoosePillsBatchID
+  → return consumed[]
+```
+
+**getProducts return shape:**
+```js
+{
+  ProductID, ProductName, CategoryName, PurchasePrice, SellingPrice,
+  TaxRate, ReorderLevel, CurrentStock, Active, DefaultMargin,
+  PillsPerUnit, SellByPill, LoosePills, LoosePillsBatchID,
+  DisplayStock  // pills if SellByPill, units otherwise
+}
+```
+
+### 2.6 `sales.gs` — Point of Sale
 
 ```
-createSale(userId, cart[{productId, qty}], options)
+createSale(userId, cart[{productId, qty, unitPrice, marginUsed}], options)
   1. validate all cart items (product exists, enough stock)
-  2. compute line totals (unitPrice × qty + tax)
+     - for sell-by-pill products: checks stock in pills (CurrentStock × PillsPerUnit + LoosePills)
+     - for normal products: checks CurrentStock
+  2. compute line totals using the dynamic unitPrice from cart (not the catalog price)
   3. compute grandTotal = subtotal - discount + tax
   4. insert Sales row (SALE000001, timestamp, cashier, totals, payment method)
   5. for each cart item:
-       deductStockFEFO(productId, qty, 'Sale', 'Sale', saleId, ...)
+       if product.SellByPill:
+         deductPillsFEFO(productId, qty, 'Sale', 'Sale', saleId, ...)
+       else:
+         deductStockFEFO(productId, qty, 'Sale', 'Sale', saleId, ...)
        for each consumed batch:
-         insert SaleItems row with the BatchID that supplied it
+         insert SaleItems row with BatchID, UnitPrice, MarginUsed
   6. bumpOpenDrawer(cashierId, field, grandTotal)  ← updates running shift totals
   7. return { saleId, total, change }
 ```
 
+**Dynamic pricing:** The cart sends `unitPrice` and `marginUsed` per item. The backend uses these instead of the catalog `SellingPrice`, enabling per-line margin selection at the POS.
+
 **Concurrency:** `LockService.getScriptLock()` prevents two concurrent sales from overselling the same batch.
 
-**SaleItems ↔ BatchID linkage:** Each SaleItem records which batch supplied its units. This means if a batch is recalled, you can trace it to every sale that received units from that batch.
+**SaleItems ↔ BatchID linkage:** Each SaleItem records which batch supplied its units, the unit price charged, and the margin used. This enables profitability analysis and batch traceability.
 
-### 2.6 `purchases.gs` — Purchase Orders
+### 2.7 `purchases.gs` — Purchase Orders
 
 ```
 createPurchase(userId, {supplierId, items[], discount, tax, paidAmount})
@@ -200,9 +249,15 @@ createPurchase(userId, {supplierId, items[], discount, tax, paidAmount})
   4. adjustSupplierBalance(supplierId, grandTotal - paidAmount)  ← increases what we owe
 ```
 
+**`getPurchaseDetails`** returns enriched data:
+- Purchase header + all line items with product names
+- Supplier contact details (phone, email, address, tax number, payment terms)
+- Payment history with recorded-by user names
+- Financial summary (totals, balance due)
+
 **Soft delete (Owner-only):** `deletePurchase` reverses stock (reduces batch quantities, recalculates inventory), reverses the supplier balance for the unpaid portion, and marks `RecordStatus = 'Deleted'` with a required reason. Partial reversals are handled — if some of the batch was already sold, only the remaining quantity is reversed.
 
-### 2.7 `returns.gs` — Sale Returns
+### 2.8 `returns.gs` — Sale Returns
 
 ```
 createReturn(userId, saleId, productId, qty, reason)
@@ -216,7 +271,7 @@ createReturn(userId, saleId, productId, qty, reason)
   5. bumpOpenDrawer(cashierId, field, -refundAmount)  ← subtracts from shift totals
 ```
 
-### 2.8 `finance.gs` — Expenses, Income, Payments & Cash Drawer
+### 2.9 `finance.gs` — Expenses, Income, Payments & Cash Drawer
 
 **Expenses / Income / Payments** are straightforward CRUD with audit logging.
 
@@ -238,7 +293,7 @@ endShift(userId, countedCash)
 
 **ShiftSales** gives a permanent, itemized record of what each cashier sold during each shift — independent of the Sales table.
 
-### 2.9 `dashboard.gs` — Analytics
+### 2.10 `dashboard.gs` — Analytics
 
 Computed live from sheet data on each load (no rollup cache yet). Functions:
 
@@ -252,18 +307,6 @@ Computed live from sheet data on each load (no rollup cache yet). Functions:
 | `getProfitTrend(days)` | Daily profit (revenue − COGS − expenses) for the last N days |
 
 Profit computation: for each sale item, the cost is `SaleItem.Quantity × Batch.PurchasePrice` (the batch's actual cost, not the product's current purchase price).
-
-### 2.10 `inventory.gs` — Legacy v0 (to be removed)
-
-This file contains the old v0 implementations that use a flat product schema (`Name`, `Qty`, `Cost`, `Price`). It defines duplicate function names that conflict with `products.gs`:
-
-- `getProducts` (v0 uses `Name` field; v1 uses `ProductName`)
-- `createProduct` (v0 writes flat `Qty`, `Cost`, `Price`; v1 creates separate Batches and Inventory rows)
-- `updateProduct`, `deleteProduct`, `getLowStockProducts`
-
-It also calls undefined functions: `safe()` and `logActivity()`.
-
-**Action required:** Remove `inventory.gs` from the project. All its functionality is superseded by `products.gs` (v1).
 
 ---
 
@@ -290,6 +333,9 @@ Roles ──< RolePermissions >── Permissions
 Products ──< Batches
     │            │
     │            └──> Inventory (derived)
+    │                  ├── CurrentStock (sum of batch quantities)
+    │                  ├── LoosePills (individual pills from broken strips)
+    │                  └── LoosePillsBatchID (traceability for loose pills)
     ├──> Categories
     └──> Suppliers
 
@@ -331,7 +377,6 @@ All IDs are sequential, human-readable, zero-padded to 6 digits:
 - `createPurchase` (15s timeout)
 - `deletePurchase` (15s timeout)
 - `endShift` (15s timeout)
-- `adjustStock` (10s timeout in legacy `inventory.gs`)
 
 ---
 
@@ -354,7 +399,7 @@ All IDs are sequential, human-readable, zero-padded to 6 digits:
 | Create Product | `PERM_CREATE_PRODUCT` | `products.gs` |
 | Edit Product | `PERM_EDIT_PRODUCT` | `products.gs` |
 | Delete Product | `PERM_DELETE_PRODUCT` | `products.gs` |
-| Adjust Stock | `PERM_ADJUST_STOCK` | `inventory.gs` (legacy) |
+| Adjust Stock | `PERM_ADJUST_STOCK` | (reserved for future stock adjustment UI) |
 | Manage Categories | `PERM_MANAGE_CATEGORIES` | `masters.gs` |
 | Sell | `PERM_SELL` | `sales.gs` |
 | View Sales | `PERM_VIEW_SALES` | `sales.gs` (all sales) |
@@ -386,7 +431,7 @@ document.querySelectorAll('.nav-item[data-perm]').forEach(function(btn){
 
 Purchase deletion is **hardcoded to Owner-only** regardless of the RolePermissions sheet:
 ```js
-// purchases.gs:125
+// purchases.gs
 if (user.RoleID !== ROLE_IDS.OWNER) return fail('Only the Owner can delete a purchase.');
 ```
 
@@ -419,20 +464,34 @@ createPurchase()
 createSale()
   │
   ├── Validate all cart items (product exists, enough available stock)
+  │     Normal products: check CurrentStock
+  │     Sell-by-pill products: check CurrentStock × PillsPerUnit + LoosePills
   │
   ├── Sales row (header: cashier, totals, payment method)
   │
   ├── For each cart item:
-  │     └── deductStockFEFO(productId, qty)
-  │           ├── Get batches WHERE Quantity > 0, SORT BY ExpiryDate ASC
-  │           ├── For each batch (soonest expiry first):
-  │           │     ├── batch.Quantity -= take
-  │           │     └── consumed[] ← {batchId, qty, unitCost}
-  │           ├── recalculateInventory()
-  │           │     ├── Inventory row updated
-  │           │     └── StockMovements row (Type=Sale)
-  │           └── For each consumed batch:
-  │                 └── SaleItems row (links Sale → Batch → Product)
+  │     ├── Read product.SellByPill flag
+  │     │
+  │     ├── If SellByPill = true:
+  │     │     └── deductPillsFEFO(productId, qty)
+  │     │           ├── Check loose pills first (Inventory.LoosePills)
+  │     │           ├── If enough: decrement LoosePills, log StockMovement
+  │     │           └── If not enough: break new strips via deductStockFEFO
+  │     │                 → deduct whole units from soonest-expiring batch
+  │     │                 → store remaining loose pills with batch traceability
+  │     │
+  │     └── If SellByPill = false:
+  │           └── deductStockFEFO(productId, qty)
+  │                 ├── Get batches WHERE Quantity > 0, SORT BY ExpiryDate ASC
+  │                 ├── For each batch (soonest expiry first):
+  │                 │     ├── batch.Quantity -= take
+  │                 │     └── consumed[] ← {batchId, qty, unitCost}
+  │                 ├── recalculateInventory()
+  │                 │     ├── Inventory row updated
+  │                 │     └── StockMovements row (Type=Sale)
+  │                 └── For each consumed batch:
+  │                       └── SaleItems row (links Sale → Batch → Product)
+  │                             with UnitPrice, MarginUsed
   │
   └── bumpOpenDrawer(cashierId, paymentField, grandTotal)
 ```
@@ -471,6 +530,96 @@ End: endShift(countedCash)
   → CashDrawer row closed with ClosingBalance, Difference, ClosedAt
 ```
 
+### 5.5 Margin Pricing Flow
+
+**Standard product:**
+```
+Product Setup:
+  Product.DefaultMargin = 25 (%)
+  Product.PurchasePrice = $8.00
+  Product.SellingPrice = $10.00 (catalog price, fallback)
+  Product.SellByPill = false
+
+Add to Cart (POS):
+  → read Product.DefaultMargin (25%)
+  → calcPrice = PurchasePrice × (1 + margin/100) = $8.00 × 1.25 = $10.00
+  → cart item = { price: $10.00, marginUsed: 25, purchasePrice: $8.00, catalogPrice: $10.00 }
+
+Cashier changes margin dropdown to 30%:
+  → changeCartMargin(productId, 30)
+  → item.marginUsed = 30
+  → item.price = $8.00 × 1.30 = $10.40
+  → renderCart() recalculates totals
+
+Checkout:
+  → sends [{ productId, qty: 1, unitPrice: $10.40, marginUsed: 30 }]
+  → backend uses unitPrice (not catalog SellingPrice) for line totals
+  → SaleItems row records { UnitPrice: $10.40, MarginUsed: 30 }
+```
+
+**Sell-by-pill product:**
+```
+Product Setup:
+  Product.DefaultMargin = 25 (%)
+  Product.PurchasePrice = $8.00 (per unit)
+  Product.SellingPrice = $10.00 (per unit)
+  Product.PillsPerUnit = 10
+  Product.SellByPill = true
+
+Add to Cart (POS):
+  → calcPrice = PurchasePrice × (1 + margin/100) = $8.00 × 1.25 = $10.00
+  → per-pill price = $10.00 / 10 = $1.00
+  → cart item = { price: $1.00, marginUsed: 25, purchasePrice: $0.80, catalogPrice: $1.00 }
+  → qty starts at 1 (one pill)
+
+Cart UI shows: Units [0] Pills [1] = 1 pill, $1.00 per pill · $10.00 per unit
+
+Cashier changes margin to 30%:
+  → item.price = $0.80 × 1.30 = $1.04 per pill
+  → priceLabel updates: "$1.04 per pill · $10.40 per unit"
+```
+
+### 5.6 Pill Selling Flow
+
+```
+Product Setup:
+  Product.PillsPerUnit = 10 (strip of 10 pills)
+  Product.PurchasePrice = $8.00 (per unit)
+  Product.SellingPrice = $10.00 (per unit, catalog price)
+  Product.DefaultMargin = 25%
+  Product.SellByPill = true
+  Inventory.CurrentStock = 5 (five whole strips)
+  Inventory.LoosePills = 3 (three loose pills from a previous break)
+
+POS displays: "53 pills" (5 × 10 + 3)
+
+Customer taps product tile → addToCart():
+  → per-pill price = PurchasePrice × (1 + margin/100) / PillsPerUnit
+                   = $8.00 × 1.25 / 10 = $1.00 per pill
+  → cart item = { price: $1.00, qty: 1, pillsPerUnit: 10 }
+
+Cart renders Units + Pills inputs:
+  Units [0]  Pills [1]  = 1 pill
+
+Customer changes to Units [2] → updateSellByPillQty():
+  → total = 2 × 10 + 1 = 21 pills
+  → cart item.qty = 21
+
+Customer adjusts Pills to 3:
+  → total = 2 × 10 + 3 = 23 pills
+  → cart item.qty = 23
+
+Checkout:
+  → sends { productId, qty: 23, unitPrice: $1.00, marginUsed: 25 }
+  → backend calls deductPillsFEFO(productId, 23)
+    → loosePills (3) < pillsWanted (23), need 20 more
+    → unitsToBreak = ceil(20/10) = 2 strips
+    → deductStockFEFO(productId, 2) → deducts from soonest-expiring batch
+    → pillsFromNewBreaks = 2 × 10 = 20
+    → newLoosePills = 3 + 20 - 23 = 0
+    → Inventory updated: CurrentStock = 3, LoosePills = 0
+```
+
 ---
 
 ## 6. Caching Strategy
@@ -492,7 +641,7 @@ Dashboard metrics are computed **live** on each load (no caching). This is fine 
 The entire frontend is a single HTML file with:
 
 - **Inline CSS** (~185 lines of custom properties, layout, responsive breakpoints, print styles)
-- **Inline JS** (~1140 lines of vanilla JavaScript)
+- **Inline JS** (~1240 lines of vanilla JavaScript)
 - **No build step, no framework, no external dependencies**
 
 ### 7.2 Views (SPA routing)
@@ -502,16 +651,16 @@ The app uses a sidebar-based SPA pattern. Clicking a nav button hides all views 
 | View | ID | Content |
 |---|---|---|
 | Dashboard | `view-dashboard` | Summary cards, 4 charts (sales trend, top products, profit trend, category breakdown), low-stock table, expiry table |
-| Sales (POS) | `view-pos` | Product grid (grouped by category), cart panel, checkout controls |
+| Sales (POS) | `view-pos` | Product grid (grouped by category) with pill-aware stock display, cart panel with margin dropdowns and Units+Pills inputs for sell-by-pill products, checkout controls |
 | Sales History | `view-salesHistory` | Transaction table with drill-down modal |
-| Products | `view-inventory` | Product catalog table with search, add/edit/delete |
-| Purchases | `view-purchases` | Purchase order table with create/view/delete |
+| Products | `view-inventory` | Product catalog table with search, add/edit/delete, margin and pill configuration |
+| Purchases | `view-purchases` | Purchase order table with create/view/delete, detail modal with supplier info and payment history |
 | Suppliers | `view-suppliers` | Supplier table with add/edit |
 | Customers | `view-customers` | Customer table with add/edit |
 | Finance | `view-finance` | Tabbed: Expenses / Income / Supplier Payments |
 | Cash Drawer | `view-cashdrawer` | Start/end shift, shift history |
 | Users | `view-users` | User table with add, enable/disable, password reset |
-| Settings | `view-settings` | Business info form + system settings form |
+| Settings | `view-settings` | Business info form + system settings form (including margin presets) |
 
 ### 7.3 RPC Layer
 
@@ -534,7 +683,44 @@ function call(fn) {
 
 Every backend function returns `{ success: true, ...data }` or `{ success: false, message: '...' }`.
 
-### 7.4 UI Features
+### 7.4 POS-Specific Frontend Logic
+
+**Global state:**
+```js
+var marginPresets = [20, 25, 30];  // loaded from Settings.MarginPresets on login
+var cart = [];  // array of { productId, name, price, catalogPrice, taxRate, qty, stock,
+                //   marginUsed, purchasePrice, pillsPerUnit, sellByPill }
+```
+
+For sell-by-pill products, `price`, `catalogPrice`, and `purchasePrice` are all **per-pill** (divided by `PillsPerUnit` at add-to-cart time). `qty` is always the total number of pills.
+
+**Key functions:**
+| Function | Purpose |
+|---|---|
+| `posTileHtml(product)` | Renders product tile with pill-aware stock label ("53 pills" vs "5 in stock") |
+| `addToCart(productId)` | Detects SellByPill flag. For pill products, divides unit prices by PillsPerUnit to get per-pill price. Adds 1 pill per tap. |
+| `changeCartQty(productId, delta)` | Updates quantity for standard products (step = 1 unit) |
+| `updateSellByPillQty(productId)` | Reads Units + Pills inputs, computes total = (units × ppu) + pills. Auto-carries if pills ≥ ppu. Validates stock. |
+| `changeCartMargin(productId, newMargin)` | Recalculates line price from new margin using per-pill purchasePrice |
+| `renderCart()` | Renders cart: standard items get `[-] [+]` counter; sell-by-pill items get **Units** and **Pills** number inputs with live `oninput` updates |
+| `ppuFor(item)` | Returns pillsPerUnit (defaults to 1). Helper for sell-by-pill math. |
+| `loadMarginPresets()` | Loads margin presets from Settings on login |
+
+**Sell-by-pill cart UI:**
+```
+┌─────────────────────────────────────────┐
+│ Amoxicillin 500mg                       │
+│ $0.80 per pill · $8.00 per unit         │
+│                                         │
+│ Units [2]  Pills [3]  = 23 pills        │
+│                                         │
+│ [▼ 25%] 25% margin                     │
+└─────────────────────────────────────────┘
+```
+
+The `updateSellByPillQty` function fires on every `oninput` event. If the user types `pills ≥ ppu`, it auto-carries: `units += floor(pills/ppu); pills = pills % ppu`. If total ≤ 0, the item is removed from cart.
+
+### 7.5 UI Features
 
 - **Responsive:** Mobile sidebar with hamburger menu at ≤860px
 - **Charts:** Dependency-free vertical and horizontal bar charts built from plain divs
@@ -554,8 +740,7 @@ Every backend function returns `{ success: true, ...data }` or `{ success: false
 | Audit trail | Every significant action is logged with timestamp, user ID, action type, and details. |
 | LockService | Prevents concurrent overselling or double-ending of shifts. |
 | Input validation | Backend validates all inputs and returns descriptive error messages. |
-
-**Known limitation:** The `safe()` function wrapper is referenced in most v1 module files but is not defined in `utilities.gs` or any other file. This appears to be a missing function that needs to be added. It likely wraps try/catch to convert exceptions into `{ success: false, message: error.message }` responses.
+| Error wrapping | The `safe()` function wraps every module function in try/catch, converting exceptions to `{ success: false, message }` responses. |
 
 ---
 
@@ -585,62 +770,21 @@ Every backend function returns `{ success: true, ...data }` or `{ success: false
 
 ## 10. Known Issues & Technical Debt
 
-### 10.1 `inventory.gs` is legacy and conflicts with `products.gs`
-
-`inventory.gs` contains v0 functions that use the old flat schema and define **duplicate function names** that will cause Apps Script compilation errors:
-
-| Function | `inventory.gs` (v0) | `products.gs` (v1) |
-|---|---|---|
-| `getProducts` | Returns flat `Name`, `Qty`, `Cost`, `Price` | Returns joined with batch stock, category name |
-| `createProduct` | Writes flat `Qty`, `Cost`, `Price` directly | Creates separate Batches + Inventory rows |
-| `updateProduct` | Updates flat fields | Updates normalized fields |
-| `deleteProduct` | Sets `Active: false` | Sets `Active: false` (same) |
-| `getLowStockProducts` | Checks `Qty ≤ MinQty` | Checks `CurrentStock ≤ ReorderLevel` |
-
-**Fix:** Delete `inventory.gs` from the project. All its functionality is superseded by `products.gs`.
-
-### 10.2 Missing `safe()` function
-
-Most v1 module files (`auth.gs`, `users.gs`, `settings.gs`, `dashboard.gs`, `products.gs`, `sales.gs`, `purchases.gs`, `returns.gs`, `finance.gs`, `masters.gs`) wrap their function bodies in `safe(function() { ... })()`. This function is not defined in `utilities.gs` or any other file.
-
-Likely implementation:
-```js
-function safe(fn) {
-  return function() {
-    try { return fn(); }
-    catch(e) { return fail(e.message); }
-  };
-}
-```
-
-### 10.3 Missing `logActivity()` function
-
-`auth.gs:17` calls `logActivity(user.UserID, 'Logged in')` but this function is not defined. Only `logAudit()` exists in `utilities.gs`.
-
-### 10.4 `inventory.gs` uses wrong field names
-
-The `recordStockMovement` function in `inventory.gs` uses field names that don't match the HEADERS in `constants.gs`:
-
-| `inventory.gs` field | `constants.gs` HEADERS |
-|---|---|
-| `DateTime` | `Date` |
-| `ProductName` | (not in StockMovements schema) |
-| `QtyChange` | `Quantity` |
-| `ResultingQty` | `NewStock` |
-| `RefID` | `ReferenceID` |
-| `Notes` | `Remarks` |
-
-### 10.5 Dashboard computes live (no rollup cache)
+### 10.1 Dashboard computes live (no rollup cache)
 
 Dashboard metrics are computed by scanning all sales/products/inventory on every page load. The `DashboardCache` table exists in the schema but is not yet used. For pharmacies with thousands of transactions, consider writing rollups into `DashboardCache` after each sale/purchase.
 
-### 10.6 Prescriptions not wired
+### 10.2 Prescriptions not wired
 
 `Prescriptions` and `PrescriptionItems` tables exist in the schema and have column headers, but no backend functions or UI views reference them.
 
-### 10.7 Notifications not persisted
+### 10.3 Notifications not persisted
 
 `Notifications` table exists but the system computes alerts live on the dashboard rather than writing to the notifications table. A persisted, dismissible inbox UI is deferred.
+
+### 10.4 Adjust Stock permission reserved
+
+`PERM_ADJUST_STOCK` is defined in `constants.gs` but no stock adjustment UI or backend function currently uses it. This is reserved for a future manual stock count / correction feature.
 
 ---
 
@@ -648,15 +792,14 @@ Dashboard metrics are computed by scanning all sales/products/inventory on every
 
 | File | Lines | Role |
 |---|---|---|
-| `constants.gs` | 139 | Configuration & schema |
+| `constants.gs` | 140 | Configuration & schema |
 | `database.gs` | 129 | Database abstraction layer |
 | `auth.gs` | 75 | Authentication & authorization |
-| `utilities.gs` | 53 | Shared helpers |
+| `utilities.gs` | 65 | Shared helpers (safe(), ok(), fail(), logAudit, etc.) |
 | `setup.gs` | 60 | One-time initialization |
-| `products.gs` | 194 | Product catalog, batches, inventory |
-| `inventory.gs` | 149 | **Legacy v0 — to be removed** |
-| `sales.gs` | 120 | Point of sale |
-| `purchases.gs` | 176 | Purchase orders |
+| `products.gs` | 248 | Product catalog, batches, inventory, FEFO, pill deduction |
+| `sales.gs` | 120 | Point of sale with dynamic pricing |
+| `purchases.gs` | 176 | Purchase orders with supplier detail view |
 | `returns.gs` | 63 | Sale returns |
 | `finance.gs` | 240 | Expenses, income, payments, cash drawer |
 | `masters.gs` | 122 | Categories, suppliers, customers |
@@ -664,5 +807,6 @@ Dashboard metrics are computed by scanning all sales/products/inventory on every
 | `settings.gs` | 46 | Settings & business info |
 | `dashboard.gs` | 229 | Analytics & charts |
 | `code.gs` | 24 | Web app entry point |
-| `Index.html` | 1770 | Single-page frontend |
-| **Total** | **~3,761** | |
+| `Index.html` | ~1940 | Single-page frontend (POS with Units+Pills pill inputs, margin dropdowns) |
+| `inventory.gs` | 10 | **Deprecated** — empty placeholder, superseded by `products.gs` |
+| **Total** | **~3,824** | |

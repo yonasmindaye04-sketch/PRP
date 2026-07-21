@@ -58,7 +58,11 @@ function readTable(name) {
   var rows = values
     .map(function (r, i) {
       var obj = {};
-      for (var c = 0; c < headers.length; c++) obj[headers[c]] = r[c];
+      for (var c = 0; c < headers.length; c++) {
+        var val = r[c];
+        if (Object.prototype.toString.call(val) === '[object Date]') val = val.toISOString();
+        obj[headers[c]] = val;
+      }
       obj._row = i + 2;
       return obj;
     })
