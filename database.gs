@@ -17,18 +17,33 @@ function ensureSheet(name) {
     sheet = ss.insertSheet(name);
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.setFrozenRows(1);
+    CacheService.getScriptCache().put('schema-ok:' + name, '1', 21600);
     return sheet;
   }
-  // Migration: if the schema in HEADERS gained columns since this sheet was
-  // created, append the missing ones at the end so older sheets (and older
-  // rows) keep working — existing columns/data are never touched or reordered.
-  var lastCol = sheet.getLastColumn();
-  var existingHeaders = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
-  var missing = headers.filter(function (h) { return existingHeaders.indexOf(h) === -1; });
-  if (missing.length) {
-    sheet.getRange(1, existingHeaders.length + 1, 1, missing.length).setValues([missing]);
+
+  // Migration: if HEADERS gained columns since this sheet was created,
+  // append the missing ones at the end — existing columns/data are never
+  // touched or reordered. This check is only actually run once every few
+  // hours per sheet (cached) instead of on every read/write, since doing
+  // it on every single sheet access was the main cause of slow page loads.
+  var cacheKey = 'schema-ok:' + name;
+  if (!CacheService.getScriptCache().get(cacheKey)) {
+    var lastCol = sheet.getLastColumn();
+    var existingHeaders = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
+    var missing = headers.filter(function (h) { return existingHeaders.indexOf(h) === -1; });
+    if (missing.length) {
+      sheet.getRange(1, existingHeaders.length + 1, 1, missing.length).setValues([missing]);
+    }
+    CacheService.getScriptCache().put(cacheKey, '1', 21600);
   }
   return sheet;
+}
+
+// Call this once after deploying a schema change (new columns in HEADERS)
+// if you don't want to wait up to 6 hours for the cache above to expire.
+function clearSchemaCache() {
+  Object.keys(SHEETS).forEach(function (key) { CacheService.getScriptCache().remove('schema-ok:' + SHEETS[key]); });
+  Logger.log('Schema cache cleared — the next request to each sheet will re-check its columns.');
 }
 
 // Reads a whole table into memory ONCE as plain objects.

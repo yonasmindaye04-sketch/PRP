@@ -89,6 +89,9 @@ tr:last-child td{border-bottom:none;}
 
 .pos-layout{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;align-items:start;}
 .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:9px;}
+#pos-product-grid>.product-grid{grid-column:1/-1;}
+.pos-category-heading{grid-column:1/-1;font-size:12.5px;font-weight:700;color:var(--primary-dark);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--line);}
+.pos-category-heading:first-child{margin-top:0;}
 .product-tile{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:11px;text-align:left;}
 .product-tile:hover{border-color:var(--primary);}
 .product-tile .p-name{font-weight:700;font-size:13px;margin-bottom:3px;}
@@ -240,6 +243,7 @@ tr:last-child td{border-bottom:none;}
     <section class="view active" id="view-dashboard">
       <div class="view-header"><div><h2>Dashboard</h2><p>Today at a glance</p></div></div>
       <div class="cards" id="dashboard-cards"></div>
+      <div class="cards" id="dashboard-comparison-cards" style="display:none;"></div>
       <div class="charts-grid">
         <div class="panel">
           <h3>Sales trend — last 14 days</h3>
@@ -250,9 +254,15 @@ tr:last-child td{border-bottom:none;}
           <div id="chart-top-products"></div>
         </div>
       </div>
-      <div class="panel" id="panel-category-breakdown" style="display:none;">
-        <h3>Sales by category — last 30 days</h3>
-        <div id="chart-category-breakdown"></div>
+      <div class="charts-grid">
+        <div class="panel" id="panel-profit-trend" style="display:none;">
+          <h3>Profit trend — last 14 days</h3>
+          <div id="chart-profit-trend"></div>
+        </div>
+        <div class="panel" id="panel-category-breakdown" style="display:none;">
+          <h3>Sales by category — last 30 days</h3>
+          <div id="chart-category-breakdown"></div>
+        </div>
       </div>
       <div class="panel"><h3>Low stock</h3><div id="dashboard-lowstock"></div></div>
       <div class="panel"><h3>Expiring within 90 days</h3><div id="dashboard-expiring"></div></div>
@@ -263,7 +273,10 @@ tr:last-child td{border-bottom:none;}
       <div class="view-header"><div><h2>Sales (POS)</h2><p>Tap a product to add it to the cart</p></div></div>
       <div class="pos-layout">
         <div>
-          <div class="toolbar"><input type="search" id="pos-search" placeholder="Search products…"></div>
+          <div class="toolbar">
+            <input type="search" id="pos-search" placeholder="Search products…">
+            <select id="pos-category-filter"><option value="">All categories</option></select>
+          </div>
           <div class="product-grid" id="pos-product-grid"></div>
         </div>
         <div class="panel">
@@ -368,8 +381,13 @@ tr:last-child td{border-bottom:none;}
 
     <!-- CASH DRAWER -->
     <section class="view" id="view-cashdrawer">
-      <div class="view-header"><div><h2>Cash Drawer</h2><p>Your shift</p></div></div>
+      <div class="view-header"><div><h2>Cash Drawer</h2><p>Start your shift, ring up sales, end your shift</p></div></div>
       <div class="panel" id="drawer-panel"></div>
+      <div class="panel" id="shift-history-panel" style="display:none;">
+        <h3>Shift History <span style="font-weight:400;color:var(--ink-soft);font-size:12.5px;">— all cashiers</span></h3>
+        <table><thead><tr><th>Date</th><th>Cashier</th><th>Opened</th><th>Closed</th><th>Expected</th><th>Counted</th><th>Difference</th><th></th></tr></thead>
+        <tbody id="shift-history-tbody"></tbody></table>
+      </div>
     </section>
 
     <!-- USERS -->
@@ -433,6 +451,9 @@ tr:last-child td{border-bottom:none;}
     <div class="field"><label>Purchase price</label><input type="text" id="pf-purchaseprice"></div>
     <div class="field"><label>Selling price</label><input type="text" id="pf-sellingprice"></div>
     <div class="field"><label>Tax rate (%)</label><input type="text" id="pf-taxrate"></div>
+    <div class="field"><label>Default margin (%)</label><input type="text" id="pf-defaultmargin" placeholder="0"></div>
+    <div class="field"><label>Pills per unit</label><input type="text" id="pf-pillsperunit" placeholder="e.g. 10 for a strip of 10"></div>
+    <div class="field"><label>&nbsp;</label><label style="display:flex;align-items:center;gap:6px;font-weight:600;cursor:pointer;"><input type="checkbox" id="pf-sellbypill"> Sell by individual pill</label></div>
     <div class="field"><label>Reorder level</label><input type="text" id="pf-reorderlevel"></div>
     <div class="field"><label>Minimum stock</label><input type="text" id="pf-minstock"></div>
     <div class="field"><label>Maximum stock</label><input type="text" id="pf-maxstock"></div>
@@ -579,10 +600,30 @@ tr:last-child td{border-bottom:none;}
 <div class="modal-overlay" id="purchase-details-modal"><div class="modal xwide">
   <h3>Purchase <span id="pd-purchase-id"></span></h3>
   <div id="pd-msg"></div>
-  <div id="pd-meta" style="font-size:13px;color:var(--ink-soft);margin-bottom:10px;"></div>
-  <div id="pd-items"></div>
-  <div id="pd-totals" style="margin-top:10px;"></div>
   <div id="pd-deleted-banner"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+    <div class="panel" style="margin-bottom:0;">
+      <h3 style="font-size:13px;margin-bottom:8px;">Order Information</h3>
+      <div id="pd-order-info" style="font-size:12.5px;line-height:1.7;"></div>
+    </div>
+    <div class="panel" style="margin-bottom:0;">
+      <h3 style="font-size:13px;margin-bottom:8px;">Supplier Details</h3>
+      <div id="pd-supplier-info" style="font-size:12.5px;line-height:1.7;"></div>
+    </div>
+  </div>
+  <div id="pd-notes" style="margin-bottom:14px;"></div>
+  <h3 style="font-size:14px;margin:0 0 8px;">Purchased Items</h3>
+  <div id="pd-items"></div>
+  <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:14px;margin-top:14px;">
+    <div>
+      <h3 style="font-size:14px;margin:0 0 8px;">Payment History</h3>
+      <div id="pd-payments"></div>
+    </div>
+    <div>
+      <h3 style="font-size:14px;margin:0 0 8px;">Financial Summary</h3>
+      <div id="pd-totals"></div>
+    </div>
+  </div>
   <div class="modal-actions">
     <button class="btn secondary" id="purchase-details-close">Close</button>
     <button class="btn danger" id="purchase-details-delete">Delete this order</button>
@@ -601,6 +642,14 @@ tr:last-child td{border-bottom:none;}
 
 <div id="receipt-print-area"></div>
 
+<div class="modal-overlay" id="shift-details-modal"><div class="modal">
+  <h3>Shift <span id="shd-drawer-id"></span></h3>
+  <div id="shd-msg"></div>
+  <div id="shd-meta" style="font-size:13px;color:var(--ink-soft);margin-bottom:10px;"></div>
+  <div id="shd-items"></div>
+  <div class="modal-actions"><button class="btn secondary" id="shift-details-close">Close</button></div>
+</div></div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -611,14 +660,35 @@ var editingProductId = null;
 var purchaseLineCount = 0;
 var currentSaleDetailsId = null;
 var cachedSettings = null, cachedBusiness = null;
+var marginPresets = [20, 25, 30];
 
 function call(fn){
   var args = Array.prototype.slice.call(arguments,1);
   return new Promise(function(resolve,reject){
-    google.script.run.withSuccessHandler(resolve).withFailureHandler(function(err){
+    google.script.run.withSuccessHandler(function(res){
+      // google.script.run can resolve with null (dropped connection, huge
+      // payload, etc.) — normalize that into a proper fail() shape so every
+      // .then(res => res.success) call site downstream is always safe.
+      if(res===null||res===undefined){ resolve({success:false, message:'No response from the server — please try again.'}); }
+      else { resolve(res); }
+    }).withFailureHandler(function(err){
       reject(err && err.message ? err.message : String(err));
     })[fn].apply(null,args);
   });
+}
+// Prevents a button from firing twice from a rapid double-click/tap while
+// its action is still in flight. fn must return a Promise (or nothing).
+function runGuarded(btn, fn){
+  if(!btn || btn.dataset.busy==='1') return;
+  btn.dataset.busy='1';
+  btn.disabled=true;
+  var originalText=btn.textContent;
+  var restore=function(){ btn.dataset.busy=''; btn.disabled=false; btn.textContent=originalText; };
+  var result;
+  try{ result=fn(); }
+  catch(e){ restore(); throw e; }
+  if(result && typeof result.then==='function'){ result.then(restore, restore); }
+  else { restore(); }
 }
 function toast(msg,isError){
   var t=document.getElementById('toast');
@@ -671,6 +741,7 @@ function enterApp(){
   loadSuppliers();
   loadCustomers();
   loadProducts();
+  loadMarginPresets();
 }
 
 document.querySelectorAll('.nav-item[data-view]').forEach(function(btn){
@@ -744,17 +815,40 @@ function loadDashboard(){
       renderHBarChart('chart-category-breakdown', res.breakdown, 'name', 'total');
     }).catch(function(){});
   }
+
+  if(can('PERM_VIEW_PROFIT')){
+    call('getPeriodComparison',session.userId).then(function(res){
+      if(!res.success) return;
+      var c=res.comparison;
+      var momUp=c.momChangePct>=0, yoyUp=c.yoyChangePct>=0;
+      document.getElementById('dashboard-comparison-cards').style.display='grid';
+      document.getElementById('dashboard-comparison-cards').innerHTML=
+        '<div class="card"><div class="label">This Month</div><div class="value">$'+money(c.thisMonth)+'</div>'+
+          '<div style="font-size:12px;font-weight:700;color:'+(momUp?'var(--primary-dark)':'var(--danger)')+';margin-top:4px;">'+(momUp?'▲ ':'▼ ')+Math.abs(c.momChangePct)+'% vs last month</div></div>'+
+        '<div class="card"><div class="label">Last Month</div><div class="value">$'+money(c.lastMonth)+'</div></div>'+
+        '<div class="card"><div class="label">This Year (to date)</div><div class="value">$'+money(c.thisYear)+'</div>'+
+          '<div style="font-size:12px;font-weight:700;color:'+(yoyUp?'var(--primary-dark)':'var(--danger)')+';margin-top:4px;">'+(yoyUp?'▲ ':'▼ ')+Math.abs(c.yoyChangePct)+'% vs last year</div></div>'+
+        '<div class="card"><div class="label">Last Year (same period)</div><div class="value">$'+money(c.lastYear)+'</div></div>';
+    }).catch(function(){});
+
+    call('getProfitTrend',session.userId,14).then(function(res){
+      if(!res.success) return;
+      document.getElementById('panel-profit-trend').style.display='block';
+      renderVBarChart('chart-profit-trend', res.trend, 'label', 'profit');
+    }).catch(function(){});
+  }
 }
 
 // Minimal dependency-free bar charts built from plain divs.
 function renderVBarChart(containerId, items, labelKey, valueKey){
   var el=document.getElementById(containerId);
   if(!items || !items.length){ el.innerHTML='<div class="empty-state">No data yet</div>'; return; }
-  var max=Math.max.apply(null, items.map(function(i){return Number(i[valueKey])||0;}))||1;
+  var maxAbs=Math.max.apply(null, items.map(function(i){return Math.abs(Number(i[valueKey])||0);}))||1;
   el.innerHTML='<div class="vbar-chart">'+items.map(function(i){
     var v=Number(i[valueKey])||0;
-    var pct=Math.max(2, Math.round(v/max*100));
-    return '<div class="vbar-col"><span class="vbar-value">'+(v>0?money(v):'')+'</span><div class="vbar" style="height:'+pct+'%;"></div><div class="vbar-label">'+esc(i[labelKey])+'</div></div>';
+    var pct=Math.max(2, Math.round(Math.abs(v)/maxAbs*100));
+    var color=v<0?'background:var(--danger);':'';
+    return '<div class="vbar-col"><span class="vbar-value">'+(v!==0?money(v):'')+'</span><div class="vbar" style="height:'+pct+'%;'+color+'"></div><div class="vbar-label">'+esc(i[labelKey])+'</div></div>';
   }).join('')+'</div>';
 }
 function renderHBarChart(containerId, items, labelKey, valueKey){
@@ -777,6 +871,8 @@ function loadCategories(){
     allCategories=res.categories;
     var sel=document.getElementById('pf-category');
     sel.innerHTML=allCategories.map(function(c){return '<option value="'+c.CategoryID+'">'+esc(c.CategoryName)+'</option>';}).join('');
+    var posSel=document.getElementById('pos-category-filter');
+    posSel.innerHTML='<option value="">All categories</option>'+allCategories.map(function(c){return '<option value="'+c.CategoryID+'">'+esc(c.CategoryName)+'</option>';}).join('');
     renderCategoryList();
   });
 }
@@ -810,29 +906,71 @@ function loadProducts(){
     renderPosGrid(); renderInventoryTable();
   }).catch(function(err){toast(err,true);});
 }
+function loadMarginPresets(){
+  call('getSettings',session.userId).then(function(res){
+    if(res.success&&res.settings&&res.settings.MarginPresets){
+      var presets=res.settings.MarginPresets.split(',').map(function(s){return Number(s.trim());}).filter(function(n){return!isNaN(n)&&n>0;});
+      if(presets.length) marginPresets=presets;
+    }
+  }).catch(function(){});
+}
 function renderPosGrid(){
   var grid=document.getElementById('pos-product-grid');
   var filter=(document.getElementById('pos-search').value||'').toLowerCase();
-  var list=allProducts.filter(function(p){return p.ProductName.toLowerCase().indexOf(filter)>-1;});
+  var catFilter=document.getElementById('pos-category-filter').value;
+  var list=allProducts.filter(function(p){
+    var matchesSearch=p.ProductName.toLowerCase().indexOf(filter)>-1;
+    var matchesCat=!catFilter||p.CategoryID===catFilter;
+    return matchesSearch&&matchesCat;
+  });
   if(!list.length){grid.innerHTML='<div class="empty-state">No products found</div>';return;}
-  grid.innerHTML=list.map(function(p){
-    var out=p.CurrentStock<=0;
-    return '<button class="product-tile" '+(out?'disabled':'')+' onclick="addToCart(\''+p.ProductID+'\')">'+
-      '<div class="p-name">'+esc(p.ProductName)+'</div>'+
-      '<div class="p-meta">'+(out?'Out of stock':p.CurrentStock+' in stock')+'</div>'+
-      '<div class="p-price">$'+money(p.SellingPrice)+'</div></button>';
-  }).join('');
+
+  if(catFilter||filter){
+    // A specific category or search term is active — flat alphabetical list.
+    list.sort(function(a,b){return a.ProductName.localeCompare(b.ProductName);});
+    grid.innerHTML=list.map(posTileHtml).join('');
+  } else {
+    // No filter — group by category, categories alphabetical, products alphabetical within each.
+    var groups={};
+    list.forEach(function(p){ var key=p.CategoryName||'Uncategorized'; (groups[key]=groups[key]||[]).push(p); });
+    var catNames=Object.keys(groups).sort();
+    grid.innerHTML=catNames.map(function(cat){
+      var items=groups[cat].slice().sort(function(a,b){return a.ProductName.localeCompare(b.ProductName);});
+      return '<div class="pos-category-heading">'+esc(cat)+'</div><div class="product-grid">'+items.map(posTileHtml).join('')+'</div>';
+    }).join('');
+  }
+}
+function posTileHtml(p){
+  var out=p.DisplayStock<=0;
+  var stockLabel=p.SellByPill&&p.PillsPerUnit>0
+    ? (out?'Out of stock':p.DisplayStock+' pills')
+    : (out?'Out of stock':p.CurrentStock+' in stock');
+  return '<button class="product-tile" '+(out?'disabled':'')+' onclick="addToCart(\''+p.ProductID+'\')">'+
+    '<div class="p-name">'+esc(p.ProductName)+'</div>'+
+    '<div class="p-meta">'+stockLabel+'</div>'+
+    '<div class="p-price">$'+money(p.SellingPrice)+'</div></button>';
 }
 document.getElementById('pos-search').addEventListener('input',renderPosGrid);
+document.getElementById('pos-category-filter').addEventListener('change',renderPosGrid);
 
 function addToCart(productId){
   var product=allProducts.filter(function(p){return p.ProductID===productId;})[0];
   if(!product) return;
   var existing=cart.filter(function(c){return c.productId===productId;})[0];
   var currentQty=existing?existing.qty:0;
-  if(currentQty+1>product.CurrentStock){toast('Not enough stock.',true);return;}
-  if(existing) existing.qty+=1;
-  else cart.push({productId:product.ProductID,name:product.ProductName,price:Number(product.SellingPrice),taxRate:Number(product.TaxRate)||0,qty:1,stock:product.CurrentStock});
+  var step=product.SellByPill&&product.PillsPerUnit>0?1:1;
+  if(currentQty+step>product.DisplayStock){toast('Not enough stock.',true);return;}
+  var margin=Number(product.DefaultMargin)||0;
+  var calcPrice=margin>0?Number(product.PurchasePrice)*(1+margin/100):Number(product.SellingPrice);
+  if(existing) existing.qty+=step;
+  else cart.push({
+    productId:product.ProductID,name:product.ProductName,
+    price:calcPrice, catalogPrice:Number(product.SellingPrice),
+    taxRate:Number(product.TaxRate)||0, qty:step, stock:product.DisplayStock,
+    marginUsed:margin, purchasePrice:Number(product.PurchasePrice)||0,
+    pillsPerUnit:Number(product.PillsPerUnit)||0,
+    sellByPill:product.SellByPill===true||product.SellByPill==='TRUE'
+  });
   renderCart();
 }
 function changeCartQty(productId,delta){
@@ -844,13 +982,33 @@ function changeCartQty(productId,delta){
   else item.qty=newQty;
   renderCart();
 }
+function changeCartMargin(productId,newMargin){
+  var item=cart.filter(function(c){return c.productId===productId;})[0];
+  if(!item) return;
+  var margin=Number(newMargin)||0;
+  item.marginUsed=margin;
+  item.price=margin>0?item.purchasePrice*(1+margin/100):item.catalogPrice;
+  renderCart();
+}
 function renderCart(){
   var el=document.getElementById('pos-cart');
   if(!cart.length){el.innerHTML='<div class="empty-state">Cart is empty</div>';}
   else{
-    el.innerHTML=cart.map(function(c){
-      return '<div class="cart-item"><div>'+esc(c.name)+'<br><span style="color:var(--ink-soft);font-size:11px;">$'+money(c.price)+' each</span></div>'+
-        '<div class="qty-controls"><button onclick="changeCartQty(\''+c.productId+'\',-1)">−</button><span>'+c.qty+'</span><button onclick="changeCartQty(\''+c.productId+'\',1)">+</button></div></div>';
+    el.innerHTML=cart.map(function(c,idx){
+      var marginOpts=marginPresets.map(function(m){return '<option value="'+m+'"'+(c.marginUsed==m?' selected':'')+'>'+m+'%</option>';}).join('');
+      var stockInfo=c.sellByPill&&c.pillsPerUnit>0
+        ? c.qty+' pills of '+c.stock
+        : c.qty+' / '+c.stock;
+      return '<div class="cart-item" style="flex-direction:column;align-items:stretch;gap:4px;">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;">'+
+          '<div><b>'+esc(c.name)+'</b><br><span style="color:var(--ink-soft);font-size:11px;">$'+money(c.price)+' each · '+stockInfo+'</span></div>'+
+          '<div class="qty-controls"><button onclick="changeCartQty(\''+c.productId+'\',-1)">−</button><span>'+c.qty+'</span><button onclick="changeCartQty(\''+c.productId+'\',1)">+</button></div>'+
+        '</div>'+
+        '<div style="display:flex;gap:6px;align-items:center;">'+
+          '<select style="font-size:11px;padding:2px 4px;border:1px solid var(--line);border-radius:4px;" onchange="changeCartMargin(\''+c.productId+'\',this.value)">'+marginOpts+'</select>'+
+          '<span style="font-size:10.5px;color:var(--ink-soft);">'+money(c.marginUsed)+'% margin</span>'+
+        '</div>'+
+      '</div>';
     }).join('');
   }
   var subtotal=cart.reduce(function(s,c){return s+c.qty*c.price;},0);
@@ -866,23 +1024,25 @@ function renderCart(){
 document.getElementById('pos-discount').addEventListener('input',renderCart);
 
 document.getElementById('pos-checkout-btn').addEventListener('click',function(){
+  var self=this;
+  runGuarded(self, function(){
   var msgEl=document.getElementById('pos-checkout-msg'); msgEl.innerHTML='';
   if(!cart.length){msgEl.innerHTML='<div class="msg error">Cart is empty.</div>';return;}
-  var btn=this; btn.disabled=true; btn.textContent='Processing…';
-  var payload=cart.map(function(c){return {productId:c.productId,qty:c.qty};});
+  self.textContent='Processing…';
+  var payload=cart.map(function(c){return {productId:c.productId,qty:c.qty,unitPrice:c.price,marginUsed:c.marginUsed};});
   var options={
     discount:Number(document.getElementById('pos-discount').value)||0,
     paymentMethod:document.getElementById('pos-payment').value,
     customerId:document.getElementById('pos-customer').value
   };
-  call('createSale',session.userId,payload,options).then(function(res){
-    btn.disabled=false; btn.textContent='Charge';
+  return call('createSale',session.userId,payload,options).then(function(res){
     if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
     toast('Sale '+res.saleId+' completed — $'+money(res.total));
     msgEl.innerHTML='<div class="msg success">Sale '+res.saleId+' completed. <button class="mini-btn" onclick="printReceipt(\''+res.saleId+'\')">Print receipt</button></div>';
     cart=[]; document.getElementById('pos-discount').value=''; renderCart();
     loadProducts(); loadDashboard();
-  }).catch(function(err){btn.disabled=false; btn.textContent='Charge'; msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+  }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+  });
 });
 
 // ── Inventory table ───────────────────────────────────────────────────────
@@ -918,6 +1078,9 @@ function openProductModal(productId){
   document.getElementById('pf-purchaseprice').value=product?product.PurchasePrice:'';
   document.getElementById('pf-sellingprice').value=product?product.SellingPrice:'';
   document.getElementById('pf-taxrate').value=product?product.TaxRate:'0';
+  document.getElementById('pf-defaultmargin').value=product?product.DefaultMargin:'';
+  document.getElementById('pf-pillsperunit').value=product?product.PillsPerUnit:'';
+  document.getElementById('pf-sellbypill').checked=product?(product.SellByPill===true||product.SellByPill==='TRUE'):false;
   document.getElementById('pf-reorderlevel').value=product?product.ReorderLevel:'';
   document.getElementById('pf-minstock').value=product?product.MinimumStock:'';
   document.getElementById('pf-maxstock').value=product?product.MaximumStock:'';
@@ -930,6 +1093,8 @@ function openProductModal(productId){
 document.getElementById('add-product-btn').addEventListener('click',function(){openProductModal(null);});
 document.getElementById('product-modal-cancel').addEventListener('click',function(){document.getElementById('product-modal').classList.remove('active');});
 document.getElementById('product-modal-save').addEventListener('click',function(){
+  var self=this;
+  runGuarded(self, function(){
   var msgEl=document.getElementById('product-modal-msg');
   var payload={
     productId:editingProductId,
@@ -944,6 +1109,9 @@ document.getElementById('product-modal-save').addEventListener('click',function(
     purchasePrice:document.getElementById('pf-purchaseprice').value,
     sellingPrice:document.getElementById('pf-sellingprice').value,
     taxRate:document.getElementById('pf-taxrate').value,
+    defaultMargin:document.getElementById('pf-defaultmargin').value,
+    pillsPerUnit:document.getElementById('pf-pillsperunit').value,
+    sellByPill:document.getElementById('pf-sellbypill').checked,
     reorderLevel:document.getElementById('pf-reorderlevel').value,
     minimumStock:document.getElementById('pf-minstock').value,
     maximumStock:document.getElementById('pf-maxstock').value,
@@ -952,11 +1120,12 @@ document.getElementById('product-modal-save').addEventListener('click',function(
   };
   if(!payload.productName||payload.sellingPrice===''){msgEl.innerHTML='<div class="msg error">Name and selling price are required.</div>';return;}
   var promise=editingProductId?call('updateProduct',session.userId,payload):call('createProduct',session.userId,payload);
-  promise.then(function(res){
+  return promise.then(function(res){
     if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
     document.getElementById('product-modal').classList.remove('active');
     toast('Product saved.'); loadProducts(); loadDashboard();
   }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+  });
 });
 function removeProduct(productId){
   if(!confirm('Deactivate this product?')) return;
@@ -978,14 +1147,17 @@ function renderCategoryList(){
   el.innerHTML=allCategories.map(function(c){return '<span class="tag">'+esc(c.CategoryName)+'</span>';}).join(' ');
 }
 document.getElementById('category-modal-add').addEventListener('click',function(){
+  var self=this;
+  runGuarded(self, function(){
   var msgEl=document.getElementById('category-modal-msg');
   var name=document.getElementById('cat-name').value.trim();
   if(!name){msgEl.innerHTML='<div class="msg error">Category name is required.</div>';return;}
-  call('createCategory',session.userId,{categoryName:name,description:document.getElementById('cat-desc').value.trim()}).then(function(res){
+  return call('createCategory',session.userId,{categoryName:name,description:document.getElementById('cat-desc').value.trim()}).then(function(res){
     if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
     document.getElementById('cat-name').value=''; document.getElementById('cat-desc').value='';
     toast('Category added.'); loadCategories();
   }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+  });
 });
 
 // ── Suppliers ─────────────────────────────────────────────────────────────
@@ -1016,6 +1188,8 @@ function openSupplierModal(supplierId){
 document.getElementById('add-supplier-btn').addEventListener('click',function(){openSupplierModal(null);});
 document.getElementById('supplier-modal-cancel').addEventListener('click',function(){document.getElementById('supplier-modal').classList.remove('active');});
 document.getElementById('supplier-modal-save').addEventListener('click',function(){
+  var self=this;
+  runGuarded(self, function(){
   var msgEl=document.getElementById('supplier-modal-msg');
   var editing=document.getElementById('supplier-modal').dataset.editing;
   var payload={
@@ -1027,11 +1201,12 @@ document.getElementById('supplier-modal-save').addEventListener('click',function
   };
   if(!payload.supplierName){msgEl.innerHTML='<div class="msg error">Supplier name is required.</div>';return;}
   var promise=editing?call('updateSupplier',session.userId,payload):call('createSupplier',session.userId,payload);
-  promise.then(function(res){
+  return promise.then(function(res){
     if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
     document.getElementById('supplier-modal').classList.remove('active');
     toast('Supplier saved.'); loadSuppliers(true);
   }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+  });
 });
 
 // ── Customers ─────────────────────────────────────────────────────────────
@@ -1057,6 +1232,8 @@ function openCustomerModal(customerId){
 document.getElementById('add-customer-btn').addEventListener('click',function(){openCustomerModal(null);});
 document.getElementById('customer-modal-cancel').addEventListener('click',function(){document.getElementById('customer-modal').classList.remove('active');});
 document.getElementById('customer-modal-save').addEventListener('click',function(){
+  var self=this;
+  runGuarded(self, function(){
   var msgEl=document.getElementById('customer-modal-msg');
   var editing=document.getElementById('customer-modal').dataset.editing;
   var payload={
@@ -1066,11 +1243,12 @@ document.getElementById('customer-modal-save').addEventListener('click',function
   };
   if(!payload.fullName){msgEl.innerHTML='<div class="msg error">Customer name is required.</div>';return;}
   var promise=editing?call('updateCustomer',session.userId,payload):call('createCustomer',session.userId,payload);
-  promise.then(function(res){
+  return promise.then(function(res){
     if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
     document.getElementById('customer-modal').classList.remove('active');
     toast('Customer saved.'); loadCustomers(true);
   }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+  });
 });
 
 // ── Purchases ─────────────────────────────────────────────────────────────
@@ -1092,41 +1270,73 @@ function loadPurchases(){
   }).catch(function(err){toast(err,true);});
 }
 function openPurchaseDetails(purchaseId){
-  document.getElementById('pd-purchase-id').textContent=purchaseId;
   document.getElementById('pd-msg').innerHTML='';
-  document.getElementById('pd-meta').innerHTML='';
+  document.getElementById('pd-order-info').innerHTML='';
+  document.getElementById('pd-supplier-info').innerHTML='';
+  document.getElementById('pd-notes').innerHTML='';
   document.getElementById('pd-items').innerHTML='';
   document.getElementById('pd-totals').innerHTML='';
+  document.getElementById('pd-payments').innerHTML='';
   document.getElementById('pd-deleted-banner').innerHTML='';
   document.getElementById('purchase-details-modal').dataset.purchaseId=purchaseId;
+  document.getElementById('purchase-details-modal').querySelector('h3').innerHTML='Purchase <span id="pd-purchase-id"></span>';
+  document.getElementById('pd-purchase-id').textContent=purchaseId;
   document.getElementById('purchase-details-modal').classList.add('active');
   call('getPurchaseDetails',session.userId,purchaseId).then(function(res){
     if(!res.success){document.getElementById('pd-msg').innerHTML='<div class="msg error">'+res.message+'</div>';return;}
-    var pur=res.purchase, items=res.items;
-    document.getElementById('pd-meta').innerHTML=
-      'Supplier: <b>'+esc(pur.SupplierName)+'</b> &nbsp;·&nbsp; Invoice: '+esc(pur.InvoiceNumber||'—')+
-      ' &nbsp;·&nbsp; Date: '+new Date(pur.PurchaseDate).toLocaleString()+
-      ' &nbsp;·&nbsp; Received by: '+esc(pur.ReceivedByName||pur.ReceivedBy);
+    var pur=res.purchase, items=res.items, payments=res.payments||[];
 
-    document.getElementById('pd-items').innerHTML='<table><thead><tr><th>Product</th><th>Batch / Expiry</th><th>Qty</th><th>Purchase price</th><th>Selling price</th><th>Line total</th></tr></thead><tbody>'+
+    var statusClass=pur.RecordStatus==='Deleted'?'bad':(pur.PaymentStatus==='Paid'?'ok':(pur.PaymentStatus==='Partial'?'low':'bad'));
+    document.getElementById('pd-order-info').innerHTML=
+      '<div><b>Date:</b> '+new Date(pur.PurchaseDate).toLocaleString()+'</div>'+
+      '<div><b>Invoice:</b> '+esc(pur.InvoiceNumber||'—')+'</div>'+
+      '<div><b>Recorded by:</b> '+esc(pur.ReceivedByName||pur.ReceivedBy)+'</div>'+
+      '<div><b>Status:</b> <span class="pill '+statusClass+'">'+esc(pur.PaymentStatus||'—')+'</span>'+
+        (pur.RecordStatus==='Deleted'?' <span class="pill bad">Deleted</span>':'')+'</div>';
+
+    document.getElementById('pd-supplier-info').innerHTML=
+      '<div><b>Name:</b> '+esc(pur.SupplierName)+'</div>'+
+      (pur.SupplierPhone?'<div><b>Phone:</b> '+esc(pur.SupplierPhone)+'</div>':'')+
+      (pur.SupplierEmail?'<div><b>Email:</b> '+esc(pur.SupplierEmail)+'</div>':'')+
+      (pur.SupplierAddress?'<div><b>Address:</b> '+esc(pur.SupplierAddress)+'</div>':'')+
+      (pur.SupplierTaxNumber?'<div><b>Tax #:</b> '+esc(pur.SupplierTaxNumber)+'</div>':'')+
+      (pur.SupplierPaymentTerms?'<div><b>Payment terms:</b> '+esc(pur.SupplierPaymentTerms)+'</div>':'');
+
+    if(pur.Notes){
+      document.getElementById('pd-notes').innerHTML='<div class="panel" style="margin-bottom:0;"><h3 style="font-size:13px;margin-bottom:6px;">Notes</h3><div style="font-size:12.5px;">'+esc(pur.Notes)+'</div></div>';
+    }
+
+    document.getElementById('pd-items').innerHTML='<table><thead><tr><th>Product</th><th>Batch</th><th>Expiry</th><th>Qty</th><th>Unit cost</th><th>Sell price</th><th>Total</th></tr></thead><tbody>'+
       items.map(function(i){
         var detail=[i.Strength,i.DosageForm,i.Unit].filter(Boolean).join(' · ');
-        return '<tr><td>'+esc(i.ProductName)+(detail?'<br><span style="color:var(--ink-soft);font-size:11.5px;">'+esc(detail)+'</span>':'')+'</td>'+
-          '<td>'+esc(i.BatchNumber||'—')+(i.ExpiryDate?'<br><span style="color:var(--ink-soft);font-size:11.5px;">exp '+i.ExpiryDate+'</span>':'')+'</td>'+
+        return '<tr><td>'+esc(i.ProductName)+(detail?'<br><span style="color:var(--ink-soft);font-size:11px;">'+esc(detail)+'</span>':'')+'</td>'+
+          '<td>'+esc(i.BatchNumber||'—')+'</td>'+
+          '<td>'+(i.ExpiryDate?esc(i.ExpiryDate):'<span style="color:var(--ink-soft);">—</span>')+'</td>'+
           '<td>'+i.Quantity+'</td><td>$'+money(i.PurchasePrice)+'</td><td>$'+money(i.SellingPrice)+'</td><td>$'+money(i.Total)+'</td></tr>';
       }).join('')+'</tbody></table>';
 
     document.getElementById('pd-totals').innerHTML=
+      '<div class="panel" style="margin-bottom:0;padding:12px 14px;">'+
       '<div class="cart-total-row"><span>Subtotal</span><span>$'+money(pur.TotalAmount)+'</span></div>'+
-      '<div class="cart-total-row"><span>Discount</span><span>$'+money(pur.Discount)+'</span></div>'+
-      '<div class="cart-total-row"><span>Tax</span><span>$'+money(pur.Tax)+'</span></div>'+
+      '<div class="cart-total-row"><span>Discount</span><span>−$'+money(pur.Discount)+'</span></div>'+
+      '<div class="cart-total-row"><span>Tax</span><span>+$'+money(pur.Tax)+'</span></div>'+
       '<div class="cart-total-row grand"><span>Grand total</span><span>$'+money(pur.GrandTotal)+'</span></div>'+
-      '<div class="cart-total-row"><span>Paid</span><span>$'+money(pur.PaidAmount)+'</span></div>'+
-      '<div class="cart-total-row"><span>Balance</span><span>$'+money(pur.Balance)+'</span></div>';
+      '<div class="cart-total-row"><span>Paid</span><span style="color:var(--primary-dark);">$'+money(pur.PaidAmount)+'</span></div>'+
+      '<div class="cart-total-row"><span>Balance owed</span><span style="color:'+(Number(pur.Balance)>0?'var(--danger)':'var(--primary-dark)')+';">$'+money(pur.Balance)+'</span></div>'+
+      '</div>';
+
+    if(payments.length){
+      var payRows=payments.map(function(p){
+        return '<tr><td>'+new Date(p.Date).toLocaleDateString()+'</td><td>$'+money(p.Amount)+'</td><td>'+esc(p.Method)+'</td><td>'+esc(p.Reference||'—')+'</td><td>'+esc(p.ReceivedByName||p.ReceivedBy)+'</td></tr>';
+      }).join('');
+      document.getElementById('pd-payments').innerHTML='<div class="panel" style="margin-bottom:0;padding:0;"><table><thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Reference</th><th>Recorded by</th></tr></thead><tbody>'+payRows+'</tbody></table></div>';
+    } else {
+      document.getElementById('pd-payments').innerHTML='<div class="panel" style="margin-bottom:0;"><div class="empty-state">No payments recorded yet</div></div>';
+    }
 
     var deleteBtn=document.getElementById('purchase-details-delete');
     if(pur.RecordStatus==='Deleted'){
-      document.getElementById('pd-deleted-banner').innerHTML='<div class="msg error">Deleted by '+esc(pur.DeletedByName||pur.DeletedBy)+' on '+new Date(pur.DeletedDate).toLocaleString()+'. Reason: '+esc(pur.DeletedReason)+'</div>';
+      document.getElementById('pd-deleted-banner').innerHTML='<div class="msg error" style="margin-bottom:14px;"><b>Deleted</b> by '+esc(pur.DeletedByName||pur.DeletedBy)+' on '+new Date(pur.DeletedDate).toLocaleString()+'<br>Reason: '+esc(pur.DeletedReason)+'</div>';
       deleteBtn.style.display='none';
     } else {
       deleteBtn.style.display = (session.roleName==='Owner') ? 'inline-block' : 'none';
@@ -1135,15 +1345,18 @@ function openPurchaseDetails(purchaseId){
 }
 document.getElementById('purchase-details-close').addEventListener('click',function(){document.getElementById('purchase-details-modal').classList.remove('active');});
 document.getElementById('purchase-details-delete').addEventListener('click',function(){
+  var self=this;
+  runGuarded(self, function(){
   var purchaseId=document.getElementById('purchase-details-modal').dataset.purchaseId;
   var reason=prompt('Reason for deleting this purchase order?');
   if(!reason||!reason.trim()) return;
-  call('deletePurchase',session.userId,purchaseId,reason.trim()).then(function(res){
+  return call('deletePurchase',session.userId,purchaseId,reason.trim()).then(function(res){
     if(!res.success) return toast(res.message,true);
     toast(res.partialReversal ? 'Order deleted. Note: some stock from this order was already sold and could not be reversed.' : 'Order deleted.');
     document.getElementById('purchase-details-modal').classList.remove('active');
     loadPurchases(); loadProducts(); loadSuppliers(true); loadDashboard();
   }).catch(function(err){toast(err,true);});
+  });
 });
 document.getElementById('add-purchase-btn').addEventListener('click',function(){
   document.getElementById('purchase-modal-msg').innerHTML='';
@@ -1201,6 +1414,8 @@ document.getElementById('purchase-lines').addEventListener('input', function(e){
 document.getElementById('pu-discount').addEventListener('input', recalcPurchaseTotals);
 document.getElementById('pu-tax').addEventListener('input', recalcPurchaseTotals);
 document.getElementById('purchase-modal-save').addEventListener('click',function(){
+  var self=this;
+  runGuarded(self, function(){
   var msgEl=document.getElementById('purchase-modal-msg');
   var supplierId=document.getElementById('pu-supplier').value;
   if(!supplierId){msgEl.innerHTML='<div class="msg error">Select a supplier.</div>';return;}
@@ -1222,12 +1437,13 @@ document.getElementById('purchase-modal-save').addEventListener('click',function
     discount:Number(document.getElementById('pu-discount').value)||0, tax:Number(document.getElementById('pu-tax').value)||0,
     paidAmount:Number(document.getElementById('pu-paid').value)||0
   };
-  call('createPurchase',session.userId,payload).then(function(res){
+  return call('createPurchase',session.userId,payload).then(function(res){
     if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
     document.getElementById('purchase-modal').classList.remove('active');
     toast('Purchase '+res.purchaseId+' recorded — $'+money(res.grandTotal));
     loadPurchases(); loadProducts(); loadSuppliers(true); loadDashboard();
   }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+  });
 });
 
 // ── Sales history + returns ───────────────────────────────────────────────
@@ -1320,15 +1536,18 @@ document.getElementById('add-expense-btn').addEventListener('click',function(){
 });
 document.getElementById('expense-modal-cancel').addEventListener('click',function(){document.getElementById('expense-modal').classList.remove('active');});
 document.getElementById('expense-modal-save').addEventListener('click',function(){
+  var self=this;
+  runGuarded(self, function(){
   var msgEl=document.getElementById('expense-modal-msg');
   var payload={category:document.getElementById('ef-category').value.trim(),description:document.getElementById('ef-description').value.trim(),
     amount:document.getElementById('ef-amount').value, paymentMethod:document.getElementById('ef-method').value};
   if(!payload.category||!payload.amount){msgEl.innerHTML='<div class="msg error">Category and amount are required.</div>';return;}
-  call('createExpense',session.userId,payload).then(function(res){
+  return call('createExpense',session.userId,payload).then(function(res){
     if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
     document.getElementById('expense-modal').classList.remove('active');
     toast('Expense recorded.'); loadExpenses(); loadDashboard();
   }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+  });
 });
 document.getElementById('add-income-btn').addEventListener('click',function(){
   document.getElementById('income-modal-msg').innerHTML='';
@@ -1337,14 +1556,17 @@ document.getElementById('add-income-btn').addEventListener('click',function(){
 });
 document.getElementById('income-modal-cancel').addEventListener('click',function(){document.getElementById('income-modal').classList.remove('active');});
 document.getElementById('income-modal-save').addEventListener('click',function(){
+  var self=this;
+  runGuarded(self, function(){
   var msgEl=document.getElementById('income-modal-msg');
   var payload={source:document.getElementById('if-source').value.trim(),description:document.getElementById('if-description').value.trim(),amount:document.getElementById('if-amount').value};
   if(!payload.source||!payload.amount){msgEl.innerHTML='<div class="msg error">Source and amount are required.</div>';return;}
-  call('createIncome',session.userId,payload).then(function(res){
+  return call('createIncome',session.userId,payload).then(function(res){
     if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
     document.getElementById('income-modal').classList.remove('active');
     toast('Income recorded.'); loadIncome();
   }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+  });
 });
 document.getElementById('add-payment-btn').addEventListener('click',function(){
   document.getElementById('payment-modal-msg').innerHTML='';
@@ -1368,17 +1590,20 @@ document.getElementById('pf-pay-purchase').addEventListener('change', function()
 });
 document.getElementById('payment-modal-cancel').addEventListener('click',function(){document.getElementById('payment-modal').classList.remove('active');});
 document.getElementById('payment-modal-save').addEventListener('click',function(){
+  var self=this;
+  runGuarded(self, function(){
   var msgEl=document.getElementById('payment-modal-msg');
   var payload={supplierId:document.getElementById('pf-pay-supplier').value,
     purchaseId:document.getElementById('pf-pay-purchase').value,
     amount:document.getElementById('pf-pay-amount').value,
     method:document.getElementById('pf-pay-method').value, reference:document.getElementById('pf-pay-reference').value.trim()};
   if(!payload.supplierId||!payload.amount){msgEl.innerHTML='<div class="msg error">Supplier and amount are required.</div>';return;}
-  call('createPayment',session.userId,payload).then(function(res){
+  return call('createPayment',session.userId,payload).then(function(res){
     if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
     document.getElementById('payment-modal').classList.remove('active');
     toast('Payment recorded.'); loadPayments(); loadSuppliers(true); loadPurchases();
   }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+  });
 });
 
 // ── Cash Drawer ────────────────────────────────────────────────────────────
@@ -1387,33 +1612,118 @@ function loadDrawer(){
     var el=document.getElementById('drawer-panel');
     if(!res.success){el.innerHTML='<div class="empty-state">'+res.message+'</div>';return;}
     if(!res.drawer){
-      el.innerHTML='<h3>No open shift</h3><div class="field"><label>Opening balance</label><input type="text" id="drawer-opening" value="0"></div>'+
-        '<button class="btn small" id="open-drawer-btn">Open shift</button>';
-      document.getElementById('open-drawer-btn').addEventListener('click',function(){
-        call('openDrawer',session.userId,document.getElementById('drawer-opening').value).then(function(r){
-          if(!r.success) return toast(r.message,true);
-          toast('Shift opened.'); loadDrawer();
-        }).catch(function(err){toast(err,true);});
+      el.innerHTML=
+        '<h3>No shift in progress</h3>'+
+        '<p class="panel-note" style="margin-bottom:12px;">Count the cash in the till and enter it below, then start your shift. Every cash, card, and mobile money sale you ring up will be tracked automatically until you end the shift.</p>'+
+        '<div class="field" style="max-width:260px;"><label>Opening cash balance</label><input type="text" id="drawer-opening" value="0"></div>'+
+        '<button class="btn small" id="start-shift-btn">Start Shift</button>'+
+        '<div id="drawer-msg"></div>';
+      document.getElementById('start-shift-btn').addEventListener('click',function(){
+        var self=this;
+        runGuarded(self, function(){
+          var msgEl=document.getElementById('drawer-msg');
+          return call('startShift',session.userId,document.getElementById('drawer-opening').value).then(function(r){
+            if(!r.success){ msgEl.innerHTML='<div class="msg error">'+r.message+'</div>'; return; }
+            toast('Shift started.'); loadDrawer();
+          }).catch(function(err){ msgEl.innerHTML='<div class="msg error">'+err+'</div>'; });
+        });
       });
     } else {
       var d=res.drawer;
-      el.innerHTML='<h3>Shift open since '+d.Date+'</h3>'+
+      var total=Number(d.CashSales)+Number(d.CardSales)+Number(d.MobileMoney);
+      el.innerHTML=
+        '<h3>Shift in progress</h3>'+
+        '<p class="panel-note" style="margin-bottom:12px;">Started '+new Date(d.OpenedAt||d.Date).toLocaleString()+'</p>'+
         '<div class="cards" style="margin-bottom:16px;">'+
         '<div class="card"><div class="label">Opening balance</div><div class="value">$'+money(d.OpeningBalance)+'</div></div>'+
         '<div class="card"><div class="label">Cash sales</div><div class="value">$'+money(d.CashSales)+'</div></div>'+
         '<div class="card"><div class="label">Card sales</div><div class="value">$'+money(d.CardSales)+'</div></div>'+
         '<div class="card"><div class="label">Mobile money</div><div class="value">$'+money(d.MobileMoney)+'</div></div>'+
-        '</div><div class="field"><label>Counted cash (to close shift)</label><input type="text" id="drawer-closing" value="0"></div>'+
-        '<button class="btn small" id="close-drawer-btn">Close shift</button>';
-      document.getElementById('close-drawer-btn').addEventListener('click',function(){
-        call('closeDrawer',session.userId,document.getElementById('drawer-closing').value).then(function(r){
-          if(!r.success) return toast(r.message,true);
-          toast('Shift closed. Difference: $'+money(r.difference)); loadDrawer();
-        }).catch(function(err){toast(err,true);});
+        '<div class="card"><div class="label">Total sales this shift</div><div class="value">$'+money(total)+'</div></div>'+
+        '</div>'+
+        '<p class="panel-note" style="margin-bottom:8px;">When you\'re ready to end your shift, count the cash in the till and enter it below — this will also record everything you sold during the shift.</p>'+
+        '<div class="field" style="max-width:260px;"><label>Counted cash</label><input type="text" id="drawer-closing" value="0"></div>'+
+        '<button class="btn small" id="end-shift-btn">End Shift</button>'+
+        '<div id="drawer-msg"></div>'+
+        '<div id="shift-summary-result"></div>';
+      document.getElementById('end-shift-btn').addEventListener('click',function(){
+        var self=this;
+        runGuarded(self, function(){
+          var msgEl=document.getElementById('drawer-msg');
+          return call('endShift',session.userId,document.getElementById('drawer-closing').value).then(function(r){
+            if(!r.success){ msgEl.innerHTML='<div class="msg error">'+r.message+'</div>'; return; }
+            renderShiftEndSummary(r);
+            loadDashboard();
+          }).catch(function(err){ msgEl.innerHTML='<div class="msg error">'+err+'</div>'; });
+        });
       });
     }
   }).catch(function(err){toast(err,true);});
+
+  if(can('PERM_VIEW_REPORTS')){
+    document.getElementById('shift-history-panel').style.display='block';
+    loadShiftHistory();
+  } else {
+    document.getElementById('shift-history-panel').style.display='none';
+  }
 }
+function renderShiftEndSummary(r){
+  var el=document.getElementById('shift-summary-result');
+  var diffColor = r.difference===0 ? 'var(--primary-dark)' : (r.difference<0 ? 'var(--danger)' : 'var(--warn)');
+  var itemsHtml = r.itemsSold.length
+    ? '<table><thead><tr><th>Product</th><th>Qty sold</th><th>Revenue</th></tr></thead><tbody>'+
+        r.itemsSold.map(function(i){ return '<tr><td>'+esc(i.productName)+'</td><td>'+i.qty+'</td><td>$'+money(i.revenue)+'</td></tr>'; }).join('')+
+      '</tbody></table>'
+    : '<div class="empty-state">No sales were rung up during this shift.</div>';
+  el.innerHTML =
+    '<div class="panel" style="background:var(--primary-tint);margin-top:14px;">'+
+      '<h3>Shift ended — '+r.transactionCount+' transaction'+(r.transactionCount===1?'':'s')+'</h3>'+
+      '<div class="cart-total-row"><span>Expected cash</span><span>$'+money(r.expected)+'</span></div>'+
+      '<div class="cart-total-row"><span>Counted cash</span><span>$'+money(r.counted)+'</span></div>'+
+      '<div class="cart-total-row grand" style="color:'+diffColor+';"><span>Difference</span><span>$'+money(r.difference)+'</span></div>'+
+      '<h3 style="margin-top:16px;">Items sold this shift</h3>'+
+      itemsHtml+
+      '<button class="btn small secondary" style="margin-top:12px;" onclick="loadDrawer()">Start a new shift</button>'+
+    '</div>';
+}
+
+// ── Shift History (admin) ───────────────────────────────────────────────
+function loadShiftHistory(){
+  call('getShiftHistory',session.userId,50).then(function(res){
+    var tbody=document.getElementById('shift-history-tbody');
+    if(!res.success){tbody.innerHTML='<tr><td colspan="8"><div class="empty-state">'+res.message+'</div></td></tr>';return;}
+    if(!res.shifts.length){tbody.innerHTML='<tr><td colspan="8"><div class="empty-state">No completed shifts yet</div></td></tr>';return;}
+    tbody.innerHTML=res.shifts.map(function(s){
+      var diffColor = Number(s.Difference)===0 ? 'ok' : 'low';
+      return '<tr><td>'+s.Date+'</td><td>'+esc(s.CashierName)+'</td><td>'+new Date(s.OpenedAt||s.Date).toLocaleTimeString()+'</td>'+
+        '<td>'+(s.ClosedAt?new Date(s.ClosedAt).toLocaleTimeString():'—')+'</td>'+
+        '<td>$'+money(Number(s.OpeningBalance)+Number(s.CashSales)-Number(s.Expenses))+'</td>'+
+        '<td>$'+money(s.ClosingBalance)+'</td>'+
+        '<td><span class="pill '+diffColor+'">$'+money(s.Difference)+'</span></td>'+
+        '<td class="row-actions"><button onclick="openShiftDetails(\''+s.DrawerID+'\')">View</button></td></tr>';
+    }).join('');
+  }).catch(function(err){toast(err,true);});
+}
+function openShiftDetails(drawerId){
+  document.getElementById('shd-drawer-id').textContent=drawerId;
+  document.getElementById('shd-msg').innerHTML='';
+  document.getElementById('shd-meta').innerHTML='';
+  document.getElementById('shd-items').innerHTML='';
+  document.getElementById('shift-details-modal').classList.add('active');
+  call('getShiftDetails',session.userId,drawerId).then(function(res){
+    if(!res.success){document.getElementById('shd-msg').innerHTML='<div class="msg error">'+res.message+'</div>';return;}
+    var d=res.drawer;
+    document.getElementById('shd-meta').innerHTML=
+      'Cashier: <b>'+esc(d.CashierName)+'</b> &nbsp;·&nbsp; '+new Date(d.OpenedAt||d.Date).toLocaleString()+' to '+(d.ClosedAt?new Date(d.ClosedAt).toLocaleString():'—')+
+      '<br>Opening: $'+money(d.OpeningBalance)+' &nbsp;·&nbsp; Counted: $'+money(d.ClosingBalance)+' &nbsp;·&nbsp; Difference: $'+money(d.Difference);
+    var el=document.getElementById('shd-items');
+    if(!res.items.length){ el.innerHTML='<div class="empty-state">No sales during this shift.</div>'; return; }
+    el.innerHTML='<table><thead><tr><th>Product</th><th>Qty sold</th><th>Revenue</th></tr></thead><tbody>'+
+      res.items.map(function(i){ return '<tr><td>'+esc(i.ProductName)+'</td><td>'+i.QuantitySold+'</td><td>$'+money(i.Revenue)+'</td></tr>'; }).join('')+
+      '</tbody></table>';
+  }).catch(function(err){document.getElementById('shd-msg').innerHTML='<div class="msg error">'+err+'</div>';});
+}
+document.getElementById('shift-details-close').addEventListener('click',function(){document.getElementById('shift-details-modal').classList.remove('active');});
 
 // ── Users ──────────────────────────────────────────────────────────────────
 function loadUsers(){
@@ -1453,15 +1763,18 @@ document.getElementById('add-user-btn').addEventListener('click',function(){
 });
 document.getElementById('user-modal-cancel').addEventListener('click',function(){document.getElementById('user-modal').classList.remove('active');});
 document.getElementById('user-modal-save').addEventListener('click',function(){
+  var self=this;
+  runGuarded(self, function(){
   var msgEl=document.getElementById('user-modal-msg');
   var payload={fullName:document.getElementById('uf-name').value.trim(),username:document.getElementById('uf-username').value.trim(),
     password:document.getElementById('uf-password').value, roleId:document.getElementById('uf-role').value};
   if(!payload.fullName||!payload.username||!payload.password){msgEl.innerHTML='<div class="msg error">All fields are required.</div>';return;}
-  call('createUser',session.userId,payload).then(function(res){
+  return call('createUser',session.userId,payload).then(function(res){
     if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
     document.getElementById('user-modal').classList.remove('active');
     toast('User created.'); loadUsers();
   }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+  });
 });
 
 // ── Settings ───────────────────────────────────────────────────────────────
@@ -1485,23 +1798,29 @@ function loadSettings(){
   }).catch(function(err){toast(err,true);});
 }
 document.getElementById('save-business-btn').addEventListener('click',function(){
+  var self=this;
+  runGuarded(self, function(){
   var payload={BusinessName:document.getElementById('bi-name').value.trim(),Owner:document.getElementById('bi-owner').value.trim(),
     LicenseNumber:document.getElementById('bi-license').value.trim(),TaxID:document.getElementById('bi-tax').value.trim(),
     Phone:document.getElementById('bi-phone').value.trim(),Email:document.getElementById('bi-email').value.trim(),
     Address:document.getElementById('bi-address').value.trim(),LogoURL:''};
-  call('updateBusinessInfo',session.userId,payload).then(function(res){
+  return call('updateBusinessInfo',session.userId,payload).then(function(res){
     if(!res.success) return toast(res.message,true);
     toast('Business info saved.');
   }).catch(function(err){toast(err,true);});
+  });
 });
 document.getElementById('save-settings-btn').addEventListener('click',function(){
+  var self=this;
+  runGuarded(self, function(){
   var payload={Currency:document.getElementById('s-currency').value.trim(),VATRate:document.getElementById('s-vat').value.trim(),
     LowStockAlertThreshold:document.getElementById('s-lowstock').value.trim(),ExpiryAlertDays:document.getElementById('s-expirydays').value.trim(),
     ReceiptHeader:document.getElementById('s-receiptheader').value.trim(),ReceiptFooter:document.getElementById('s-receiptfooter').value.trim()};
-  call('updateSettings',session.userId,payload).then(function(res){
+  return call('updateSettings',session.userId,payload).then(function(res){
     if(!res.success) return toast(res.message,true);
     toast('Settings saved.');
   }).catch(function(err){toast(err,true);});
+  });
 });
 
 // ── Receipt printing ─────────────────────────────────────────────────────

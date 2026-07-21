@@ -51,3 +51,17 @@ function ok(data) {
 function fail(message) {
   return { success: false, message: message };
 }
+
+// Wraps a function body in try/catch. Returns a callable that catches
+// exceptions and returns fail() instead of throwing.
+// Usage: return safe(function () { ... })();
+function safe(fn) {
+  return function () {
+    try {
+      return fn.apply(this, arguments);
+    } catch (e) {
+      Logger.log('safe() caught: ' + e);
+      return fail(e.message || String(e));
+    }
+  };
+}

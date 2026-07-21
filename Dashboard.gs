@@ -141,3 +141,89 @@ function getCategoryBreakdown(userId, days) {
     return ok({ breakdown: breakdown });
   })();
 }
+
+// Month-over-month and year-over-year revenue comparison. Owner/Pharmacist only.
+function getPeriodComparison(userId) {
+  return safe(function () {
+    authorize(userId, PERMISSIONS.VIEW_PROFIT);
+    var sales = readTable(SHEETS.SALES).rows;
+    var now = new Date();
+
+    function sumRange(start, end) {
+      return sales.reduce(function (sum, s) {
+        var d = new Date(s.SaleDate);
+        return (d >= start && d < end) ? sum + Number(s.GrandTotal || 0) : sum;
+      }, 0);
+    }
+    function pctChange(curr, prev) {
+      if (!prev) return curr > 0 ? 100 : 0;
+      return Math.round((curr - prev) / prev * 10000) / 100;
+    }
+
+    var startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    var startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    var startOfThisYear = new Date(now.getFullYear(), 0, 1);
+    var startOfLastYear = new Date(now.getFullYear() - 1, 0, 1);
+    // Same year-to-date window last year, so the comparison is apples-to-apples
+    // (e.g. "Jan 1 – Jul 21 this year" vs "Jan 1 – Jul 21 last year").
+    var lastYearSameWindowEnd = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate() + 1);
+
+    var thisMonth = sumRange(startOfThisMonth, now);
+    var lastMonth = sumRange(startOfLastMonth, startOfThisMonth);
+    var thisYear = sumRange(startOfThisYear, now);
+    var lastYear = sumRange(startOfLastYear, lastYearSameWindowEnd);
+
+    return ok({
+      comparison: {
+        thisMonth: Math.round(thisMonth * 100) / 100, lastMonth: Math.round(lastMonth * 100) / 100,
+        momChangePct: pctChange(thisMonth, lastMonth),
+        thisYear: Math.round(thisYear * 100) / 100, lastYear: Math.round(lastYear * 100) / 100,
+        yoyChangePct: pctChange(thisYear, lastYear)
+      }
+    });
+  })();
+}
+
+// Daily profit (revenue − cost of goods sold − expenses) for the last `days`
+// days (default 14). Owner/Pharmacist only.
+function getProfitTrend(userId, days) {
+  return safe(function () {
+    authorize(userId, PERMISSIONS.VIEW_PROFIT);
+    var n = Number(days) || 14;
+    var sales = readTable(SHEETS.SALES).rows;
+    var saleItems = readTable(SHEETS.SALE_ITEMS).rows;
+    var batches = readTable(SHEETS.BATCHES).rows;
+    var expenses = readTable(SHEETS.EXPENSES).rows;
+
+    var costByBatch = {}; batches.forEach(function (b) { costByBatch[b.BatchID] = Number(b.PurchasePrice || 0); });
+    var saleDateById = {}; sales.forEach(function (s) { saleDateById[s.SaleID] = new Date(s.SaleDate).toDateString(); });
+
+    var buckets = [];
+    var revByDate = {}, costByDate = {}, expByDate = {};
+    for (var i = n - 1; i >= 0; i--) {
+      var d = new Date(); d.setDate(d.getDate() - i);
+      var key = d.toDateString();
+      revByDate[key] = 0; costByDate[key] = 0; expByDate[key] = 0;
+      buckets.push(key);
+    }
+    sales.forEach(function (s) {
+      var key = new Date(s.SaleDate).toDateString();
+      if (revByDate[key] !== undefined) revByDate[key] += Number(s.GrandTotal || 0);
+    });
+    saleItems.forEach(function (item) {
+      var key = saleDateById[item.SaleID];
+      if (key && costByDate[key] !== undefined) costByDate[key] += Number(item.Quantity) * (costByBatch[item.BatchID] || 0);
+    });
+    expenses.forEach(function (e) {
+      var key = new Date(e.ExpenseDate).toDateString();
+      if (expByDate[key] !== undefined) expByDate[key] += Number(e.Amount || 0);
+    });
+
+    var trend = buckets.map(function (key) {
+      var d = new Date(key);
+      var profit = revByDate[key] - costByDate[key] - expByDate[key];
+      return { label: (d.getMonth() + 1) + '/' + d.getDate(), profit: Math.round(profit * 100) / 100 };
+    });
+    return ok({ trend: trend });
+  })();
+}

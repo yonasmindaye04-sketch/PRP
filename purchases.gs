@@ -106,12 +106,26 @@ function getPurchaseDetails(userId, purchaseId) {
   var receiver = findRowById(SHEETS.USERS, 'UserID', purchase.ReceivedBy);
   purchase.SupplierName = supplier ? supplier.SupplierName : purchase.SupplierID;
   purchase.ReceivedByName = receiver ? receiver.FullName : purchase.ReceivedBy;
+  if (supplier) {
+    purchase.SupplierPhone = supplier.Phone || '';
+    purchase.SupplierEmail = supplier.Email || '';
+    purchase.SupplierAddress = supplier.Address || '';
+    purchase.SupplierTaxNumber = supplier.TaxNumber || '';
+    purchase.SupplierPaymentTerms = supplier.PaymentTerms || '';
+  }
   if (purchase.DeletedBy) {
     var deleter = findRowById(SHEETS.USERS, 'UserID', purchase.DeletedBy);
     purchase.DeletedByName = deleter ? deleter.FullName : purchase.DeletedBy;
   }
 
-  return ok({ purchase: purchase, items: items });
+  var payments = findRows(SHEETS.PAYMENTS, function (p) { return p.PurchaseID === purchaseId; });
+  if (payments.length) {
+    var pUsers = readTable(SHEETS.USERS).rows;
+    var pNameById = {}; pUsers.forEach(function (u) { pNameById[u.UserID] = u.FullName; });
+    payments.forEach(function (p) { p.ReceivedByName = pNameById[p.ReceivedBy] || p.ReceivedBy; });
+  }
+
+  return ok({ purchase: purchase, items: items, payments: payments || [] });
   })();
 }
 

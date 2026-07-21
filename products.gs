@@ -22,15 +22,26 @@ function getProducts(userId) {
 
   var out = products.map(function (p) {
     var inv = stockByProduct[p.ProductID];
+    var currentStock = inv ? Number(inv.CurrentStock) : 0;
+    var loosePills = inv ? Number(inv.LoosePills) || 0 : 0;
+    var pillsPerUnit = Number(p.PillsPerUnit) || 0;
+    var sellByPill = p.SellByPill === true || p.SellByPill === 'TRUE';
+    var displayStock = sellByPill && pillsPerUnit > 0
+      ? currentStock * pillsPerUnit + loosePills
+      : currentStock;
     return {
       ProductID: p.ProductID, Barcode: p.Barcode, ProductName: p.ProductName, GenericName: p.GenericName,
       Brand: p.Brand, CategoryID: p.CategoryID, CategoryName: categoryName[p.CategoryID] || '—',
       Unit: p.Unit, Strength: p.Strength, DosageForm: p.DosageForm,
       PurchasePrice: p.PurchasePrice, SellingPrice: p.SellingPrice, TaxRate: p.TaxRate,
+      DefaultMargin: Number(p.DefaultMargin) || 0,
+      PillsPerUnit: pillsPerUnit, SellByPill: sellByPill,
       MinimumStock: p.MinimumStock, MaximumStock: p.MaximumStock, ReorderLevel: p.ReorderLevel,
       SupplierID: p.SupplierID,
-      CurrentStock: inv ? Number(inv.CurrentStock) : 0,
-      AvailableStock: inv ? Number(inv.AvailableStock) : 0
+      CurrentStock: currentStock, LoosePills: loosePills,
+      LoosePillsBatchID: inv ? inv.LoosePillsBatchID || '' : '',
+      AvailableStock: inv ? Number(inv.AvailableStock) : 0,
+      DisplayStock: displayStock
     };
   });
   out.sort(function (a, b) { return String(a.ProductName).localeCompare(String(b.ProductName)); });
@@ -50,14 +61,16 @@ function createProduct(userId, input) {
     Brand: input.brand || '', CategoryID: input.categoryId || '', Unit: input.unit || 'unit',
     Strength: input.strength || '', DosageForm: input.dosageForm || '',
     PurchasePrice: Number(input.purchasePrice) || 0, SellingPrice: Number(input.sellingPrice),
-    TaxRate: Number(input.taxRate) || 0, MinimumStock: Number(input.minimumStock) || 0,
+    TaxRate: Number(input.taxRate) || 0, DefaultMargin: Number(input.defaultMargin) || 0,
+    PillsPerUnit: Number(input.pillsPerUnit) || 0, SellByPill: input.sellByPill || false,
+    MinimumStock: Number(input.minimumStock) || 0,
     MaximumStock: Number(input.maximumStock) || 0, ReorderLevel: Number(input.reorderLevel) || 0,
     SupplierID: input.supplierId || '', Active: true, CreatedDate: nowIso(), UpdatedDate: nowIso(), CreatedBy: userId
   });
 
   // Inventory row starts at zero — stock only enters through a Purchase or
   // an opening-balance batch (see receivePurchase / addOpeningBatch).
-  appendRow(SHEETS.INVENTORY, { ProductID: id, CurrentStock: 0, ReservedStock: 0, AvailableStock: 0, LastUpdated: nowIso() });
+  appendRow(SHEETS.INVENTORY, { ProductID: id, CurrentStock: 0, LoosePills: 0, LoosePillsBatchID: '', ReservedStock: 0, AvailableStock: 0, LastUpdated: nowIso() });
 
   var openingQty = Number(input.openingStock) || 0;
   if (openingQty > 0) {
@@ -78,7 +91,9 @@ function updateProduct(userId, input) {
     Brand: input.brand || '', CategoryID: input.categoryId || '', Unit: input.unit || 'unit',
     Strength: input.strength || '', DosageForm: input.dosageForm || '',
     PurchasePrice: Number(input.purchasePrice) || 0, SellingPrice: Number(input.sellingPrice),
-    TaxRate: Number(input.taxRate) || 0, MinimumStock: Number(input.minimumStock) || 0,
+    TaxRate: Number(input.taxRate) || 0, DefaultMargin: Number(input.defaultMargin) || 0,
+    PillsPerUnit: Number(input.pillsPerUnit) || 0, SellByPill: input.sellByPill || false,
+    MinimumStock: Number(input.minimumStock) || 0,
     MaximumStock: Number(input.maximumStock) || 0, ReorderLevel: Number(input.reorderLevel) || 0,
     SupplierID: input.supplierId || '', UpdatedDate: nowIso()
   };
@@ -190,5 +205,44 @@ function deductStockFEFO(productId, qty, type, refType, refId, userId, notes) {
   if (remaining > 0) throw new Error('Not enough stock available.');
 
   recalculateInventory(productId, consumed.length ? consumed[0].batchId : '', type, -qty, refType, refId, userId, notes);
+  return consumed;
+}
+
+// Deducts individual pills using FEFO. First uses loose pills from an
+// already-broken strip, then breaks new strips from the soonest-expiring
+// batch. Updates LoosePills/LoosePillsBatchID on the Inventory row.
+function deductPillsFEFO(productId, pillsWanted, type, refType, refId, userId, notes) {
+  var product = findRowById(SHEETS.PRODUCTS, 'ProductID', productId);
+  var pillsPerUnit = Number(product ? product.PillsPerUnit : 0);
+  if (!pillsPerUnit || pillsPerUnit <= 0) throw new Error('Product is not configured for pill selling (PillsPerUnit is 0).');
+
+  var inv = findRowById(SHEETS.INVENTORY, 'ProductID', productId);
+  var loosePills = inv ? Number(inv.LoosePills) || 0 : 0;
+  var currentUnits = inv ? Number(inv.CurrentStock) || 0 : 0;
+
+  // Case 1: loose pills are enough
+  if (loosePills >= pillsWanted) {
+    if (inv) updateRowById(SHEETS.INVENTORY, 'ProductID', productId, { LoosePills: loosePills - pillsWanted, LastUpdated: nowIso() });
+    appendRow(SHEETS.STOCK_MOVEMENTS, {
+      MovementID: Utilities.getUuid(), Date: nowIso(), ProductID: productId, BatchID: inv ? inv.LoosePillsBatchID || '' : '',
+      Type: type, Quantity: -pillsWanted, PreviousStock: loosePills + currentUnits * pillsPerUnit,
+      NewStock: (loosePills - pillsWanted) + currentUnits * pillsPerUnit,
+      ReferenceType: refType || '', ReferenceID: refId || '', Remarks: notes || ('Used ' + pillsWanted + ' loose pills'), UserID: userId
+    });
+    return [];
+  }
+
+  // Case 2: need to break new strips
+  var pillsStillNeeded = pillsWanted - loosePills;
+  var unitsToBreak = Math.ceil(pillsStillNeeded / pillsPerUnit);
+  if (unitsToBreak > currentUnits) throw new Error('Not enough stock (need ' + pillsWanted + ' pills, have ' + (currentUnits * pillsPerUnit + loosePills) + ').');
+
+  var consumed = deductStockFEFO(productId, unitsToBreak, type, refType, refId, userId, notes || ('Broke ' + unitsToBreak + ' unit(s) for ' + pillsWanted + ' pills'));
+
+  var pillsFromNewBreaks = unitsToBreak * pillsPerUnit;
+  var newLoosePills = loosePills + pillsFromNewBreaks - pillsWanted;
+  var lastBatchId = consumed.length ? consumed[consumed.length - 1].batchId : (inv ? inv.LoosePillsBatchID || '' : '');
+  if (inv) updateRowById(SHEETS.INVENTORY, 'ProductID', productId, { LoosePills: newLoosePills, LoosePillsBatchID: lastBatchId, LastUpdated: nowIso() });
+
   return consumed;
 }
