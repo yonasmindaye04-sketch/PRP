@@ -42,7 +42,8 @@ function createPurchase(userId, input) {
       PurchaseID: purchaseId, PurchaseDate: nowIso(), SupplierID: input.supplierId,
       InvoiceNumber: input.invoiceNumber || '', TotalAmount: subtotal, Discount: discount, Tax: tax,
       GrandTotal: grandTotal, PaymentStatus: paidAmount >= grandTotal ? 'Paid' : (paidAmount > 0 ? 'Partial' : 'Unpaid'),
-      PaidAmount: paidAmount, Balance: grandTotal - paidAmount, ReceivedBy: userId, Notes: input.notes || ''
+      PaidAmount: paidAmount, Balance: grandTotal - paidAmount, ReceivedBy: userId, Notes: input.notes || '',
+      RecordStatus: 'Active', DeletedBy: '', DeletedReason: '', DeletedDate: ''
     });
 
     validated.forEach(function (v) {
@@ -83,6 +84,107 @@ function getPurchaseDetails(userId, purchaseId) {
   var purchase = findRowById(SHEETS.PURCHASES, 'PurchaseID', purchaseId);
   if (!purchase) return fail('Purchase not found.');
   var items = findRows(SHEETS.PURCHASE_ITEMS, function (i) { return i.PurchaseID === purchaseId; });
-  return ok({ purchase: purchase, items: items });
+
+  var products = readTable(SHEETS.PRODUCTS).rows;
+  var productById = {}; products.forEach(function (p) { productById[p.ProductID] = p; });
+  var batches = readTable(SHEETS.BATCHES).rows;
+  var batchById = {}; batches.forEach(function (b) { batchById[b.BatchID] = b; });
+
+  items.forEach(function (item) {
+    var product = productById[item.ProductID] || {};
+    var batch = batchById[item.BatchID];
+    item.ProductName = product.ProductName || item.ProductID;
+    item.GenericName = product.GenericName || '';
+    item.Strength = product.Strength || '';
+    item.DosageForm = product.DosageForm || '';
+    item.Unit = product.Unit || '';
+    item.ExpiryDate = batch ? batch.ExpiryDate : '';
+    item.BatchNumber = batch ? batch.BatchNumber : item.BatchID;
+  });
+
+  var supplier = findRowById(SHEETS.SUPPLIERS, 'SupplierID', purchase.SupplierID);
+  var receiver = findRowById(SHEETS.USERS, 'UserID', purchase.ReceivedBy);
+  purchase.SupplierName = supplier ? supplier.SupplierName : purchase.SupplierID;
+  purchase.ReceivedByName = receiver ? receiver.FullName : purchase.ReceivedBy;
+  if (supplier) {
+    purchase.SupplierPhone = supplier.Phone || '';
+    purchase.SupplierEmail = supplier.Email || '';
+    purchase.SupplierAddress = supplier.Address || '';
+    purchase.SupplierTaxNumber = supplier.TaxNumber || '';
+    purchase.SupplierPaymentTerms = supplier.PaymentTerms || '';
+  }
+  if (purchase.DeletedBy) {
+    var deleter = findRowById(SHEETS.USERS, 'UserID', purchase.DeletedBy);
+    purchase.DeletedByName = deleter ? deleter.FullName : purchase.DeletedBy;
+  }
+
+  var payments = findRows(SHEETS.PAYMENTS, function (p) { return p.PurchaseID === purchaseId; });
+  if (payments.length) {
+    var pUsers = readTable(SHEETS.USERS).rows;
+    var pNameById = {}; pUsers.forEach(function (u) { pNameById[u.UserID] = u.FullName; });
+    payments.forEach(function (p) { p.ReceivedByName = pNameById[p.ReceivedBy] || p.ReceivedBy; });
+  }
+
+  return ok({ purchase: purchase, items: items, payments: payments || [] });
+  })();
+}
+
+// Deleting a purchase is an Owner-only action, checked directly against the
+// user's role rather than the RolePermissions sheet — this is deliberately
+// not configurable, since voiding a financial record shouldn't depend on
+// how someone has set up the permissions table.
+function deletePurchase(userId, purchaseId, reason) {
+  return safe(function () {
+  var user = requireUser(userId);
+  if (user.RoleID !== ROLE_IDS.OWNER) return fail('Only the Owner can delete a purchase.');
+  if (!reason || !reason.trim()) return fail('A reason is required to delete a purchase.');
+
+  var purchase = findRowById(SHEETS.PURCHASES, 'PurchaseID', purchaseId);
+  if (!purchase) return fail('Purchase not found.');
+  if (purchase.RecordStatus === 'Deleted') return fail('This purchase has already been deleted.');
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    var items = findRows(SHEETS.PURCHASE_ITEMS, function (i) { return i.PurchaseID === purchaseId; });
+    var partialReversalProducts = [];
+
+    items.forEach(function (item) {
+      var batch = findRowById(SHEETS.BATCHES, 'BatchID', item.BatchID);
+      if (!batch) return; // batch already fully removed some other way — nothing to reverse
+      var purchasedQty = Number(item.Quantity);
+      var currentQty = Number(batch.Quantity);
+      var reduceBy = Math.min(purchasedQty, currentQty);
+      if (reduceBy <= 0) return;
+
+      updateRowById(SHEETS.BATCHES, 'BatchID', batch.BatchID, { Quantity: currentQty - reduceBy });
+      recalculateInventory(item.ProductID, batch.BatchID, 'Purchase Deleted', -reduceBy, 'PurchaseDeleted', purchaseId, userId,
+        'Purchase ' + purchaseId + ' deleted: ' + reason);
+
+      if (reduceBy < purchasedQty) {
+        // Some of this batch was already sold — that portion can't be
+        // "unreceived", so stock only reverses down to what's left.
+        partialReversalProducts.push(item.ProductID);
+      }
+    });
+
+    // Cancel whatever unpaid balance this purchase still contributed —
+    // payments already made are real money that changed hands and are
+    // left alone; only the outstanding portion is removed.
+    adjustSupplierBalance(purchase.SupplierID, -Number(purchase.Balance || 0));
+
+    updateRowById(SHEETS.PURCHASES, 'PurchaseID', purchaseId, {
+      RecordStatus: 'Deleted', DeletedBy: userId, DeletedReason: reason, DeletedDate: nowIso()
+    });
+
+    logAudit(userId, 'Purchases', 'DELETE', purchaseId, purchase, { reason: reason });
+
+    return ok({
+      partialReversal: partialReversalProducts.length > 0,
+      affectedProductCount: partialReversalProducts.length
+    });
+  } finally {
+    lock.releaseLock();
+  }
   })();
 }

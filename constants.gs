@@ -30,6 +30,7 @@ var SHEETS = {
   INCOME:              'Income',
   PAYMENTS:            'Payments',
   CASH_DRAWER:         'CashDrawer',
+  SHIFT_SALES:         'ShiftSales',
   PRESCRIPTIONS:       'Prescriptions',
   PRESCRIPTION_ITEMS:  'PrescriptionItems',
   NOTIFICATIONS:       'Notifications',
@@ -51,13 +52,14 @@ var HEADERS = {
   Categories:    ['CategoryID', 'CategoryName', 'Description', 'Active'],
 
   Products: ['ProductID', 'Barcode', 'ProductName', 'GenericName', 'Brand', 'CategoryID', 'Unit',
-             'Strength', 'DosageForm', 'PurchasePrice', 'SellingPrice', 'TaxRate', 'MinimumStock',
-             'MaximumStock', 'ReorderLevel', 'SupplierID', 'Active', 'CreatedDate', 'UpdatedDate', 'CreatedBy'],
+             'Strength', 'DosageForm', 'PurchasePrice', 'SellingPrice', 'TaxRate', 'DefaultMargin',
+             'PillsPerUnit', 'SellByPill', 'MinimumStock', 'MaximumStock', 'ReorderLevel', 'SupplierID',
+             'Active', 'CreatedDate', 'UpdatedDate', 'CreatedBy'],
 
   Batches: ['BatchID', 'ProductID', 'BatchNumber', 'ManufacturingDate', 'ExpiryDate', 'Quantity',
             'PurchasePrice', 'SellingPrice', 'SupplierID'],
 
-  Inventory: ['ProductID', 'CurrentStock', 'ReservedStock', 'AvailableStock', 'LastUpdated'],
+  Inventory: ['ProductID', 'CurrentStock', 'LoosePills', 'LoosePillsBatchID', 'ReservedStock', 'AvailableStock', 'LastUpdated'],
 
   StockMovements: ['MovementID', 'Date', 'ProductID', 'BatchID', 'Type', 'Quantity', 'PreviousStock',
                    'NewStock', 'ReferenceType', 'ReferenceID', 'Remarks', 'UserID'],
@@ -68,7 +70,8 @@ var HEADERS = {
   Customers: ['CustomerID', 'FullName', 'Phone', 'Email', 'Address', 'LoyaltyPoints', 'CreditBalance', 'CreatedDate'],
 
   Purchases: ['PurchaseID', 'PurchaseDate', 'SupplierID', 'InvoiceNumber', 'TotalAmount', 'Discount',
-              'Tax', 'GrandTotal', 'PaymentStatus', 'PaidAmount', 'Balance', 'ReceivedBy', 'Notes'],
+              'Tax', 'GrandTotal', 'PaymentStatus', 'PaidAmount', 'Balance', 'ReceivedBy', 'Notes',
+              'RecordStatus', 'DeletedBy', 'DeletedReason', 'DeletedDate'],
 
   PurchaseItems: ['PurchaseItemID', 'PurchaseID', 'ProductID', 'BatchID', 'Quantity', 'PurchasePrice',
                   'SellingPrice', 'Total'],
@@ -76,7 +79,7 @@ var HEADERS = {
   Sales: ['SaleID', 'SaleDate', 'InvoiceNumber', 'CustomerID', 'CashierID', 'TotalAmount', 'Discount',
           'Tax', 'GrandTotal', 'PaymentMethod', 'AmountReceived', 'ChangeGiven', 'Status'],
 
-  SaleItems: ['SaleItemID', 'SaleID', 'ProductID', 'BatchID', 'Quantity', 'UnitPrice', 'Discount', 'Tax', 'Total'],
+  SaleItems: ['SaleItemID', 'SaleID', 'ProductID', 'BatchID', 'Quantity', 'UnitPrice', 'MarginUsed', 'Discount', 'Tax', 'Total'],
 
   Returns: ['ReturnID', 'Date', 'SaleID', 'ProductID', 'Quantity', 'Reason', 'Amount', 'ApprovedBy'],
 
@@ -87,7 +90,9 @@ var HEADERS = {
   Payments: ['PaymentID', 'Date', 'SupplierID', 'PurchaseID', 'Amount', 'Method', 'Reference', 'ReceivedBy'],
 
   CashDrawer: ['DrawerID', 'Date', 'CashierID', 'OpeningBalance', 'CashSales', 'CardSales', 'MobileMoney',
-               'Expenses', 'ClosingBalance', 'Difference', 'ClosedBy'],
+               'Expenses', 'ClosingBalance', 'Difference', 'ClosedBy', 'OpenedAt', 'ClosedAt'],
+
+  ShiftSales: ['ShiftSaleID', 'DrawerID', 'CashierID', 'ProductID', 'ProductName', 'QuantitySold', 'Revenue'],
 
   Prescriptions: ['PrescriptionID', 'CustomerID', 'DoctorName', 'Hospital', 'Date', 'Notes'],
   PrescriptionItems: ['PrescriptionItemID', 'PrescriptionID', 'ProductID', 'Quantity', 'Instructions'],

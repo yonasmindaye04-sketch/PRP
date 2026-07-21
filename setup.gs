@@ -52,9 +52,10 @@ function seedProduct(name, categoryId, cost, price, qty, reorderLevel, expiry) {
   appendRow(SHEETS.PRODUCTS, {
     ProductID: id, Barcode: '', ProductName: name, GenericName: '', Brand: '', CategoryID: categoryId,
     Unit: 'unit', Strength: '', DosageForm: '', PurchasePrice: cost, SellingPrice: price, TaxRate: 0,
+    DefaultMargin: 0, PillsPerUnit: 0, SellByPill: false,
     MinimumStock: reorderLevel, MaximumStock: qty * 3, ReorderLevel: reorderLevel, SupplierID: '',
     Active: true, CreatedDate: nowIso(), UpdatedDate: nowIso(), CreatedBy: 'admin'
   });
-  appendRow(SHEETS.INVENTORY, { ProductID: id, CurrentStock: 0, ReservedStock: 0, AvailableStock: 0, LastUpdated: nowIso() });
+  appendRow(SHEETS.INVENTORY, { ProductID: id, CurrentStock: 0, LoosePills: 0, LoosePillsBatchID: '', ReservedStock: 0, AvailableStock: 0, LastUpdated: nowIso() });
   if (qty > 0) addOpeningBatch(id, qty, cost, price, expiry, 'admin');
 }

@@ -13,7 +13,7 @@ function login(username, password) {
     if (user.PasswordHash !== hashPassword(password)) return fail('Invalid username or password.');
 
     updateRowById(SHEETS.USERS, 'UserID', user.UserID, { LastLogin: nowIso() });
-    logActivity(user.UserID, 'Logged in');
+    logAudit(user.UserID, 'Logged in');
 
     var role = findRowById(SHEETS.ROLES, 'RoleID', user.RoleID);
     return ok({
