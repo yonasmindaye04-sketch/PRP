@@ -29,7 +29,16 @@ function createPurchase(userId, input) {
       if (qty <= 0 || price < 0) return fail('Invalid quantity/price in line ' + (i + 1) + '.');
       var lineTotal = qty * price;
       subtotal += lineTotal;
-      validated.push({ product: product, qty: qty, purchasePrice: price, sellingPrice: Number(it.sellingPrice) || Number(product.SellingPrice), expiryDate: it.expiryDate || '', lineTotal: lineTotal });
+      var finalSellingPrice = Number(it.sellingPrice);
+      if (!finalSellingPrice) {
+        if (price > Number(product.PurchasePrice || 0)) {
+          var defaultMargin = Number(product.DefaultMargin || 0);
+          finalSellingPrice = price * (1 + defaultMargin / 100);
+        } else {
+          finalSellingPrice = Number(product.SellingPrice);
+        }
+      }
+      validated.push({ product: product, qty: qty, purchasePrice: price, sellingPrice: finalSellingPrice, expiryDate: it.expiryDate || '', lineTotal: lineTotal });
     }
 
     var discount = Number(input.discount) || 0;
@@ -52,6 +61,13 @@ function createPurchase(userId, input) {
         PurchaseItemID: Utilities.getUuid(), PurchaseID: purchaseId, ProductID: v.product.ProductID, BatchID: batchId,
         Quantity: v.qty, PurchasePrice: v.purchasePrice, SellingPrice: v.sellingPrice, Total: v.lineTotal
       });
+      if (v.purchasePrice > Number(v.product.PurchasePrice || 0)) {
+        updateRowById(SHEETS.PRODUCTS, 'ProductID', v.product.ProductID, {
+          PurchasePrice: v.purchasePrice,
+          SellingPrice: v.sellingPrice,
+          UpdatedDate: nowIso()
+        });
+      }
     });
 
     // Whatever isn't paid up front increases what we owe the supplier.

@@ -239,15 +239,25 @@ createSale(userId, cart[{productId, qty, unitPrice, marginUsed}], options)
 ```
 createPurchase(userId, {supplierId, items[], discount, tax, paidAmount})
   1. validate supplier and all line items
-  2. insert Purchases row (PUR000001, timestamp, totals, PaymentStatus)
-  3. for each line item:
-       receiveBatch(productId, qty, purchasePrice, sellingPrice, expiryDate, supplierId, 'Purchase', purchaseId, ...)
-       → creates a Batches row with the delivery's expiry/cost
-       → recalculates Inventory
-       → appends StockMovements
+  2. for each line item, determine final selling price:
+       IF sellingPrice typed manually → use it
+       ELSE IF new purchasePrice > catalog PurchasePrice:
+           sellingPrice = newCost × (1 + product.DefaultMargin / 100)  ← AUTO-CALCULATED
+       ELSE → keep existing catalog SellingPrice
+  3. insert Purchases row (PUR000001, timestamp, totals, PaymentStatus)
+  4. for each line item:
+       receiveBatch(productId, qty, purchasePrice, sellingPrice, expiryDate, ...)
+         → creates a Batches row with the delivery's expiry/cost
+         → recalculates Inventory
+         → appends StockMovements
        insert PurchaseItems row with BatchID
-  4. adjustSupplierBalance(supplierId, grandTotal - paidAmount)  ← increases what we owe
+       IF new purchasePrice > catalog PurchasePrice:
+           updateRowById(PRODUCTS, ProductID, { PurchasePrice, SellingPrice, UpdatedDate })
+           ← permanently updates the catalog price
+  5. adjustSupplierBalance(supplierId, grandTotal - paidAmount)  ← increases what we owe
 ```
+
+**Auto price update on restock:** If the supplier charges more than the previously recorded cost, the product catalog is updated automatically. The new `SellingPrice` is recalculated using the product's `DefaultMargin` so profit margins are preserved without manual intervention.
 
 **`getPurchaseDetails`** returns enriched data:
 - Purchase header + all line items with product names
@@ -255,7 +265,7 @@ createPurchase(userId, {supplierId, items[], discount, tax, paidAmount})
 - Payment history with recorded-by user names
 - Financial summary (totals, balance due)
 
-**Soft delete (Owner-only):** `deletePurchase` reverses stock (reduces batch quantities, recalculates inventory), reverses the supplier balance for the unpaid portion, and marks `RecordStatus = 'Deleted'` with a required reason. Partial reversals are handled — if some of the batch was already sold, only the remaining quantity is reversed.
+**Soft delete (Owner-only):** `deletePurchase` reverses stock (reduces batch quantities, recalculates inventory), reverses the supplier balance for the unpaid portion, and marks `RecordStatus = 'Deleted'` with a required reason.
 
 ### 2.8 `returns.gs` — Sale Returns
 
@@ -299,14 +309,23 @@ Computed live from sheet data on each load (no rollup cache yet). Functions:
 
 | Function | What it computes |
 |---|---|
-| `getDashboardSummary` | Today's sales total, transaction count, expenses, product count, low-stock count, expiry-soon count, today's profit (Owner/Pharmacist only) |
+| `getDashboardSummary` | Today's sales total, transaction count, expenses, product count, low-stock count (smart fallback threshold), expiry-soon count, today's profit (Owner/Pharmacist only) |
 | `getSalesTrend(days)` | Daily sales totals for the last N days (powers the bar chart) |
 | `getTopProducts(days, limit)` | Top-selling products by revenue over the last N days |
 | `getCategoryBreakdown(days)` | Revenue grouped by category over the last N days |
 | `getPeriodComparison` | Month-over-month and year-over-year revenue comparison with percentage change |
 | `getProfitTrend(days)` | Daily profit (revenue − COGS − expenses) for the last N days |
 
-Profit computation: for each sale item, the cost is `SaleItem.Quantity × Batch.PurchasePrice` (the batch's actual cost, not the product's current purchase price).
+**Smart low-stock threshold:** Each product is compared against its own `ReorderLevel` if that value exists and is greater than 0. If the product's `ReorderLevel` is 0 or blank, the global `LowStockAlertThreshold` from Settings is used as the fallback. This prevents products with an unset `ReorderLevel` from always appearing in the low-stock list.
+
+```javascript
+var threshold = (p.ReorderLevel && Number(p.ReorderLevel) > 0)
+    ? Number(p.ReorderLevel)
+    : defaultLowStock;  // from Settings
+return (stockByProduct[p.ProductID] || 0) <= threshold;
+```
+
+Profit computation: for each sale item, the cost is `SaleItem.Quantity × Batch.PurchasePrice` (the batch's actual cost at the time of purchase, not the product's current catalog price).
 
 ---
 
