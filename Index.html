@@ -1527,7 +1527,8 @@ function recalcPurchaseTotals(){
   var discount=Number(document.getElementById('pu-discount').value)||0;
   var tax=Number(document.getElementById('pu-tax').value)||0;
   var grandTotal=Math.max(0, subtotal-discount+tax);
-  document.getElementById('pu-calc-subtotal').textContent='$'+money(subtotal);
+  docume
+  nt.getElementById('pu-calc-subtotal').textContent='$'+money(subtotal);
   document.getElementById('pu-calc-discount').textContent='$'+money(discount);
   document.getElementById('pu-calc-tax').textContent='$'+money(tax);
   document.getElementById('pu-calc-grandtotal').textContent='$'+money(grandTotal);
