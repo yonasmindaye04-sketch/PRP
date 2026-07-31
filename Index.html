@@ -463,8 +463,29 @@ tr:last-child td{border-bottom:none;}
     <div class="field"><label>Selling price</label><input type="text" id="pf-sellingprice"></div>
     <div class="field"><label>Tax rate (%)</label><input type="text" id="pf-taxrate"></div>
     <div class="field"><label>Default margin (%)</label><input type="text" id="pf-defaultmargin" placeholder="0"></div>
-    <div class="field"><label>Pills per unit</label><input type="text" id="pf-pillsperunit" placeholder="e.g. 10 for a strip of 10"></div>
-    <div class="field"><label>&nbsp;</label><label style="display:flex;align-items:center;gap:6px;font-weight:600;cursor:pointer;"><input type="checkbox" id="pf-sellbypill"> Sell by individual pill</label></div>
+    <div class="field" style="grid-column:1/-1;">
+      <div style="border:1.5px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--surface);">
+        <label style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;cursor:pointer;margin-bottom:0;">
+          <input type="checkbox" id="pf-sellbypill" onchange="updatePillPreview()" style="width:16px;height:16px;accent-color:var(--brand);">
+          Enable sell-by-pill (e.g. sell individual tablets from a strip)
+        </label>
+        <div id="pf-pill-section" style="display:none;margin-top:12px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div class="field" style="margin:0;">
+              <label>Number of pills in 1 sealed unit</label>
+              <input type="number" id="pf-pillsperunit" min="1" placeholder="e.g. 10" oninput="updatePillPreview()" style="margin-top:4px;">
+              <small style="color:var(--ink-soft);font-size:11px;">How many individual tablets/capsules are inside one box or strip you purchase.</small>
+            </div>
+            <div id="pf-pill-preview" style="background:var(--ink-xsoft,#f0f4f8);border-radius:8px;padding:12px;font-size:12px;line-height:1.8;display:flex;flex-direction:column;justify-content:center;">
+              <span style="color:var(--ink-soft);">Fill in the fields on the left to see the price preview.</span>
+            </div>
+          </div>
+          <div style="background:#fff8e1;border:1px solid #f9c920;border-radius:6px;padding:8px 12px;font-size:11.5px;color:#7a5c00;">
+            ⚠️ <strong>Important:</strong> Enter the <strong>selling price per full sealed unit</strong> (e.g. price of one full strip). The system will automatically calculate the individual pill price by dividing by the number of pills above.
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="field"><label>Reorder level</label><input type="text" id="pf-reorderlevel"></div>
     <div class="field"><label>Minimum stock</label><input type="text" id="pf-minstock"></div>
     <div class="field"><label>Maximum stock</label><input type="text" id="pf-maxstock"></div>
@@ -1025,6 +1046,8 @@ function changeCartMargin(productId,newMargin){
   if(!item) return;
   var margin=Number(newMargin)||0;
   item.marginUsed=margin;
+  // item.purchasePrice and item.catalogPrice are already per-pill for SellByPill products
+  // (they were divided by PillsPerUnit in addToCart), so this formula is correct for both cases.
   item.price=margin>0?item.purchasePrice*(1+margin/100):item.catalogPrice;
   renderCart();
 }
@@ -1072,6 +1095,7 @@ function renderCart(){
           '<div><b>'+esc(c.name)+'</b><br><span style="color:var(--ink-soft);font-size:11px;">'+priceLabel+'</span></div>'+
           controls+
         '</div>'+
+<<<<<<< HEAD
         '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">'+
           '<button class="mini-btn" style="padding:4px 8px;font-size:11px;" onclick="changeCartMargin(\''+c.productId+'\',0)" '+(c.marginUsed==0?'style="background:var(--primary);color:#fff;border-color:var(--primary);"':'')+'>Auto</button>'+
           '<button class="mini-btn" style="padding:4px 8px;font-size:11px;" onclick="changeCartMargin(\''+c.productId+'\',20)" '+(c.marginUsed==20?'style="background:var(--primary);color:#fff;border-color:var(--primary);"':'')+'>20%</button>'+
@@ -1079,6 +1103,11 @@ function renderCart(){
           '<button class="mini-btn" style="padding:4px 8px;font-size:11px;" onclick="changeCartMargin(\''+c.productId+'\',35)" '+(c.marginUsed==35?'style="background:var(--primary);color:#fff;border-color:var(--primary);"':'')+'>35%</button>'+
           '<input type="number" min="0" placeholder="%" style="width:50px;font-size:11px;padding:2px 4px;border:1px solid var(--line);border-radius:4px;" value="'+c.marginUsed+'" onchange="changeCartMargin(\''+c.productId+'\',this.value)">'+
           '<span style="font-size:10.5px;color:var(--ink-soft);">margin</span>'+
+=======
+        '<div style="display:flex;gap:6px;align-items:center;">'+
+          '<input type="number" step="0.1" value="'+c.marginUsed+'" style="width:60px;font-size:11px;padding:2px 4px;border:1px solid var(--line);border-radius:4px;" onchange="changeCartMargin(\''+c.productId+'\',this.value)">'+
+          '<span style="font-size:10.5px;color:var(--ink-soft);">% margin</span>'+
+>>>>>>> 8256c0cfbe516b1196f0e8277c26f3e392e83c9b
         '</div>'+
       '</div>';
     }).join('');
@@ -1179,9 +1208,43 @@ function openProductModal(productId){
   document.getElementById('pf-openingqty-field').style.display=product?'none':'block';
   document.getElementById('pf-expiry-field').style.display=product?'none':'block';
   document.getElementById('product-modal').classList.add('active');
+  updatePillPreview();
 }
 document.getElementById('add-product-btn').addEventListener('click',function(){openProductModal(null);});
 document.getElementById('product-modal-cancel').addEventListener('click',function(){document.getElementById('product-modal').classList.remove('active');});
+document.getElementById('pf-sellingprice').addEventListener('input', updatePillPreview);
+document.getElementById('pf-purchaseprice').addEventListener('input', updatePillPreview);
+
+function updatePillPreview(){
+  var isChecked = document.getElementById('pf-sellbypill').checked;
+  var section = document.getElementById('pf-pill-section');
+  section.style.display = isChecked ? 'block' : 'none';
+  if(!isChecked) return;
+
+  var ppu = Number(document.getElementById('pf-pillsperunit').value) || 0;
+  var sellingPrice = Number(document.getElementById('pf-sellingprice').value) || 0;
+  var purchasePrice = Number(document.getElementById('pf-purchaseprice').value) || 0;
+  var preview = document.getElementById('pf-pill-preview');
+
+  if(!ppu || !sellingPrice){
+    preview.innerHTML = '<span style="color:var(--ink-soft);">Enter the number of pills and selling price to see the preview.</span>';
+    return;
+  }
+
+  var pricePerPill = sellingPrice / ppu;
+  var costPerPill = purchasePrice > 0 ? purchasePrice / ppu : null;
+  var margin = purchasePrice > 0 && sellingPrice > 0 ? ((sellingPrice - purchasePrice) / purchasePrice * 100) : null;
+
+  preview.innerHTML =
+    '<div style="font-weight:700;font-size:13px;margin-bottom:6px;">💊 Price Preview</div>'+
+    '<table style="width:100%;font-size:12px;border-collapse:collapse;">'+
+      '<tr><td style="color:var(--ink-soft);padding:2px 0;">Sealed unit ('+ppu+' pills)</td><td style="text-align:right;font-weight:600;">'+money(sellingPrice)+' ETB</td></tr>'+
+      '<tr><td style="color:var(--ink-soft);padding:2px 0;">Per individual pill</td><td style="text-align:right;font-weight:700;color:var(--brand);">'+money(pricePerPill)+' ETB</td></tr>'+
+      (costPerPill!==null?'<tr><td style="color:var(--ink-soft);padding:2px 0;">Cost per pill</td><td style="text-align:right;">'+money(costPerPill)+' ETB</td></tr>':'')+
+      (margin!==null?'<tr><td style="color:var(--ink-soft);padding:2px 0;">Unit margin</td><td style="text-align:right;color:'+(margin>=0?'#2e7d32':'#c62828')+';">'+money(margin)+'%</td></tr>':'')+
+    '</table>'+
+    '<div style="margin-top:8px;font-size:11px;color:var(--ink-soft);">Example: customer buys 3 pills → <strong>'+money(pricePerPill*3)+' ETB</strong></div>';
+}
 document.getElementById('product-modal-save').addEventListener('click',function(){
   var self=this;
   runGuarded(self, function(){
@@ -1493,7 +1556,8 @@ function recalcPurchaseTotals(){
   var discount=Number(document.getElementById('pu-discount').value)||0;
   var tax=Number(document.getElementById('pu-tax').value)||0;
   var grandTotal=Math.max(0, subtotal-discount+tax);
-  document.getElementById('pu-calc-subtotal').textContent='$'+money(subtotal);
+  docume
+  nt.getElementById('pu-calc-subtotal').textContent='$'+money(subtotal);
   document.getElementById('pu-calc-discount').textContent='$'+money(discount);
   document.getElementById('pu-calc-tax').textContent='$'+money(tax);
   document.getElementById('pu-calc-grandtotal').textContent='$'+money(grandTotal);
