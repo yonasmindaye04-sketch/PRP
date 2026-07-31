@@ -99,11 +99,13 @@ Defines every constant the system references:
 - **`ROLE_IDS`** — `ROLE_OWNER`, `ROLE_PHARMACIST`, `ROLE_CASHIER`
 - **`PERMISSIONS`** — 21 permission constants (`PERM_VIEW_DASHBOARD`, `PERM_SELL`, `PERM_MANAGE_PURCHASES`, etc.)
 - **`CACHE_TTL_SECONDS`** — 1800 (30 minutes), used for permissions and settings cache
+- **`ERROR_CODES`** — Enum of 11 structured error codes: `VALIDATION_ERROR`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `INSUFFICIENT_STOCK`, `INVALID_STATE`, `RATE_LIMITED`, `INTERNAL_ERROR`, `SHEET_ERROR`, `LOCK_TIMEOUT`. Used by `fail(message, code)` for structured client handling.
 
 Notable schema fields added for new features:
 - **Products**: `DefaultMargin`, `PillsPerUnit`, `SellByPill`
 - **Inventory**: `LoosePills`, `LoosePillsBatchID`
 - **SaleItems**: `MarginUsed`
+- **Settings**: `MarginPresets` (CSV, e.g., "20,25,35")
 
 ### 2.2 `database.gs` — Database Layer (the swap seam)
 
@@ -148,10 +150,16 @@ Permissions are **data-driven**: Roles, Permissions, and RolePermissions live in
 | `nextId(prefix, sheetName, idField)` | Sequential, human-readable IDs (e.g., `MED000042`). Scans sheet for highest existing number. |
 | `nowIso()` | Current timestamp in ISO format. |
 | `hashPassword(plain)` | SHA-256 hash via `Utilities.computeDigest`. |
-| `logAudit(userId, action, details)` | Writes to AuditLogs sheet with UUID, timestamp, user, action, details. |
+| `logAudit(userId, action, details, userAgent, ip)` | Writes to AuditLogs sheet with UUID, timestamp, user, action, details, **device/user-agent**, and **IP**. |
 | `ok(data)` | Returns `{ success: true, ...data }`. |
-| `fail(message)` | Returns `{ success: false, message: '...' }`. |
+| `fail(message, code)` | Returns `{ success: false, message: '...', code?: ERROR_CODES }`. Optional error code for structured client handling. |
 | `safe(fn)` | Wraps a function body in try/catch. Returns a callable that catches exceptions and returns `fail()` instead of throwing. Used by every module function. |
+| `reportClientError(payload)` | Receives client-side JS errors (message, stack, context, userAgent, URL) and logs them to AuditLogs with action `CLIENT_ERROR`. |
+| `archiveAuditLogs(retentionDays)` | Moves AuditLogs rows older than `retentionDays` (default 90) into yearly archive sheets (`AuditLogs_Archive_YYYY`). |
+| `setupArchiveTrigger()` | Creates a daily 2 AM trigger for `archiveAuditLogs`. Run once manually. |
+
+**Error codes** (defined in `constants.gs`):
+`VALIDATION_ERROR`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `INSUFFICIENT_STOCK`, `INVALID_STATE`, `RATE_LIMITED`, `INTERNAL_ERROR`, `SHEET_ERROR`, `LOCK_TIMEOUT`
 
 ### 2.5 `products.gs` — Product Catalog, Batches & Inventory
 

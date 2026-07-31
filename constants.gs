@@ -138,3 +138,18 @@ var PERMISSIONS = {
 };
 
 var CACHE_TTL_SECONDS = 1800; // 30 minutes — used for permissions & settings cache
+
+// ── Error codes ─────────────────────────────────────────────────────────────
+var ERROR_CODES = {
+  VALIDATION_ERROR:       'VALIDATION_ERROR',
+  UNAUTHORIZED:           'UNAUTHORIZED',
+  FORBIDDEN:              'FORBIDDEN',
+  NOT_FOUND:              'NOT_FOUND',
+  CONFLICT:               'CONFLICT',
+  INSUFFICIENT_STOCK:     'INSUFFICIENT_STOCK',
+  INVALID_STATE:          'INVALID_STATE',
+  RATE_LIMITED:           'RATE_LIMITED',
+  INTERNAL_ERROR:         'INTERNAL_ERROR',
+  SHEET_ERROR:            'SHEET_ERROR',
+  LOCK_TIMEOUT:           'LOCK_TIMEOUT'
+};
