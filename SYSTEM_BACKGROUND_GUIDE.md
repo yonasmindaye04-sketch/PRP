@@ -559,3 +559,13 @@ Purchases are never hard-deleted. They are marked `RecordStatus = 'Deleted'` and
 
 ### Permission Gating on Every Function
 No backend function can be called without first checking `authorize(userId, PERMISSION)`. The frontend cannot bypass this because the user has no way to impersonate another `userId` — the `userId` is stored only in the server-side session (via `ScriptProperties` or the session mechanism).
+
+---
+
+## Contact & Developer Info
+
+Developed by **Yonas Mindaye**  
+- Telegram: [@yona64](https://t.me/yona64)
+- Phone/WhatsApp: [0910011818](https://wa.me/2510910011818)
+- Email: [yonasmindaye04@gmail.com](mailto:yonasmindaye04@gmail.com)
+- Website: [afro-tech-et.vercel.app](https://afro-tech-et.vercel.app/)

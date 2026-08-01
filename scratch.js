@@ -1214,6 +1214,10 @@ function loadSettings(){
     document.getElementById('bi-tax').value=b.TaxID||'';
     document.getElementById('bi-phone').value=b.Phone||'';
     document.getElementById('bi-email').value=b.Email||'';
+    document.getElementById('bi-website').value=b.Website||'';
+    document.getElementById('bi-socialhandle').value=b.SocialHandle||'';
+    document.getElementById('bi-socialphone').value=b.SocialPhone||'';
+    document.getElementById('bi-language').value=b.Language||'';
     document.getElementById('bi-address').value=b.Address||'';
     document.getElementById('s-currency').value=s.Currency||'';
     document.getElementById('s-vat').value=s.VATRate||'';
@@ -1229,6 +1233,8 @@ document.getElementById('save-business-btn').addEventListener('click',function()
   var payload={BusinessName:document.getElementById('bi-name').value.trim(),Owner:document.getElementById('bi-owner').value.trim(),
     LicenseNumber:document.getElementById('bi-license').value.trim(),TaxID:document.getElementById('bi-tax').value.trim(),
     Phone:document.getElementById('bi-phone').value.trim(),Email:document.getElementById('bi-email').value.trim(),
+    Website:document.getElementById('bi-website').value.trim(),SocialHandle:document.getElementById('bi-socialhandle').value.trim(),
+    SocialPhone:document.getElementById('bi-socialphone').value.trim(),Language:document.getElementById('bi-language').value.trim(),
     Address:document.getElementById('bi-address').value.trim(),LogoURL:''};
   return call('updateBusinessInfo',session.userId,payload).then(function(res){
     if(!res.success) return toast(res.message,true);

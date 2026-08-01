@@ -42,7 +42,7 @@ var SHEETS = {
 // ── Column headers (schema) for every table ───────────────────────────────
 var HEADERS = {
   Settings:      ['Setting', 'Value'],
-  BusinessInfo:  ['BusinessName', 'Owner', 'LicenseNumber', 'TaxID', 'Phone', 'Email', 'Address', 'LogoURL'],
+  BusinessInfo:  ['BusinessName', 'Owner', 'LicenseNumber', 'TaxID', 'Phone', 'Email', 'Address', 'LogoURL', 'Website', 'SocialHandle', 'SocialPhone', 'Language'],
 
   Users:         ['UserID', 'FullName', 'Username', 'PasswordHash', 'RoleID', 'Phone', 'Email', 'Active', 'LastLogin', 'CreatedDate'],
   Roles:         ['RoleID', 'RoleName', 'Description'],

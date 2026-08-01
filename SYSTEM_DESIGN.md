@@ -837,3 +837,13 @@ Dashboard metrics are computed by scanning all sales/products/inventory on every
 | `Index.html` | ~1940 | Single-page frontend (POS with Units+Pills pill inputs, margin dropdowns) |
 | `inventory.gs` | 10 | **Deprecated** — empty placeholder, superseded by `products.gs` |
 | **Total** | **~3,824** | |
+
+---
+
+## Contact & Developer Info
+
+Developed by **Yonas Mindaye**  
+- Telegram: [@yona64](https://t.me/yona64)
+- Phone/WhatsApp: [0910011818](https://wa.me/2510910011818)
+- Email: [yonasmindaye04@gmail.com](mailto:yonasmindaye04@gmail.com)
+- Website: [afro-tech-et.vercel.app](https://afro-tech-et.vercel.app/)

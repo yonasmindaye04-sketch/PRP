@@ -1,4 +1,4 @@
-﻿# Pharmacy ERP
+# Pharmacy ERP
 
 A full-featured pharmacy management system built on **Google Sheets + Apps Script** — a zero-infrastructure ERP that runs entirely inside Google Workspace. Sheets is the database, Apps Script is the backend, and a single-page HTML/JS frontend talks to it through `google.script.run`.
 
@@ -154,3 +154,13 @@ Products are deactivated (Active = false). Purchases use RecordStatus (Active / 
 | Multi-branch support | Deferred |
 | Barcode scanning hardware | Deferred |
 | Receipt printer integration | Deferred |
+
+---
+
+## Contact & Developer Info
+
+Developed by **Yonas Mindaye**  
+- Telegram: [@yona64](https://t.me/yona64)
+- Phone/WhatsApp: [0910011818](https://wa.me/2510910011818)
+- Email: [yonasmindaye04@gmail.com](mailto:yonasmindaye04@gmail.com)
+- Website: [afro-tech-et.vercel.app](https://afro-tech-et.vercel.app/)
