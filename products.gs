@@ -123,6 +123,16 @@ function getLowStockProducts(userId) {
     var threshold = (p.ReorderLevel !== undefined && p.ReorderLevel !== '' && Number(p.ReorderLevel) > 0) ? Number(p.ReorderLevel) : defaultLowStock;
     return p.CurrentStock <= threshold;
   });
+  // Sort by hierarchy: Out of stock (CurrentStock <= 0) first, then by CurrentStock ascending, then Category, then Product
+  low.sort(function (a, b) {
+    var aOut = Number(a.CurrentStock) <= 0 ? 0 : 1;
+    var bOut = Number(b.CurrentStock) <= 0 ? 0 : 1;
+    if (aOut !== bOut) return aOut - bOut;
+    if (Number(a.CurrentStock) !== Number(b.CurrentStock)) return Number(a.CurrentStock) - Number(b.CurrentStock);
+    var catCmp = String(a.CategoryName || '').localeCompare(String(b.CategoryName || ''));
+    if (catCmp !== 0) return catCmp;
+    return String(a.ProductName || '').localeCompare(String(b.ProductName || ''));
+  });
   return ok({ products: low });
   })();
 }
@@ -234,7 +244,7 @@ function deductPillsFEFO(productId, pillsWanted, type, refType, refId, userId, n
       NewStock: (loosePills - pillsWanted) + currentUnits * pillsPerUnit,
       ReferenceType: refType || '', ReferenceID: refId || '', Remarks: notes || ('Used ' + pillsWanted + ' loose pills'), UserID: userId
     });
-    return [];
+    return [{ batchId: inv ? inv.LoosePillsBatchID || '' : '', qty: pillsWanted, unitCost: (Number(product ? product.PurchasePrice : 0) / (pillsPerUnit || 1)) }];
   }
 
   // Case 2: need to break new strips

@@ -3,8 +3,9 @@
 //  constants.gs — configuration & schema (single source of truth)
 // ============================================================================
 
-var SPREADSHEET_ID = 'PASTE_YOUR_SPREADSHEET_ID_HERE';
+var SPREADSHEET_ID = '1YbpIaBqGbtkanJ3IyT5DwMgZ0D4mfYhhKfrj52kfDzE';
 var APP_NAME = 'Pharmacy ERP';
+
 
 // ── Sheet names ───────────────────────────────────────────────────────────
 var SHEETS = {
@@ -42,7 +43,7 @@ var SHEETS = {
 // ── Column headers (schema) for every table ───────────────────────────────
 var HEADERS = {
   Settings:      ['Setting', 'Value'],
-  BusinessInfo:  ['BusinessName', 'Owner', 'LicenseNumber', 'TaxID', 'Phone', 'Email', 'Address', 'LogoURL'],
+  BusinessInfo:  ['BusinessName', 'Owner', 'LicenseNumber', 'TaxID', 'Phone', 'Email', 'Address', 'LogoURL', 'Website', 'SocialHandle', 'SocialPhone', 'Language'],
 
   Users:         ['UserID', 'FullName', 'Username', 'PasswordHash', 'RoleID', 'Phone', 'Email', 'Active', 'LastLogin', 'CreatedDate'],
   Roles:         ['RoleID', 'RoleName', 'Description'],
@@ -77,7 +78,8 @@ var HEADERS = {
                   'SellingPrice', 'Total'],
 
   Sales: ['SaleID', 'SaleDate', 'InvoiceNumber', 'CustomerID', 'CashierID', 'TotalAmount', 'Discount',
-          'Tax', 'GrandTotal', 'PaymentMethod', 'AmountReceived', 'ChangeGiven', 'Status'],
+          'Tax', 'GrandTotal', 'PaymentMethod', 'AmountReceived', 'ChangeGiven', 'Status',
+          'DeletedBy', 'DeletedReason', 'DeletedDate'],
 
   SaleItems: ['SaleItemID', 'SaleID', 'ProductID', 'BatchID', 'Quantity', 'UnitPrice', 'MarginUsed', 'Discount', 'Tax', 'Total'],
 
@@ -138,3 +140,18 @@ var PERMISSIONS = {
 };
 
 var CACHE_TTL_SECONDS = 1800; // 30 minutes — used for permissions & settings cache
+
+// ── Error codes ─────────────────────────────────────────────────────────────
+var ERROR_CODES = {
+  VALIDATION_ERROR:       'VALIDATION_ERROR',
+  UNAUTHORIZED:           'UNAUTHORIZED',
+  FORBIDDEN:              'FORBIDDEN',
+  NOT_FOUND:              'NOT_FOUND',
+  CONFLICT:               'CONFLICT',
+  INSUFFICIENT_STOCK:     'INSUFFICIENT_STOCK',
+  INVALID_STATE:          'INVALID_STATE',
+  RATE_LIMITED:           'RATE_LIMITED',
+  INTERNAL_ERROR:         'INTERNAL_ERROR',
+  SHEET_ERROR:            'SHEET_ERROR',
+  LOCK_TIMEOUT:           'LOCK_TIMEOUT'
+};

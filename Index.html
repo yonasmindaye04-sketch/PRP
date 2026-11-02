@@ -15,9 +15,12 @@ body{margin:0;background:var(--bg);color:var(--ink);}
 button{font-family:inherit;cursor:pointer;}
 input,select{font-family:inherit;}
 
-#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;
+#login-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
   background:linear-gradient(160deg,var(--primary-dark),var(--primary) 60%,#12876f);}
-.login-card{background:var(--surface);width:340px;max-width:90vw;padding:32px 28px;border-radius:14px;box-shadow:0 20px 50px rgba(10,40,32,.25);}
+.login-card{background:var(--surface);width:340px;max-width:90vw;padding:32px 28px;border-radius:14px;box-shadow:0 20px 50px rgba(10,40,32,.25);z-index:2;}
+.login-footer{margin-top:24px;text-align:center;font-size:12.5px;color:rgba(255,255,255,.8);line-height:1.6;z-index:2;}
+.login-footer a{color:#fff;text-decoration:none;font-weight:600;}
+.login-footer a:hover{text-decoration:underline;}
 .login-card .brand{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
 .brand-mark{width:36px;height:36px;border-radius:9px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;}
 .brand-name{font-weight:700;font-size:17px;}
@@ -67,6 +70,11 @@ input,select{font-family:inherit;}
 .card .label{font-size:12px;color:var(--ink-soft);font-weight:600;margin-bottom:5px;}
 .card .value{font-size:22px;font-weight:700;}
 .card.warn .value{color:var(--warn);}
+.card.danger .value{color:var(--danger);}
+.card.success .value{color:var(--primary-dark);}
+.mini-tab{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:all .15s;}
+.mini-tab:hover{border-color:var(--primary);color:var(--ink);}
+.mini-tab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
 
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
 .panel h3{margin:0 0 12px;font-size:14px;}
@@ -144,6 +152,37 @@ tr:last-child td{border-bottom:none;}
 .hbar-fill{background:var(--primary);height:100%;border-radius:6px;min-width:3px;}
 .hbar-row .hbar-value{text-align:right;font-weight:600;color:var(--ink-soft);}
 
+/* ── Dashboard: performance-period selector ────────────────────────────── */
+.period-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;}
+.period-bar .period-label{font-size:11.5px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
+.period-bar select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:#fbfdfc;font-weight:600;color:var(--ink);}
+.period-custom{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.period-custom input[type=date]{padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;background:#fbfdfc;color:var(--ink);}
+.period-arrow{color:var(--ink-soft);}
+.period-active{margin-left:auto;font-size:12.5px;color:var(--ink-soft);font-weight:600;white-space:nowrap;}
+
+/* ── Dashboard: best-selling products ──────────────────────────────────── */
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.panel-head h3{margin:0;}
+.panel-sub{margin:2px 0 0;font-size:12px;color:var(--ink-soft);}
+.panel-head select{padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:12px;background:#fbfdfc;font-weight:600;}
+p.panel-sub{margin:-8px 0 12px;}
+.table-scroll{overflow-x:auto;}
+.bestsellers td.num,.bestsellers th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.bestsellers td.qty{font-weight:700;}
+.rank-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--primary-tint);color:var(--primary-dark);font-weight:700;font-size:11px;flex-shrink:0;}
+.rank-badge.top{background:var(--primary);color:#fff;}
+.bs-name{font-weight:600;font-size:12.5px;}
+.bs-bar{margin-top:4px;background:var(--primary-tint);border-radius:4px;height:5px;overflow:hidden;max-width:200px;}
+.bs-bar span{display:block;height:100%;background:var(--primary);border-radius:4px;}
+
+/* ── Dashboard: interactive line chart ─────────────────────────────────── */
+.line-chart{position:relative;width:100%;}
+.line-chart svg{display:block;width:100%;height:auto;}
+.line-tip{position:absolute;display:none;background:var(--ink);color:#fff;border-radius:8px;padding:8px 11px;font-size:12px;line-height:1.5;pointer-events:none;white-space:nowrap;z-index:5;box-shadow:0 8px 20px rgba(0,0,0,.18);transform:translate(-50%,-118%);}
+.line-tip .lt-date{font-weight:700;margin-bottom:1px;}
+.line-tip .lt-dim{color:#c9d8d3;font-size:11px;}
+
 .topbar{display:none;}
 .sidebar-backdrop{display:none;}
 
@@ -197,7 +236,13 @@ tr:last-child td{border-bottom:none;}
       <div class="field"><label>Password</label><input type="password" id="login-password" autocomplete="current-password" required></div>
       <button type="submit" class="btn" id="login-btn">Sign in</button>
     </form>
-    <div class="hint">First run? default is admin / ChangeMe123</div>
+  </div>
+  <div class="login-footer">
+    Developed by <b>Yonas Mindaye</b><br>
+    <a href="https://t.me/yona64" target="_blank">@yona64</a> | 
+    <a href="https://wa.me/2510910011818">0910011818</a><br>
+    <a href="mailto:yonasmindaye04@gmail.com">yonasmindaye04@gmail.com</a><br>
+    <a href="https://afro-tech-et.vercel.app" target="_blank">afro-tech-et.vercel.app</a>
   </div>
 </div>
 
@@ -229,10 +274,18 @@ tr:last-child td{border-bottom:none;}
 
     <div class="nav-section">Admin</div>
     <button class="nav-item" data-view="users" data-perm="PERM_MANAGE_USERS"><span class="dot"></span><span class="label">Users</span></button>
+    <button class="nav-item" data-view="auditLogs" data-perm="PERM_VIEW_AUDIT_LOGS"><span class="dot"></span><span class="label">Audit Logs</span></button>
     <button class="nav-item" data-view="settings" data-perm="PERM_MANAGE_SETTINGS"><span class="dot"></span><span class="label">Settings</span></button>
 
     <div class="sidebar-footer">
-      <div class="user-chip"><b id="chip-name">—</b><span id="chip-role">—</span></div>
+      <div class="dev-info" style="font-size:10.5px;color:#8fc3b5;margin-bottom:8px;line-height:1.5;">
+        Developed by <b style="color:#fff;">Yonas Mindaye</b><br>
+        <a href="https://github.com/yona64" target="_blank" style="color:#7fe0c4;text-decoration:none;">@yona64</a> | 
+        <a href="tel:+251910011818" style="color:#7fe0c4;text-decoration:none;">0910011818</a><br>
+        <a href="mailto:yonasmindaye04@gmail.com" style="color:#7fe0c4;text-decoration:none;">yonasmindaye04@gmail.com</a> | 
+        <a href="https://afro-tech-et.vercel.app" target="_blank" style="color:#7fe0c4;text-decoration:none;">afro-tech-et.vercel.app</a>
+      </div>
+      <div class="user-chip"><b id="chip-name">-</b><span id="chip-role">-</span></div>
       <button class="logout-btn" id="logout-btn">Sign out</button>
     </div>
   </aside>
@@ -241,30 +294,72 @@ tr:last-child td{border-bottom:none;}
 
     <!-- DASHBOARD -->
     <section class="view active" id="view-dashboard">
-      <div class="view-header"><div><h2>Dashboard</h2><p>Today at a glance</p></div></div>
+      <div class="view-header"><div><h2>Dashboard</h2><p>Performance overview for the selected period</p></div></div>
+
+      <!-- Performance-period selector: ONE range drives every widget below -->
+      <div class="period-bar">
+        <span class="period-label">Performance Period</span>
+        <select id="period-preset"></select>
+        <div class="period-custom" id="period-custom" style="display:none;">
+          <input type="date" id="period-start">
+          <span class="period-arrow">→</span>
+          <input type="date" id="period-end">
+          <button class="btn small" id="period-apply">Apply</button>
+        </div>
+        <span class="period-active" id="period-active"></span>
+        <button class="mini-btn" id="period-reset">Reset</button>
+      </div>
+
       <div class="cards" id="dashboard-cards"></div>
       <div class="cards" id="dashboard-comparison-cards" style="display:none;"></div>
       <div class="charts-grid">
         <div class="panel">
-          <h3>Sales trend — last 14 days</h3>
+          <h3>Sales Trend</h3>
+          <p class="panel-sub">Revenue over the selected period</p>
           <div id="chart-sales-trend"></div>
         </div>
         <div class="panel">
-          <h3>Top products — last 30 days</h3>
+          <div class="panel-head">
+            <div>
+              <h3>Best-Selling Products</h3>
+              <p class="panel-sub">Top products by quantity sold</p>
+            </div>
+            <select id="topn-select">
+              <option value="5">Top 5</option>
+              <option value="10">Top 10</option>
+              <option value="20">Top 20</option>
+            </select>
+          </div>
           <div id="chart-top-products"></div>
         </div>
       </div>
       <div class="charts-grid">
         <div class="panel" id="panel-profit-trend" style="display:none;">
-          <h3>Profit trend — last 14 days</h3>
+          <h3>Profit Trend</h3>
+          <p class="panel-sub">Profit over the selected period</p>
           <div id="chart-profit-trend"></div>
         </div>
         <div class="panel" id="panel-category-breakdown" style="display:none;">
-          <h3>Sales by category — last 30 days</h3>
+          <h3>Sales by category</h3>
+          <p class="panel-sub">Revenue over the selected period</p>
           <div id="chart-category-breakdown"></div>
         </div>
       </div>
-      <div class="panel"><h3>Low stock</h3><div id="dashboard-lowstock"></div></div>
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+          <div>
+            <h3 style="margin:0;">Stock Alerts Hierarchy</h3>
+            <span style="font-size:12px;color:var(--ink-soft);" id="dashboard-stock-badge">Prioritized by stock urgency</span>
+          </div>
+          <div style="display:flex;gap:6px;" id="dashboard-lowstock-tabs">
+            <button class="mini-tab active" id="ls-tab-all" data-tab="all" onclick="setDashboardStockFilter('all')">All</button>
+            <button class="mini-tab" id="ls-tab-out" data-tab="out" onclick="setDashboardStockFilter('out')">Out of stock</button>
+            <button class="mini-tab" id="ls-tab-low" data-tab="low" onclick="setDashboardStockFilter('low')">Low stock</button>
+          </div>
+        </div>
+        <div id="dashboard-lowstock"></div>
+        <div id="dashboard-lowstock-pagination" style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);"></div>
+      </div>
       <div class="panel"><h3>Expiring within 90 days</h3><div id="dashboard-expiring"></div></div>
     </section>
 
@@ -300,7 +395,7 @@ tr:last-child td{border-bottom:none;}
     <section class="view" id="view-salesHistory">
       <div class="view-header"><div><h2>Sales History</h2><p>Recent transactions — click a row to view/return items</p></div></div>
       <div class="panel" style="padding:0;">
-        <table><thead><tr><th>Sale ID</th><th>Date</th><th>Cashier</th><th>Payment</th><th>Total</th><th></th></tr></thead>
+        <table><thead><tr><th>Sale ID</th><th>Date</th><th>Cashier</th><th>Payment</th><th>Total</th><th>Status</th><th></th></tr></thead>
         <tbody id="sales-tbody"></tbody></table>
       </div>
     </section>
@@ -314,6 +409,7 @@ tr:last-child td{border-bottom:none;}
           <button class="btn small" id="add-product-btn">+ Add product</button>
         </div>
       </div>
+      <div class="cards" id="inventory-kpi-cards" style="margin-bottom:16px;"></div>
       <div class="toolbar">
         <input type="search" id="inventory-search" placeholder="Search products…">
         <select id="inventory-category-filter" style="margin-left: 10px; max-width: 200px;">
@@ -413,6 +509,43 @@ tr:last-child td{border-bottom:none;}
       </div>
     </section>
 
+    <!-- AUDIT LOGS -->
+    <section class="view" id="view-auditLogs">
+      <div class="view-header">
+        <div><h2>Audit Logs</h2><p>Accountability log — all actions recorded across the system</p></div>
+        <button class="btn small secondary" onclick="loadAuditLogs()">Refresh logs</button>
+      </div>
+      <div class="toolbar">
+        <input type="search" id="audit-search" placeholder="Search by user, action, module, or details…">
+        <select id="audit-module-filter" style="margin-left: 10px; max-width: 200px;">
+          <option value="">All modules</option>
+          <option value="Sales">Sales</option>
+          <option value="Products">Products</option>
+          <option value="Purchases">Purchases</option>
+          <option value="Users">Users</option>
+          <option value="Auth">Auth</option>
+          <option value="CashDrawer">Cash Drawer</option>
+          <option value="Finance">Finance</option>
+          <option value="Settings">Settings</option>
+        </select>
+      </div>
+      <div class="panel" style="padding:0;">
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Staff / User</th>
+              <th>Module</th>
+              <th>Action</th>
+              <th>Details / Reason</th>
+              <th>Record ID</th>
+            </tr>
+          </thead>
+          <tbody id="audit-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- SETTINGS -->
     <section class="view" id="view-settings">
       <div class="view-header"><div><h2>Settings</h2><p>Business info &amp; system defaults</p></div></div>
@@ -425,6 +558,10 @@ tr:last-child td{border-bottom:none;}
           <div class="field"><label>Tax ID</label><input type="text" id="bi-tax"></div>
           <div class="field"><label>Phone</label><input type="text" id="bi-phone"></div>
           <div class="field"><label>Email</label><input type="text" id="bi-email"></div>
+          <div class="field"><label>Website</label><input type="text" id="bi-website" placeholder="e.g. afro-tech-et.vercel.app"></div>
+          <div class="field"><label>Social handle</label><input type="text" id="bi-socialhandle" placeholder="e.g. @yona64"></div>
+          <div class="field"><label>Social phone</label><input type="text" id="bi-socialphone" placeholder="e.g. 0910011818"></div>
+          <div class="field"><label>Language</label><input type="text" id="bi-language"></div>
         </div>
         <div class="field"><label>Address</label><input type="text" id="bi-address"></div>
         <button class="btn small" id="save-business-btn">Save business info</button>
@@ -665,10 +802,12 @@ tr:last-child td{border-bottom:none;}
 <div class="modal-overlay" id="sale-details-modal"><div class="modal wide">
   <h3>Sale <span id="sd-sale-id"></span></h3>
   <div id="sd-msg"></div>
+  <div id="sd-voided-banner"></div>
   <div id="sd-items"></div>
   <div class="modal-actions">
     <button class="btn secondary" id="sale-details-close">Close</button>
     <button class="btn" id="sale-details-print">Print receipt</button>
+    <button class="btn danger" id="sale-details-delete" style="display:none;width:auto;margin-left:auto;">Delete / Void Sale</button>
   </div>
 </div></div>
 
@@ -692,7 +831,7 @@ var editingProductId = null;
 var purchaseLineCount = 0;
 var currentSaleDetailsId = null;
 var cachedSettings = null, cachedBusiness = null;
-var marginPresets = [20, 25, 30];
+var marginPresets = [20, 25, 35];
 
 function call(fn){
   var args = Array.prototype.slice.call(arguments,1);
@@ -727,9 +866,29 @@ function toast(msg,isError){
   t.textContent=msg; t.className='toast active'+(isError?' error':'');
   setTimeout(function(){t.className='toast';},3200);
 }
-function money(n){ return Number(n||0).toFixed(2); }
+function money(n){ return Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function esc(str){ return String(str==null?'':str).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];}); }
-function can(permId){ return session && session.permissions && session.permissions.indexOf(permId) > -1; }
+function can(permId){ return session && (session.roleId === 'ROLE_OWNER' || (session.permissions && session.permissions.indexOf(permId) > -1)); }
+
+// ── Global error handler → reports to server ──────────────────────────────
+window.addEventListener('error', function(e){
+  google.script.run.reportClientError({
+    message: e.message,
+    stack: e.error && e.error.stack,
+    context: 'window.onerror',
+    userAgent: navigator.userAgent,
+    url: window.location.href
+  });
+});
+window.addEventListener('unhandledrejection', function(e){
+  google.script.run.reportClientError({
+    message: e.reason && e.reason.message ? e.reason.message : String(e.reason),
+    stack: e.reason && e.reason.stack,
+    context: 'unhandledrejection',
+    userAgent: navigator.userAgent,
+    url: window.location.href
+  });
+});
 
 // ── Login ──────────────────────────────────────────────────────────────
 document.getElementById('login-form').addEventListener('submit', function(e){
@@ -758,22 +917,33 @@ document.getElementById('hamburger-btn').addEventListener('click', openSidebar);
 document.getElementById('sidebar-backdrop').addEventListener('click', closeSidebar);
 
 function enterApp(){
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app-shell').classList.add('active');
-  document.getElementById('chip-name').textContent=session.name;
-  document.getElementById('chip-role').textContent=session.roleName;
+  try {
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app-shell').classList.add('active');
+    document.getElementById('chip-name').textContent=session.name;
+    document.getElementById('chip-role').textContent=session.roleName;
 
-  document.querySelectorAll('.nav-item[data-perm]').forEach(function(btn){
-    btn.style.display = can(btn.getAttribute('data-perm')) ? 'flex' : 'none';
-  });
-  document.getElementById('add-product-btn').style.display = can('PERM_CREATE_PRODUCT') ? 'inline-block' : 'none';
+    document.querySelectorAll('.nav-item[data-perm]').forEach(function(btn){
+      btn.style.display = can(btn.getAttribute('data-perm')) ? 'flex' : 'none';
+    });
+    
+    var addProdBtn = document.getElementById('add-product-btn');
+    if (addProdBtn) {
+      addProdBtn.style.display = can('PERM_CREATE_PRODUCT') ? 'inline-block' : 'none';
+    }
 
-  loadDashboard();
-  loadCategories();
-  loadSuppliers();
-  loadCustomers();
-  loadProducts();
-  loadMarginPresets();
+    loadDashboard();
+    loadCategories();
+    loadSuppliers();
+    loadCustomers();
+    loadProducts();
+    loadMarginPresets();
+  } catch (err) {
+    document.getElementById('login-screen').style.display='flex';
+    document.getElementById('app-shell').classList.remove('active');
+    document.getElementById('login-msg').innerHTML='<div class="msg error">App initialization failed: '+err.message+'</div>';
+    console.error(err);
+  }
 }
 
 document.querySelectorAll('.nav-item[data-view]').forEach(function(btn){
@@ -794,32 +964,169 @@ document.querySelectorAll('.nav-item[data-view]').forEach(function(btn){
     if(view==='finance') { loadExpenses(); loadIncome(); loadPayments(); }
     if(view==='cashdrawer') loadDrawer();
     if(view==='users') loadUsers();
+    if(view==='auditLogs') loadAuditLogs();
     if(view==='settings') loadSettings();
     closeSidebar();
   });
 });
 
 // ── Dashboard ────────────────────────────────────────────────────────────
-function loadDashboard(){
-  call('getDashboardSummary',session.userId).then(function(res){
-    if(!res.success) return toast(res.message,true);
-    var s=res.summary;
-    var html =
-      '<div class="card"><div class="label">Today\'s Sales</div><div class="value">'+money(s.todaysSalesTotal)+'</div></div>'+
-      '<div class="card"><div class="label">Transactions Today</div><div class="value">'+s.todaysTransactionCount+'</div></div>'+
-      '<div class="card"><div class="label">Active Products</div><div class="value">'+s.totalProducts+'</div></div>'+
-      '<div class="card '+(s.lowStockCount>0?'warn':'')+'"><div class="label">Low Stock</div><div class="value">'+s.lowStockCount+'</div></div>'+
-      '<div class="card '+(s.expiringSoonCount>0?'warn':'')+'"><div class="label">Expiring Soon</div><div class="value">'+s.expiringSoonCount+'</div></div>';
-    if(s.todaysProfit!==undefined) html+='<div class="card"><div class="label">Today\'s Profit</div><div class="value">'+money(s.todaysProfit)+'</div></div>';
-    document.getElementById('dashboard-cards').innerHTML=html;
-  }).catch(function(err){toast(err,true);});
+// dashboardPeriod is the SINGLE SOURCE OF TRUTH for the dashboard's
+// analytical period: KPIs, sales trend, best sellers, category split and
+// profit are all fetched in ONE getDashboardData call for these dates, so
+// no widget can silently use a different range. The selection survives
+// navigation within the app (it's held in this module-level state).
+var dashboardPeriod = { preset:'last30', start:null, end:null };
+var dashboardTopN = 5;
+var dashboardLowStockAll = [];
+var dashboardLowStockPage = 0;
+var dashboardLowStockPageSize = 5;
+var dashboardStockFilter = 'all';
+var DASHBOARD_PRESETS = [
+  ['today','Today'],['yesterday','Yesterday'],['last7','Last 7 days'],['last14','Last 14 days'],
+  ['last30','Last 30 days'],['thisWeek','This week'],['lastWeek','Last week'],
+  ['thisMonth','This month'],['lastMonth','Last month'],['thisYear','This year'],
+  ['lastYear','Last year'],['custom','Custom range…']
+];
+var MONTHS_SHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var MONTHS_LONG=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
+function pad2(n){ return ('0'+n).slice(-2); }
+// NEVER use toISOString() for calendar dates — it shifts the day in
+// non-UTC timezones. Always compose from local date parts.
+function fmtISODate(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function parseISODate(str){ var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(str||'')); if(!m) return null; var d=new Date(+m[1],+m[2]-1,+m[3]); return isNaN(d.getTime())?null:d; }
+function fmtHumanDate(iso){ var d=parseISODate(iso); if(!d) return String(iso||''); return MONTHS_SHORT[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear(); }
+function fmtChartDate(iso, granularity){
+  var d=parseISODate(iso); if(!d) return String(iso||'');
+  if(granularity==='month') return MONTHS_LONG[d.getMonth()]+' '+d.getFullYear();
+  if(granularity==='week') return 'Week of '+MONTHS_SHORT[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
+  return MONTHS_SHORT[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
+}
+function resolveDashboardPreset(preset){
+  var now=new Date();
+  var today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  function daysAgo(n){ var d=new Date(today); d.setDate(d.getDate()-n); return d; }
+  var s=new Date(today), e=new Date(today);
+  switch(preset){
+    case 'today': break;
+    case 'yesterday': s=daysAgo(1); e=daysAgo(1); break;
+    case 'last7': s=daysAgo(6); break;
+    case 'last14': s=daysAgo(13); break;
+    case 'last30': s=daysAgo(29); break;
+    case 'thisWeek': s=daysAgo((today.getDay()+6)%7); break;                                    // Monday → today
+    case 'lastWeek': e=daysAgo(((today.getDay()+6)%7)+1); s=daysAgo(((today.getDay()+6)%7)+7); break; // prev Mon → Sun
+    case 'thisMonth': s=new Date(today.getFullYear(),today.getMonth(),1); break;
+    case 'lastMonth': s=new Date(today.getFullYear(),today.getMonth()-1,1); e=new Date(today.getFullYear(),today.getMonth(),0); break;
+    case 'thisYear': s=new Date(today.getFullYear(),0,1); break;
+    case 'lastYear': s=new Date(today.getFullYear()-1,0,1); e=new Date(today.getFullYear()-1,11,31); break;
+    default: s=daysAgo(29);
+  }
+  return { start:fmtISODate(s), end:fmtISODate(e) };
+}
+
+function initDashboardPeriodControls(){
+  var sel=document.getElementById('period-preset');
+  if(sel.options.length===0){
+    sel.innerHTML=DASHBOARD_PRESETS.map(function(p){ return '<option value="'+p[0]+'">'+p[1]+'</option>'; }).join('');
+  }
+  sel.value=dashboardPeriod.preset;
+  document.getElementById('topn-select').value=String(dashboardTopN);
+  if(dashboardPeriod.preset==='custom'){
+    document.getElementById('period-custom').style.display='flex';
+    document.getElementById('period-start').value=dashboardPeriod.start||'';
+    document.getElementById('period-end').value=dashboardPeriod.end||'';
+  } else {
+    document.getElementById('period-custom').style.display='none';
+    var r=resolveDashboardPreset(dashboardPeriod.preset);
+    dashboardPeriod.start=r.start; dashboardPeriod.end=r.end;
+  }
+  document.getElementById('period-active').textContent=fmtHumanDate(dashboardPeriod.start)+'  –  '+fmtHumanDate(dashboardPeriod.end);
+}
+document.getElementById('period-preset').addEventListener('change', function(){
+  if(this.value==='custom'){
+    // Show the date pickers but wait for an explicit Apply, so each
+    // keystroke doesn't fire a dashboard recompute.
+    var r=(dashboardPeriod.start&&dashboardPeriod.end)?{start:dashboardPeriod.start,end:dashboardPeriod.end}:resolveDashboardPreset('last30');
+    document.getElementById('period-custom').style.display='flex';
+    document.getElementById('period-start').value=r.start;
+    document.getElementById('period-end').value=r.end;
+    return;
+  }
+  dashboardPeriod={preset:this.value,start:null,end:null};
+  loadDashboard();
+});
+document.getElementById('period-apply').addEventListener('click', function(){
+  var s=document.getElementById('period-start').value, e=document.getElementById('period-end').value;
+  if(!s||!e){ toast('Pick both a start and an end date.',true); return; }
+  if(s>e){ toast('Start date must be on or before the end date.',true); return; }
+  dashboardPeriod={preset:'custom',start:s,end:e};
+  loadDashboard();
+});
+document.getElementById('period-reset').addEventListener('click', function(){
+  dashboardPeriod={preset:'last30',start:null,end:null};
+  loadDashboard();
+});
+document.getElementById('topn-select').addEventListener('change', function(){
+  dashboardTopN=Number(this.value)||5;
+  loadDashboard();
+});
+
+function renderKpiCards(summary, snapshot){
+  var s=summary, snap=snapshot||{};
+  var html =
+    '<div class="card"><div class="label">Sales</div><div class="value">'+money(s.salesTotal)+'</div></div>'+
+    '<div class="card"><div class="label">Transactions</div><div class="value">'+(s.transactionCount||0)+'</div></div>'+
+    '<div class="card"><div class="label">Active Products</div><div class="value">'+(snap.totalProducts||0)+'</div></div>'+
+    '<div class="card '+((snap.lowStockCount||0)>0?'warn':'')+'"><div class="label">Low Stock</div><div class="value">'+(snap.lowStockCount||0)+'</div></div>'+
+    '<div class="card '+((snap.expiringSoonCount||0)>0?'warn':'')+'"><div class="label">Expiring Soon</div><div class="value">'+(snap.expiringSoonCount||0)+'</div></div>';
+  if(s.profit!==undefined) html+='<div class="card"><div class="label">Profit</div><div class="value">'+money(s.profit)+'</div></div>';
+  document.getElementById('dashboard-cards').innerHTML=html;
+}
+function setDashboardLoading(){
+  document.getElementById('dashboard-cards').innerHTML='<div class="card"><div class="label">Sales</div><div class="value" style="font-size:14px;color:var(--ink-soft);">Loading…</div></div>';
+  ['chart-sales-trend','chart-top-products','chart-category-breakdown','chart-profit-trend'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.innerHTML='<div class="empty-state">Loading…</div>';
+  });
+}
+function setDashboardError(message){
+  document.getElementById('dashboard-cards').innerHTML='<div class="card"><div class="label">Dashboard</div><div class="value" style="font-size:13px;color:var(--danger);">'+esc(message||'Failed to load')+'</div></div>';
+  ['chart-sales-trend','chart-top-products','chart-category-breakdown','chart-profit-trend'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.innerHTML='<div class="empty-state">Couldn\'t load data for this period</div>';
+  });
+}
+
+function loadDashboard(){
+  initDashboardPeriodControls();
+  setDashboardLoading();
+
+  // ONE request — every period-driven widget below renders from it.
+  call('getDashboardData',session.userId,dashboardPeriod.start,dashboardPeriod.end,dashboardTopN).then(function(res){
+    if(!res.success){ setDashboardError(res.message); return toast(res.message||'Dashboard failed to load',true); }
+
+    renderKpiCards(res.summary||{}, res.snapshot);
+    renderLineChart('chart-sales-trend', res.salesTrend, {valueKey:'sales', tipLabel:'Sales', granularity:res.period.granularity});
+    renderBestSellers(res.topProducts);
+
+    if(can('PERM_VIEW_PROFIT')){
+      document.getElementById('panel-category-breakdown').style.display='block';
+      renderHBarChart('chart-category-breakdown', res.categoryBreakdown, 'name', 'total');
+      if(res.profitTrend){
+        document.getElementById('panel-profit-trend').style.display='block';
+        renderLineChart('chart-profit-trend', res.profitTrend, {valueKey:'profit', tipLabel:'Profit', granularity:res.period.granularity});
+      }
+    }
+  }).catch(function(err){ setDashboardError(String(err)); toast(err,true); });
+
+  // Point-in-time panels — stock levels & expiries are "right now" by nature,
+  // so they intentionally don't follow the period selector.
   call('getLowStockProducts',session.userId).then(function(res){
-    var el=document.getElementById('dashboard-lowstock');
-    if(!res.success){el.innerHTML='';return;}
-    if(!res.products.length){el.innerHTML='<div class="empty-state">Nothing low on stock</div>';return;}
-    el.innerHTML='<table><thead><tr><th>Product</th><th>Stock</th><th>Reorder level</th></tr></thead><tbody>'+
-      res.products.map(function(p){return '<tr><td>'+esc(p.ProductName)+'</td><td>'+p.CurrentStock+'</td><td>'+p.ReorderLevel+'</td></tr>';}).join('')+'</tbody></table>';
+    dashboardLowStockAll = (res.success && res.products) ? res.products : [];
+    dashboardLowStockPage = 0;
+    renderDashboardStockAlerts();
+  }).catch(function(){
+    dashboardLowStockAll = [];
+    renderDashboardStockAlerts();
   });
 
   call('getExpiringBatches',session.userId,90).then(function(res){
@@ -830,24 +1137,8 @@ function loadDashboard(){
       res.batches.map(function(b){return '<tr><td>'+esc(b.ProductName)+'</td><td>'+b.BatchNumber+'</td><td>'+b.Quantity+'</td><td>'+b.ExpiryDate+'</td></tr>';}).join('')+'</tbody></table>';
   });
 
-  call('getSalesTrend',session.userId,14).then(function(res){
-    if(!res.success) return;
-    renderVBarChart('chart-sales-trend', res.trend, 'label', 'total');
-  }).catch(function(){});
-
-  call('getTopProducts',session.userId,30,5).then(function(res){
-    if(!res.success) return;
-    renderHBarChart('chart-top-products', res.products, 'name', 'total');
-  }).catch(function(){});
-
-  if(can('PERM_VIEW_PROFIT')){
-    call('getCategoryBreakdown',session.userId,30).then(function(res){
-      if(!res.success) return;
-      document.getElementById('panel-category-breakdown').style.display = res.breakdown.length ? 'block' : 'none';
-      renderHBarChart('chart-category-breakdown', res.breakdown, 'name', 'total');
-    }).catch(function(){});
-  }
-
+  // Explicitly-labelled period-over-period comparison — its labels
+  // ("this month", "last month", …) are self-describing, unpaged by the selector.
   if(can('PERM_VIEW_PROFIT')){
     call('getPeriodComparison',session.userId).then(function(res){
       if(!res.success) return;
@@ -862,30 +1153,207 @@ function loadDashboard(){
           '<div style="font-size:12px;font-weight:700;color:'+(yoyUp?'var(--primary-dark)':'var(--danger)')+';margin-top:4px;">'+(yoyUp?'▲ ':'▼ ')+Math.abs(c.yoyChangePct)+'% vs last year</div></div>'+
         '<div class="card"><div class="label">Last Year (same period)</div><div class="value">$'+money(c.lastYear)+'</div></div>';
     }).catch(function(){});
-
-    call('getProfitTrend',session.userId,14).then(function(res){
-      if(!res.success) return;
-      document.getElementById('panel-profit-trend').style.display='block';
-      renderVBarChart('chart-profit-trend', res.trend, 'label', 'profit');
-    }).catch(function(){});
   }
 }
 
-// Minimal dependency-free bar charts built from plain divs.
-function renderVBarChart(containerId, items, labelKey, valueKey){
-  var el=document.getElementById(containerId);
-  if(!items || !items.length){ el.innerHTML='<div class="empty-state">No data yet</div>'; return; }
-  var maxAbs=Math.max.apply(null, items.map(function(i){return Math.abs(Number(i[valueKey])||0);}))||1;
-  el.innerHTML='<div class="vbar-chart">'+items.map(function(i){
-    var v=Number(i[valueKey])||0;
-    var pct=Math.max(2, Math.round(Math.abs(v)/maxAbs*100));
-    var color=v<0?'background:var(--danger);':'';
-    return '<div class="vbar-col"><span class="vbar-value">'+(v!==0?money(v):'')+'</span><div class="vbar" style="height:'+pct+'%;'+color+'"></div><div class="vbar-label">'+esc(i[labelKey])+'</div></div>';
-  }).join('')+'</div>';
+function setDashboardStockFilter(f){
+  dashboardStockFilter = f;
+  dashboardLowStockPage = 0;
+  ['all','out','low'].forEach(function(t){
+    var b = document.getElementById('ls-tab-' + t);
+    if(b) b.classList.toggle('active', t === f);
+  });
+  renderDashboardStockAlerts();
 }
+
+function changeDashboardStockPage(delta){
+  dashboardLowStockPage += delta;
+  renderDashboardStockAlerts();
+}
+
+function renderDashboardStockAlerts(){
+  var el = document.getElementById('dashboard-lowstock');
+  var pagEl = document.getElementById('dashboard-lowstock-pagination');
+  if(!el) return;
+  var filtered = dashboardLowStockAll.filter(function(p){
+    var stock = Number(p.CurrentStock) || 0;
+    if(dashboardStockFilter === 'out') return stock <= 0;
+    if(dashboardStockFilter === 'low') return stock > 0;
+    return true;
+  });
+  var totalItems = filtered.length;
+  var totalPages = Math.ceil(totalItems / dashboardLowStockPageSize) || 1;
+  if(dashboardLowStockPage >= totalPages) dashboardLowStockPage = Math.max(0, totalPages - 1);
+  if(dashboardLowStockPage < 0) dashboardLowStockPage = 0;
+
+  var badge = document.getElementById('dashboard-stock-badge');
+  if(badge){
+    badge.textContent = totalItems + ' items requiring attention (0 stock prioritized)';
+  }
+
+  if(!filtered.length){
+    el.innerHTML = '<div class="empty-state">No products found for this alert level</div>';
+    if(pagEl) pagEl.innerHTML = '';
+    return;
+  }
+
+  var start = dashboardLowStockPage * dashboardLowStockPageSize;
+  var paged = filtered.slice(start, start + dashboardLowStockPageSize);
+
+  el.innerHTML = '<table><thead><tr><th>Product &amp; Category</th><th style="width:130px;">Current Stock</th><th style="width:100px;">Reorder Level</th></tr></thead><tbody>' +
+    paged.map(function(p){
+      var stock = Number(p.CurrentStock) || 0;
+      var isOut = stock <= 0;
+      var pill = isOut ? '<span class="pill bad">0 (Out of stock)</span>' : '<span class="pill low">' + stock + ' in stock</span>';
+      var cat = p.CategoryName ? '<span style="font-size:11px;color:var(--ink-soft);display:block;">📁 ' + esc(p.CategoryName) + '</span>' : '';
+      return '<tr>' +
+        '<td><b>' + esc(p.ProductName) + '</b>' + cat + '</td>' +
+        '<td>' + pill + '</td>' +
+        '<td style="color:var(--ink-soft);">' + (p.ReorderLevel || '—') + '</td>' +
+      '</tr>';
+    }).join('') + '</tbody></table>';
+
+  if(pagEl){
+    var prevDisabled = dashboardLowStockPage <= 0 ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : '';
+    var nextDisabled = dashboardLowStockPage >= totalPages - 1 ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : '';
+    pagEl.innerHTML = '<span style="font-size:12px;color:var(--ink-soft);">Showing ' + (start + 1) + '–' + Math.min(start + dashboardLowStockPageSize, totalItems) + ' of ' + totalItems + ' items</span>' +
+      '<div style="display:flex;gap:6px;">' +
+        '<button class="mini-tab" ' + prevDisabled + ' onclick="changeDashboardStockPage(-1)">← Previous</button>' +
+        '<button class="mini-tab" ' + nextDisabled + ' onclick="changeDashboardStockPage(1)">Next →</button>' +
+      '</div>';
+  }
+}
+
+// Ranked best-sellers list: rank · product (with qty bar) · qty sold · revenue.
+function renderBestSellers(items){
+  var el=document.getElementById('chart-top-products');
+  if(!items || !items.length){ el.innerHTML='<div class="empty-state">No sales in the selected period</div>'; return; }
+  var maxQty=Math.max.apply(null, items.map(function(i){ return Number(i.quantity)||0; }))||1;
+  var html='<div class="table-scroll"><table class="bestsellers"><thead><tr>'+
+    '<th style="width:34px;">#</th><th>Product</th><th class="num">Qty Sold</th><th class="num">Revenue</th>'+
+    '</tr></thead><tbody>';
+  items.forEach(function(p, idx){
+    var pct=Math.max(3, Math.round((Number(p.quantity)||0)/maxQty*100));
+    html+='<tr>'+
+      '<td><span class="rank-badge'+(idx<3?' top':'')+'">'+(idx+1)+'</span></td>'+
+      '<td><div class="bs-name" title="'+esc(p.name)+'">'+esc(p.name)+'</div><div class="bs-bar"><span style="width:'+pct+'%;"></span></div></td>'+
+      '<td class="num qty">'+(Number(p.quantity)||0).toLocaleString('en-US')+'</td>'+
+      '<td class="num">'+money(p.revenue)+'</td>'+
+    '</tr>';
+  });
+  el.innerHTML=html+'</tbody></table></div>';
+}
+
+// Interactive line chart (dependency-free SVG). Hover anywhere over the plot
+// to get a tooltip with the exact amount for the nearest data point.
+function renderLineChart(containerId, points, opts){
+  opts=opts||{};
+  var valueKey=opts.valueKey||'sales';
+  var tipLabel=opts.tipLabel||'Sales';
+  var granularity=opts.granularity||'day';
+  var el=document.getElementById(containerId);
+  if(!points || !points.length){ el.innerHTML='<div class="empty-state">No sales in the selected period</div>'; return; }
+
+  var W=720, H=230, padL=48, padR=14, padT=16, padB=26;
+  var iw=W-padL-padR, ih=H-padT-padB;
+  var vals=points.map(function(p){ return Number(p[valueKey])||0; });
+  var lo=Math.min(0, Math.min.apply(null, vals)), hi=Math.max(0, Math.max.apply(null, vals));
+  var step=niceStep((hi-lo)/4||1);
+  var minV=Math.floor(lo/step)*step, maxV=Math.ceil(hi/step)*step;
+  if(maxV===minV) maxV=minV+step;
+
+  function xAt(i){ return points.length>1 ? padL+i*(iw/(points.length-1)) : padL+iw/2; }
+  function yAt(v){ return padT+ih-((v-minV)/(maxV-minV))*ih; }
+
+  var grid='';
+  for(var g=0; g<=4; g++){
+    var gv=minV+(maxV-minV)*g/4;
+    grid+='<line x1="'+padL+'" y1="'+yAt(gv)+'" x2="'+(W-padR)+'" y2="'+yAt(gv)+'" stroke="#E7EFEC" stroke-width="1"/>'+
+          '<text x="'+(padL-7)+'" y="'+(yAt(gv)+3.5)+'" text-anchor="end" font-size="10" fill="#5B6D69">'+axisNumber(gv)+'</text>';
+  }
+  var tickEvery=Math.max(1, Math.ceil(points.length/8));
+  var xlabels='';
+  for(var t=0; t<points.length; t+=tickEvery){
+    xlabels+='<text x="'+xAt(t)+'" y="'+(H-8)+'" text-anchor="middle" font-size="10" fill="#5B6D69">'+esc(points[t].label)+'</text>';
+  }
+
+  var path=points.map(function(p,i){ return (i?'L':'M')+xAt(i).toFixed(1)+','+yAt(vals[i]).toFixed(1); }).join(' ');
+  var area=path+' L'+xAt(points.length-1).toFixed(1)+','+(padT+ih)+' L'+xAt(0).toFixed(1)+','+(padT+ih)+' Z';
+  var gradId='lc-grad-'+containerId;
+
+  el.innerHTML=
+    '<div class="line-chart">'+
+      '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet" role="img">'+
+        '<defs><linearGradient id="'+gradId+'" x1="0" y1="0" x2="0" y2="1">'+
+          '<stop offset="0" stop-color="#0E6E5C" stop-opacity="0.16"></stop>'+
+          '<stop offset="1" stop-color="#0E6E5C" stop-opacity="0"></stop>'+
+        '</linearGradient></defs>'+
+        grid+
+        (points.length>1 ?
+          '<path d="'+area+'" fill="url(#'+gradId+')"></path>'+
+          '<path d="'+path+'" fill="none" stroke="#0E6E5C" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>' : '')+
+        points.map(function(p,i){
+          return '<circle cx="'+xAt(i).toFixed(1)+'" cy="'+yAt(vals[i]).toFixed(1)+'" r="2.6" fill="#0E6E5C" stroke="#fff" stroke-width="1"></circle>';
+        }).join('')+
+        '<line class="lc-crosshair" x1="0" y1="'+padT+'" x2="0" y2="'+(padT+ih)+'" stroke="#0E6E5C" stroke-width="1" stroke-dasharray="3 3" opacity="0"></line>'+
+        '<circle class="lc-dot" cx="0" cy="0" r="4.5" fill="#0E6E5C" stroke="#fff" stroke-width="2" opacity="0"></circle>'+
+        '<rect class="lc-hit" x="'+padL+'" y="'+padT+'" width="'+iw+'" height="'+ih+'" fill="transparent"></rect>'+
+        xlabels+
+      '</svg>'+
+      '<div class="line-tip"></div>'+
+    '</div>';
+
+  var chart=el.querySelector('.line-chart');
+  var tip=chart.querySelector('.line-tip');
+  var cross=chart.querySelector('.lc-crosshair');
+  var dot=chart.querySelector('.lc-dot');
+  var hit=chart.querySelector('.lc-hit');
+  var svg=chart.querySelector('svg');
+  var xDenom=points.length>1 ? iw/(points.length-1) : 1;
+
+  hit.addEventListener('mousemove', function(e){
+    var rect=svg.getBoundingClientRect();
+    if(!rect.width) return;
+    var xsvg=Math.max(padL, Math.min(W-padR, (e.clientX-rect.left)*(W/rect.width)));
+    var idx=points.length>1 ? Math.max(0, Math.min(points.length-1, Math.round((xsvg-padL)/xDenom))) : 0;
+    var px=xAt(idx), py=yAt(vals[idx]);
+    cross.setAttribute('x1',px); cross.setAttribute('x2',px); cross.setAttribute('opacity','1');
+    dot.setAttribute('cx',px); dot.setAttribute('cy',py); dot.setAttribute('opacity','1');
+    var html='<div class="lt-date">'+esc(fmtChartDate(points[idx].date,granularity))+'</div>'+
+      '<div>'+esc(tipLabel)+': <b>'+money(vals[idx])+'</b></div>';
+    if(points[idx].transactions!==undefined) html+='<div class="lt-dim">Transactions: '+points[idx].transactions+'</div>';
+    tip.innerHTML=html;
+    tip.style.display='block';
+    // Position as % so it tracks the point at any responsive chart width;
+    // clamp the horizontal nudge near the edges so the tooltip stays visible.
+    var frac=px/W;
+    tip.style.left=(frac*100)+'%';
+    tip.style.top=(py/H*100)+'%';
+    tip.style.transform='translate('+(frac<0.18?'-6%':(frac>0.85?'-94%':'-50%'))+',-118%)';
+  });
+  hit.addEventListener('mouseleave', function(){
+    tip.style.display='none';
+    cross.setAttribute('opacity','0');
+    dot.setAttribute('opacity','0');
+  });
+}
+// "Nice" axis step (1/2/5 × 10ⁿ) so gridlines land on round numbers.
+function niceStep(raw){
+  if(!isFinite(raw) || raw<=0) return 1;
+  var pow=Math.pow(10, Math.floor(Math.log10(raw)));
+  var f=raw/pow;
+  return (f<=1?1:(f<=2?2:(f<=5?5:10)))*pow;
+}
+function axisNumber(v){
+  var a=Math.abs(v);
+  if(a>=1000000) return (Math.round(v/100000)/10)+'M';
+  if(a>=1000) return (Math.round(v/100)/10)+'k';
+  return String(Math.round(v*100)/100);
+}
+
 function renderHBarChart(containerId, items, labelKey, valueKey){
   var el=document.getElementById(containerId);
-  if(!items || !items.length){ el.innerHTML='<div class="empty-state">No data yet</div>'; return; }
+  if(!items || !items.length){ el.innerHTML='<div class="empty-state">No sales in the selected period</div>'; return; }
   var max=Math.max.apply(null, items.map(function(i){return Number(i[valueKey])||0;}))||1;
   el.innerHTML=items.map(function(i){
     var v=Number(i[valueKey])||0;
@@ -937,7 +1405,15 @@ function loadProducts(){
   call('getProducts',session.userId).then(function(res){
     if(!res.success) return toast(res.message,true);
     allProducts=res.products;
+    renderInventoryKpis();
     renderPosGrid(); renderInventoryTable();
+    var dl = document.getElementById('products-datalist');
+    if(!dl) {
+      dl = document.createElement('datalist');
+      dl.id = 'products-datalist';
+      document.body.appendChild(dl);
+    }
+    dl.innerHTML = allProducts.map(function(p){ return '<option value="'+esc(p.ProductName)+'">'; }).join('');
   }).catch(function(err){toast(err,true);});
 }
 function loadMarginPresets(){
@@ -1008,7 +1484,8 @@ function addToCart(productId){
     taxRate:Number(product.TaxRate)||0, qty:step, stock:product.DisplayStock,
     marginUsed:margin, purchasePrice:isPill?unitPurchasePrice/ppu:unitPurchasePrice,
     pillsPerUnit:ppu,
-    sellByPill:isPill
+    sellByPill:isPill,
+    unit:product.Unit
   });
   renderCart();
 }
@@ -1052,7 +1529,6 @@ function renderCart(){
   if(!cart.length){el.innerHTML='<div class="empty-state">Cart is empty</div>';}
   else{
     el.innerHTML=cart.map(function(c,idx){
-      var marginOpts=marginPresets.map(function(m){return '<option value="'+m+'"'+(c.marginUsed==m?' selected':'')+'>'+m+'%</option>';}).join('');
       var priceLabel='$'+money(c.price)+' per pill';
       var controls='';
       if(c.sellByPill&&c.pillsPerUnit>0){
@@ -1067,20 +1543,25 @@ function renderCart(){
             '<input id="sbp-p-'+c.productId+'" type="number" min="0" max="'+(ppu-1)+'" value="'+pills+'" style="width:50px;font-size:12px;padding:2px 4px;border:1px solid var(--line);border-radius:4px;" onchange="updateSellByPillQty(\''+c.productId+'\')" oninput="updateSellByPillQty(\''+c.productId+'\')">'+
             '<span style="font-size:10.5px;color:var(--ink-soft);">= '+c.qty+' pills</span>'+
           '</div>';
-        priceLabel='$'+money(c.price)+' per pill · $'+money(c.price*ppu)+' per unit';
+        priceLabel='$'+money(c.price)+' per pill | $'+money(c.price*ppu)+' per unit';
       } else {
-        controls='<div class="qty-controls"><button onclick="changeCartQty(\''+c.productId+'\',-1)">−</button><span>'+c.qty+'</span><button onclick="changeCartQty(\''+c.productId+'\',1)">+</button></div>';
+        controls='<div class="qty-controls"><button onclick="changeCartQty(\''+c.productId+'\',-1)">-</button><span>'+c.qty+(c.unit?' '+esc(c.unit):'')+'</span><button onclick="changeCartQty(\''+c.productId+'\',1)">+</button></div>';
       }
       return '<div class="cart-item" style="flex-direction:column;align-items:stretch;gap:4px;">'+
         '<div style="display:flex;justify-content:space-between;align-items:center;">'+
           '<div><b>'+esc(c.name)+'</b><br><span style="color:var(--ink-soft);font-size:11px;">'+priceLabel+'</span></div>'+
           controls+
         '</div>'+
+        '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">'+
+          '<button class="mini-btn" style="padding:4px 8px;font-size:11px;" onclick="changeCartMargin(\''+c.productId+'\',0)" '+(c.marginUsed==0?'style="background:var(--primary);color:#fff;border-color:var(--primary);"':'')+'>Auto</button>'+
+          '<button class="mini-btn" style="padding:4px 8px;font-size:11px;" onclick="changeCartMargin(\''+c.productId+'\',20)" '+(c.marginUsed==20?'style="background:var(--primary);color:#fff;border-color:var(--primary);"':'')+'>20%</button>'+
+          '<button class="mini-btn" style="padding:4px 8px;font-size:11px;" onclick="changeCartMargin(\''+c.productId+'\',25)" '+(c.marginUsed==25?'style="background:var(--primary);color:#fff;border-color:var(--primary);"':'')+'>25%</button>'+
+          '<button class="mini-btn" style="padding:4px 8px;font-size:11px;" onclick="changeCartMargin(\''+c.productId+'\',35)" '+(c.marginUsed==35?'style="background:var(--primary);color:#fff;border-color:var(--primary);"':'')+'>35%</button>'+
         '<div style="display:flex;gap:6px;align-items:center;">'+
           '<input type="number" step="0.1" value="'+c.marginUsed+'" style="width:60px;font-size:11px;padding:2px 4px;border:1px solid var(--line);border-radius:4px;" onchange="changeCartMargin(\''+c.productId+'\',this.value)">'+
           '<span style="font-size:10.5px;color:var(--ink-soft);">% margin</span>'+
         '</div>'+
-      '</div>';
+        '</div>';
     }).join('');
   }
   var subtotal=cart.reduce(function(s,c){return s+c.qty*c.price;},0);
@@ -1117,7 +1598,50 @@ document.getElementById('pos-checkout-btn').addEventListener('click',function(){
   });
 });
 
-// ── Inventory table ───────────────────────────────────────────────────────
+// ── Inventory KPI cards & table ───────────────────────────────────────────
+function renderInventoryKpis(){
+  var container = document.getElementById('inventory-kpi-cards');
+  if(!container || !allProducts) return;
+  var totalProducts = allProducts.length;
+  var inStockCount = 0;
+  var totalUnits = 0;
+  var outOfStockCount = 0;
+  var lowStockCount = 0;
+  var totalCost = 0;
+  var totalRetail = 0;
+  var defaultLow = Number(document.getElementById('s-lowstock') ? document.getElementById('s-lowstock').value : 0) || 0;
+
+  allProducts.forEach(function(p){
+    var stock = Number(p.CurrentStock) || 0;
+    var costPrice = Number(p.PurchasePrice) || 0;
+    var sellPrice = Number(p.SellingPrice) || 0;
+    var threshold = (p.ReorderLevel !== undefined && p.ReorderLevel !== '' && Number(p.ReorderLevel) > 0) ? Number(p.ReorderLevel) : defaultLow;
+
+    totalUnits += stock;
+    if(stock > 0){
+      inStockCount++;
+      totalCost += stock * costPrice;
+      totalRetail += stock * sellPrice;
+      if(stock <= threshold){
+        lowStockCount++;
+      }
+    } else {
+      outOfStockCount++;
+    }
+  });
+
+  var marginPct = totalRetail > 0 ? (((totalRetail - totalCost) / totalRetail) * 100).toFixed(1) : 0;
+  var availabilityPct = totalProducts > 0 ? ((inStockCount / totalProducts) * 100).toFixed(0) : 0;
+
+  container.innerHTML =
+    '<div class="card"><div class="label">Total Products</div><div class="value">' + totalProducts + '</div><div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">' + totalUnits.toLocaleString() + ' units on hand</div></div>' +
+    '<div class="card"><div class="label">Products Available</div><div class="value">' + inStockCount + '</div><div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">' + availabilityPct + '% catalog available</div></div>' +
+    '<div class="card"><div class="label">Inventory Cost Value</div><div class="value">$' + money(totalCost) + '</div><div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">Total investment at cost</div></div>' +
+    '<div class="card"><div class="label">Potential Retail Value</div><div class="value">$' + money(totalRetail) + '</div><div style="font-size:11.5px;color:var(--primary-dark);margin-top:4px;font-weight:600;">Est. profit margin ' + marginPct + '%</div></div>' +
+    '<div class="card ' + (lowStockCount > 0 ? 'warn' : '') + '"><div class="label">Low Stock Alerts</div><div class="value">' + lowStockCount + '</div><div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">At or below reorder level</div></div>' +
+    '<div class="card ' + (outOfStockCount > 0 ? 'danger' : '') + '"><div class="label">Out of Stock</div><div class="value">' + outOfStockCount + '</div><div style="font-size:11.5px;color:var(--danger);margin-top:4px;font-weight:600;">Immediate restock needed</div></div>';
+}
+
 function renderInventoryTable(){
   var tbody=document.getElementById('inventory-tbody');
   var filter=(document.getElementById('inventory-search').value||'').toLowerCase();
@@ -1140,12 +1664,13 @@ function renderInventoryTable(){
   if(!list.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state">No products found</div></td></tr>';return;}
   tbody.innerHTML=list.map(function(p){
     var threshold = (p.ReorderLevel !== undefined && p.ReorderLevel !== '' && Number(p.ReorderLevel) > 0) ? Number(p.ReorderLevel) : defaultLowStock;
-    var low=p.CurrentStock<=threshold;
+    var stock = Number(p.CurrentStock) || 0;
+    var statusPill = stock <= 0 ? '<span class="pill bad">Out of stock</span>' : (stock <= threshold ? '<span class="pill low">Low stock</span>' : '<span class="pill ok">In stock</span>');
     var actions='';
     if(can('PERM_EDIT_PRODUCT')) actions+='<button onclick="openProductModal(\''+p.ProductID+'\')">Edit</button>';
     if(can('PERM_DELETE_PRODUCT')) actions+='<button class="danger" onclick="removeProduct(\''+p.ProductID+'\')">Delete</button>';
-    return '<tr><td>'+esc(p.ProductName)+'</td><td>'+esc(p.CategoryName)+'</td><td>$'+money(p.SellingPrice)+'</td><td>'+p.CurrentStock+'</td>'+
-      '<td><span class="pill '+(low?'low':'ok')+'">'+(low?'Low stock':'In stock')+'</span></td><td class="row-actions">'+actions+'</td></tr>';
+    return '<tr><td>'+esc(p.ProductName)+'</td><td>'+esc(p.CategoryName)+'</td><td>$'+money(p.SellingPrice)+'</td><td>'+stock+'</td>'+
+      '<td>'+statusPill+'</td><td class="row-actions">'+actions+'</td></tr>';
   }).join('');
 }
 document.getElementById('inventory-search').addEventListener('input',renderInventoryTable);
@@ -1207,7 +1732,7 @@ function updatePillPreview(){
   var margin = purchasePrice > 0 && sellingPrice > 0 ? ((sellingPrice - purchasePrice) / purchasePrice * 100) : null;
 
   preview.innerHTML =
-    '<div style="font-weight:700;font-size:13px;margin-bottom:6px;">💊 Price Preview</div>'+
+    '<div style="font-weight:700;font-size:13px;margin-bottom:6px;">Price Preview</div>'+
     '<table style="width:100%;font-size:12px;border-collapse:collapse;">'+
       '<tr><td style="color:var(--ink-soft);padding:2px 0;">Sealed unit ('+ppu+' pills)</td><td style="text-align:right;font-weight:600;">'+money(sellingPrice)+' ETB</td></tr>'+
       '<tr><td style="color:var(--ink-soft);padding:2px 0;">Per individual pill</td><td style="text-align:right;font-weight:700;color:var(--brand);">'+money(pricePerPill)+' ETB</td></tr>'+
@@ -1247,7 +1772,29 @@ document.getElementById('product-modal-save').addEventListener('click',function(
   return promise.then(function(res){
     if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
     document.getElementById('product-modal').classList.remove('active');
-    toast('Product saved.'); loadProducts(); loadDashboard();
+    toast('Product saved.'); 
+    
+    call('getProducts',session.userId).then(function(res2){
+      if(!res2.success) return;
+      allProducts=res2.products;
+      renderPosGrid(); renderInventoryTable();
+      var dl = document.getElementById('products-datalist');
+      if(dl) dl.innerHTML = allProducts.map(function(p){ return '<option value="'+esc(p.ProductName)+'">'; }).join('');
+      
+      if(window.activePurchaseLineForNewProduct && res.productId) {
+        var newProd = allProducts.find(function(p){ return p.ProductID === res.productId; });
+        if(newProd) {
+          var input = window.activePurchaseLineForNewProduct.querySelector('.pl-product-search');
+          if(input) {
+            input.value = newProd.ProductName;
+            input.dispatchEvent(new Event('input', {bubbles:true}));
+          }
+        }
+        window.activePurchaseLineForNewProduct = null;
+      }
+    });
+    
+    loadDashboard();
   }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
   });
 });
@@ -1432,7 +1979,7 @@ function openPurchaseDetails(purchaseId){
 
     document.getElementById('pd-items').innerHTML='<table><thead><tr><th>Product</th><th>Batch</th><th>Expiry</th><th>Qty</th><th>Unit cost</th><th>Sell price</th><th>Total</th></tr></thead><tbody>'+
       items.map(function(i){
-        var detail=[i.Strength,i.DosageForm,i.Unit].filter(Boolean).join(' · ');
+        var detail=[i.Strength,i.DosageForm,i.Unit].filter(Boolean).join(' | ');
         return '<tr><td>'+esc(i.ProductName)+(detail?'<br><span style="color:var(--ink-soft);font-size:11px;">'+esc(detail)+'</span>':'')+'</td>'+
           '<td>'+esc(i.BatchNumber||'—')+'</td>'+
           '<td>'+(i.ExpiryDate?esc(i.ExpiryDate):'<span style="color:var(--ink-soft);">—</span>')+'</td>'+
@@ -1442,7 +1989,7 @@ function openPurchaseDetails(purchaseId){
     document.getElementById('pd-totals').innerHTML=
       '<div class="panel" style="margin-bottom:0;padding:12px 14px;">'+
       '<div class="cart-total-row"><span>Subtotal</span><span>$'+money(pur.TotalAmount)+'</span></div>'+
-      '<div class="cart-total-row"><span>Discount</span><span>−$'+money(pur.Discount)+'</span></div>'+
+      '<div class="cart-total-row"><span>Discount</span><span>-$'+money(pur.Discount)+'</span></div>'+
       '<div class="cart-total-row"><span>Tax</span><span>+$'+money(pur.Tax)+'</span></div>'+
       '<div class="cart-total-row grand"><span>Grand total</span><span>$'+money(pur.GrandTotal)+'</span></div>'+
       '<div class="cart-total-row"><span>Paid</span><span style="color:var(--primary-dark);">$'+money(pur.PaidAmount)+'</span></div>'+
@@ -1495,19 +2042,53 @@ document.getElementById('add-purchase-btn').addEventListener('click',function(){
 });
 document.getElementById('purchase-modal-cancel').addEventListener('click',function(){document.getElementById('purchase-modal').classList.remove('active');});
 document.getElementById('add-purchase-line').addEventListener('click',addPurchaseLine);
+window.activePurchaseLineForNewProduct = null;
+function openProductModalForPurchase(btn) {
+  window.activePurchaseLineForNewProduct = btn.closest('.line-item-row');
+  openProductModal(null);
+  document.getElementById('product-modal').style.zIndex = '200';
+}
+var UNIT_OPTIONS = [
+  '','tablet','capsule','caplet','softgel','lozenge','suppository',
+  'strip','blister','sachet','packet','ampoule','vial',
+  'bottle','can','jar','tube','spray','inhaler','dropper',
+  'box','carton','pack','bag',
+  'ml','L','g','mg','kg',
+  'pcs','unit','dose','pair','set'
+];
+function unitSelectHtml(selectedUnit){
+  return '<select class="pl-unit" style="width:90px;padding:4px;font-size:12px;border:1px solid var(--line);border-radius:6px;">'+
+    UNIT_OPTIONS.map(function(u){
+      return '<option value="'+u+'"'+(u===(selectedUnit||'')?'selected':'')+'>'+(u||'-- unit --')+'</option>';
+    }).join('')+
+  '</select>';
+}
 function addPurchaseLine(){
   var idx=purchaseLineCount++;
   var div=document.createElement('div');
   div.className='line-item-row'; div.dataset.idx=idx;
+  div.style.marginBottom='8px';
+  div.style.border='1px solid var(--line)';
+  div.style.padding='8px';
+  div.style.borderRadius='8px';
+  
   div.innerHTML=
-    '<div class="li-top">'+
-      '<select class="pl-product">'+allProducts.map(function(p){return '<option value="'+p.ProductID+'">'+esc(p.ProductName)+'</option>';}).join('')+'</select>'+
-      '<button type="button" class="li-remove" onclick="this.closest(\'.line-item-row\').remove();recalcPurchaseTotals();">✕</button>'+
+    '<div class="li-top" style="display:flex;gap:10px;margin-bottom:8px;align-items:center;">'+
+      '<input type="text" class="pl-product-search" list="products-datalist" placeholder="Search product..." style="flex:1;">'+
+      '<input type="hidden" class="pl-product-id">'+
+      '<button type="button" class="btn outline small add-product-shortcut" onclick="openProductModalForPurchase(this)" style="padding:0 8px;font-size:12px;">+ New</button>'+
+      '<button type="button" class="li-remove" onclick="this.closest(\'.line-item-row\').remove();recalcPurchaseTotals();">X</button>'+
     '</div>'+
-    '<div class="li-grid">'+
-      '<input class="pl-qty" type="text" placeholder="Qty">'+
-      '<input class="pl-cost" type="text" placeholder="Purchase price">'+
-      '<input class="pl-price" type="text" placeholder="Selling price">'+
+    '<div class="li-product-info" style="font-size:11.5px;color:var(--primary);margin-bottom:8px;font-weight:600;"></div>'+
+    '<div class="li-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;align-items:center;">'+
+      '<div class="pl-qty-wrapper">'+
+        '<div style="display:flex;gap:4px;align-items:center;">'+
+          '<input class="pl-qty" type="number" min="0" placeholder="Qty" style="width:70px;padding:4px;">'+
+          unitSelectHtml('')+
+        '</div>'+
+      '</div>'+
+      '<input class="pl-cost" type="number" min="0" placeholder="Purchase price">'+
+      '<input class="pl-price" type="number" min="0" placeholder="Selling price">'+
       '<input class="pl-expiry" type="text" placeholder="Expiry YYYY-MM-DD">'+
     '</div>'+
     '<div class="pl-line-total" style="text-align:right;font-size:12px;color:var(--ink-soft);margin-top:4px;">Line total: <b>$0.00</b></div>';
@@ -1517,9 +2098,21 @@ function addPurchaseLine(){
 function recalcPurchaseTotals(){
   var subtotal=0;
   document.querySelectorAll('#purchase-lines .line-item-row').forEach(function(rowEl){
+    var id = rowEl.querySelector('.pl-product-id').value;
     var qty=Number(rowEl.querySelector('.pl-qty').value)||0;
+    var pillsEl = rowEl.querySelector('.pl-pills');
+    var pills = pillsEl ? (Number(pillsEl.value)||0) : 0;
+    
+    var effectiveQty = qty;
+    if (pills > 0 && id) {
+      var p = allProducts.find(function(item){ return item.ProductID === id; });
+      if(p && p.PillsPerUnit > 0) {
+        effectiveQty = qty + (pills / p.PillsPerUnit);
+      }
+    }
+    
     var cost=Number(rowEl.querySelector('.pl-cost').value)||0;
-    var lineTotal=qty*cost;
+    var lineTotal=effectiveQty*cost;
     subtotal+=lineTotal;
     var totalEl=rowEl.querySelector('.pl-line-total b');
     if(totalEl) totalEl.textContent='$'+money(lineTotal);
@@ -1527,14 +2120,50 @@ function recalcPurchaseTotals(){
   var discount=Number(document.getElementById('pu-discount').value)||0;
   var tax=Number(document.getElementById('pu-tax').value)||0;
   var grandTotal=Math.max(0, subtotal-discount+tax);
-  docume
-  nt.getElementById('pu-calc-subtotal').textContent='$'+money(subtotal);
+  document.getElementById('pu-calc-subtotal').textContent='$'+money(subtotal);
   document.getElementById('pu-calc-discount').textContent='$'+money(discount);
   document.getElementById('pu-calc-tax').textContent='$'+money(tax);
   document.getElementById('pu-calc-grandtotal').textContent='$'+money(grandTotal);
 }
 document.getElementById('purchase-lines').addEventListener('input', function(e){
-  if(e.target.classList.contains('pl-qty')||e.target.classList.contains('pl-cost')) recalcPurchaseTotals();
+  if(e.target.classList.contains('pl-product-search')){
+    var row = e.target.closest('.line-item-row');
+    var val = e.target.value.trim().toLowerCase();
+    var p = allProducts.find(function(item){ return item.ProductName.toLowerCase() === val; });
+    var idInput = row.querySelector('.pl-product-id');
+    var info = row.querySelector('.li-product-info');
+    var qtyWrap = row.querySelector('.pl-qty-wrapper');
+    if(p) {
+      idInput.value = p.ProductID;
+      row.querySelector('.pl-cost').value = p.PurchasePrice || '';
+      row.querySelector('.pl-price').value = p.SellingPrice || '';
+      if(p.SellByPill) {
+        info.textContent = 'Pill product: ' + p.PillsPerUnit + ' pills/unit';
+        qtyWrap.innerHTML = '<div style="display:flex;gap:4px;align-items:center;">'+
+          '<input class="pl-qty" type="number" min="0" placeholder="Units" style="width:60px;padding:4px;">'+
+          unitSelectHtml(p.Unit)+
+          '<span style="font-size:11px;color:var(--ink-soft);">+</span>'+
+          '<input class="pl-pills" type="number" min="0" placeholder="Pills" style="width:60px;padding:4px;">'+
+          '<span style="font-size:11px;color:var(--ink-soft);">pills</span>'+
+          '</div>';
+      } else {
+        info.textContent = 'Standard product - ' + (p.Strength||'') + (p.DosageForm?' '+p.DosageForm:'');
+        qtyWrap.innerHTML = '<div style="display:flex;gap:4px;align-items:center;">'+
+          '<input class="pl-qty" type="number" min="0" placeholder="Qty" style="width:70px;padding:4px;">'+
+          unitSelectHtml(p.Unit)+
+          '</div>';
+      }
+      recalcPurchaseTotals();
+    } else {
+      idInput.value = '';
+      info.textContent = '';
+      qtyWrap.innerHTML = '<div style="display:flex;gap:4px;align-items:center;">'+
+          '<input class="pl-qty" type="number" min="0" placeholder="Qty" style="width:70px;padding:4px;">'+
+          unitSelectHtml('')+
+          '</div>';
+    }
+  }
+  if(e.target.classList.contains('pl-qty')||e.target.classList.contains('pl-cost')||e.target.classList.contains('pl-pills')) recalcPurchaseTotals();
 });
 document.getElementById('pu-discount').addEventListener('input', recalcPurchaseTotals);
 document.getElementById('pu-tax').addEventListener('input', recalcPurchaseTotals);
@@ -1546,10 +2175,23 @@ document.getElementById('purchase-modal-save').addEventListener('click',function
   if(!supplierId){msgEl.innerHTML='<div class="msg error">Select a supplier.</div>';return;}
   var items=[];
   document.querySelectorAll('#purchase-lines .line-item-row').forEach(function(row){
-    var qty=Number(row.querySelector('.pl-qty').value);
-    if(qty>0){
+    var id=row.querySelector('.pl-product-id').value;
+    if(!id) return;
+    var qty=Number(row.querySelector('.pl-qty').value)||0;
+    var pillsEl = row.querySelector('.pl-pills');
+    var pills = pillsEl ? (Number(pillsEl.value)||0) : 0;
+    
+    var effectiveQty = qty;
+    if (pills > 0) {
+      var p = allProducts.find(function(item){ return item.ProductID === id; });
+      if(p && p.PillsPerUnit > 0) {
+        effectiveQty = qty + (pills / p.PillsPerUnit);
+      }
+    }
+    
+    if(effectiveQty>0){
       items.push({
-        productId:row.querySelector('.pl-product').value, quantity:qty,
+        productId:id, quantity:effectiveQty,
         purchasePrice:Number(row.querySelector('.pl-cost').value)||0,
         sellingPrice:Number(row.querySelector('.pl-price').value)||0,
         expiryDate:row.querySelector('.pl-expiry').value.trim()
@@ -1575,12 +2217,16 @@ document.getElementById('purchase-modal-save').addEventListener('click',function
 function loadSalesHistory(){
   call('getSales',session.userId,100).then(function(res){
     var tbody=document.getElementById('sales-tbody');
-    if(!res.success){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state">'+res.message+'</div></td></tr>';return;}
-    if(!res.sales.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state">No sales yet</div></td></tr>';return;}
+    if(!res.success){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state">'+res.message+'</div></td></tr>';return;}
+    if(!res.sales.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state">No sales yet</div></td></tr>';return;}
     tbody.innerHTML=res.sales.map(function(s){
-      return '<tr><td>'+s.SaleID+'</td><td>'+new Date(s.SaleDate).toLocaleString()+'</td><td>'+esc(s.CashierName)+'</td>'+
-        '<td>'+esc(s.PaymentMethod)+'</td><td>$'+money(s.GrandTotal)+'</td>'+
-        '<td class="row-actions"><button onclick="openSaleDetails(\''+s.SaleID+'\')">View</button></td></tr>';
+      var isVoided = String(s.Status || '').toLowerCase() === 'voided';
+      var statusPill = isVoided ? '<span class="pill bad">Voided</span>' : '<span class="pill ok">Completed</span>';
+      var canDelete = !isVoided && (session.roleId === 'ROLE_OWNER' || can('PERM_REFUND') || can('PERM_MANAGE_USERS'));
+      var delBtn = canDelete ? '<button class="danger" onclick="deleteSalePrompt(\''+s.SaleID+'\')">Delete</button>' : '';
+      return '<tr style="'+(isVoided?'opacity:0.65;background:#fafafa;':'')+'"><td>'+s.SaleID+'</td><td>'+new Date(s.SaleDate).toLocaleString()+'</td><td>'+esc(s.CashierName)+'</td>'+
+        '<td>'+esc(s.PaymentMethod)+'</td><td>$'+money(s.GrandTotal)+'</td><td>'+statusPill+'</td>'+
+        '<td class="row-actions"><button onclick="openSaleDetails(\''+s.SaleID+'\')">View</button>'+delBtn+'</td></tr>';
     }).join('');
   }).catch(function(err){toast(err,true);});
 }
@@ -1588,19 +2234,54 @@ function openSaleDetails(saleId){
   currentSaleDetailsId=saleId;
   document.getElementById('sd-sale-id').textContent=saleId;
   document.getElementById('sd-msg').innerHTML='';
+  var bannerEl = document.getElementById('sd-voided-banner');
+  if(bannerEl) bannerEl.innerHTML = '';
+  var delModalBtn = document.getElementById('sale-details-delete');
+  if(delModalBtn) delModalBtn.style.display = 'none';
+
   document.getElementById('sale-details-modal').classList.add('active');
   call('getSaleDetails',session.userId,saleId).then(function(res){
     var el=document.getElementById('sd-items');
     if(!res.success){el.innerHTML='<div class="empty-state">'+res.message+'</div>';return;}
-    el.innerHTML='<table><thead><tr><th>Product</th><th>Qty</th><th>Unit price</th><th>Total</th>'+(can('PERM_REFUND')?'<th></th>':'')+'</tr></thead><tbody>'+
+    var sale = res.sale || {};
+    var isVoided = String(sale.Status || '').toLowerCase() === 'voided';
+    if(bannerEl && isVoided){
+      bannerEl.innerHTML = '<div class="msg error" style="margin-bottom:12px;">This sale was <b>Voided / Deleted</b>' +
+        (sale.DeletedByName ? ' by <b>' + esc(sale.DeletedByName) + '</b>' : '') +
+        (sale.DeletedReason ? ' &mdash; Reason: <i>' + esc(sale.DeletedReason) + '</i>' : '') +
+        (sale.DeletedDate ? ' (' + new Date(sale.DeletedDate).toLocaleString() + ')' : '') +
+        '. Items restored to stock and drawer reversed.</div>';
+    }
+    if(delModalBtn && !isVoided && (session.roleId === 'ROLE_OWNER' || can('PERM_REFUND') || can('PERM_MANAGE_USERS'))){
+      delModalBtn.style.display = 'inline-block';
+      delModalBtn.onclick = function(){ deleteSalePrompt(saleId); };
+    }
+    el.innerHTML='<table><thead><tr><th>Product</th><th>Qty</th><th>Unit price</th><th>Total</th>'+(!isVoided && can('PERM_REFUND')?'<th></th>':'')+'</tr></thead><tbody>'+
       res.items.map(function(i){
-        var returnBtn=can('PERM_REFUND')?'<button onclick="promptReturn(\''+saleId+'\',\''+i.ProductID+'\',\''+esc(i.ProductName)+'\','+i.Quantity+')">Return</button>':'';
-        return '<tr><td>'+esc(i.ProductName)+'</td><td>'+i.Quantity+'</td><td>$'+money(i.UnitPrice)+'</td><td>$'+money(i.Total)+'</td><td class="row-actions">'+returnBtn+'</td></tr>';
+        var returnBtn=(!isVoided && can('PERM_REFUND'))?'<button onclick="promptReturn(\''+saleId+'\',\''+i.ProductID+'\',\''+esc(i.ProductName)+'\','+i.Quantity+')">Return</button>':'';
+        return '<tr><td>'+esc(i.ProductName)+'</td><td>'+i.Quantity+'</td><td>$'+money(i.UnitPrice)+'</td><td>$'+money(i.Total)+'</td>'+(!isVoided && can('PERM_REFUND')?'<td class="row-actions">'+returnBtn+'</td>':'')+'</tr>';
       }).join('')+'</tbody></table>';
   });
 }
 document.getElementById('sale-details-close').addEventListener('click',function(){document.getElementById('sale-details-modal').classList.remove('active');});
 document.getElementById('sale-details-print').addEventListener('click',function(){ if(currentSaleDetailsId) printReceipt(currentSaleDetailsId); });
+
+function deleteSalePrompt(saleId){
+  if(!confirm('Are you sure you want to delete/void sale "' + saleId + '"? This will reverse items back to inventory batches, adjust cash drawer totals, and mark the transaction as Voided.')) return;
+  var reason = prompt('Please enter a reason for deleting this sale (required for accountability):', 'Customer order cancelled / cashier correction');
+  if(!reason || !reason.trim()){
+    toast('Deletion cancelled: A reason is required for the accountability audit log.', true);
+    return;
+  }
+  call('deleteSale', session.userId, saleId, reason.trim()).then(function(res){
+    if(!res.success) return toast(res.message, true);
+    toast('Sale ' + saleId + ' voided and inventory reversed.');
+    document.getElementById('sale-details-modal').classList.remove('active');
+    loadSalesHistory();
+    loadProducts();
+    loadDashboard();
+  }).catch(function(err){ toast(err, true); });
+}
 function promptReturn(saleId,productId,productName,maxQty){
   var qty=prompt('Return how many units of "'+productName+'"? (max '+maxQty+')','1');
   if(!qty) return;
@@ -1860,12 +2541,25 @@ function loadUsers(){
     if(!res.users.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state">No users yet</div></td></tr>';return;}
     tbody.innerHTML=res.users.map(function(u){
       var active=u.Active!==false&&u.Active!=='FALSE';
+      var delBtn = (session.roleId === 'ROLE_OWNER' || can('PERM_MANAGE_USERS')) ? '<button class="danger" onclick="removeUser(\''+u.UserID+'\',\''+esc(u.FullName)+'\')">Delete</button>' : '';
       return '<tr><td>'+esc(u.FullName)+'</td><td>'+esc(u.Username)+'</td><td>'+esc(u.RoleName)+'</td>'+
         '<td><span class="pill '+(active?'ok':'bad')+'">'+(active?'Active':'Disabled')+'</span></td><td>'+(u.LastLogin?new Date(u.LastLogin).toLocaleString():'—')+'</td>'+
         '<td class="row-actions"><button onclick="toggleUser(\''+u.UserID+'\','+(!active)+')">'+(active?'Disable':'Enable')+'</button>'+
-        '<button onclick="resetPassword(\''+u.UserID+'\')">Reset password</button></td></tr>';
+        '<button onclick="resetPassword(\''+u.UserID+'\')">Reset password</button>'+delBtn+'</td></tr>';
     }).join('');
   }).catch(function(err){toast(err,true);});
+}
+function removeUser(userId,name){
+  if(userId === session.userId){
+    toast('You cannot delete your own account.', true);
+    return;
+  }
+  if(!confirm('Are you sure you want to permanently delete user "' + (name||userId) + '"? This action cannot be undone.')) return;
+  call('deleteUser', session.userId, userId).then(function(res){
+    if(!res.success) return toast(res.message, true);
+    toast('User deleted successfully.');
+    loadUsers();
+  }).catch(function(err){ toast(err, true); });
 }
 function toggleUser(userId,setActive){
   call('setUserActive',session.userId,userId,setActive).then(function(res){
@@ -1913,6 +2607,10 @@ function loadSettings(){
     document.getElementById('bi-tax').value=b.TaxID||'';
     document.getElementById('bi-phone').value=b.Phone||'';
     document.getElementById('bi-email').value=b.Email||'';
+    document.getElementById('bi-website').value=b.Website||'';
+    document.getElementById('bi-socialhandle').value=b.SocialHandle||'';
+    document.getElementById('bi-socialphone').value=b.SocialPhone||'';
+    document.getElementById('bi-language').value=b.Language||'';
     document.getElementById('bi-address').value=b.Address||'';
     document.getElementById('s-currency').value=s.Currency||'';
     document.getElementById('s-vat').value=s.VATRate||'';
@@ -1928,6 +2626,8 @@ document.getElementById('save-business-btn').addEventListener('click',function()
   var payload={BusinessName:document.getElementById('bi-name').value.trim(),Owner:document.getElementById('bi-owner').value.trim(),
     LicenseNumber:document.getElementById('bi-license').value.trim(),TaxID:document.getElementById('bi-tax').value.trim(),
     Phone:document.getElementById('bi-phone').value.trim(),Email:document.getElementById('bi-email').value.trim(),
+    Website:document.getElementById('bi-website').value.trim(),SocialHandle:document.getElementById('bi-socialhandle').value.trim(),
+    SocialPhone:document.getElementById('bi-socialphone').value.trim(),Language:document.getElementById('bi-language').value.trim(),
     Address:document.getElementById('bi-address').value.trim(),LogoURL:''};
   return call('updateBusinessInfo',session.userId,payload).then(function(res){
     if(!res.success) return toast(res.message,true);
@@ -1994,6 +2694,64 @@ function renderReceiptHtml(sale, items){
       '<div class="center">'+esc(s.ReceiptFooter||'Thank you for your purchase')+'</div>'+
     '</div>';
 }
+
+// ── Audit Logs ─────────────────────────────────────────────────────────────
+var allAuditLogs = [];
+function loadAuditLogs(){
+  call('getAuditLogs', session.userId, 200).then(function(res){
+    var tbody = document.getElementById('audit-tbody');
+    if(!tbody) return;
+    if(!res.success){ tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">' + esc(res.message) + '</div></td></tr>'; return; }
+    allAuditLogs = res.logs || [];
+    renderAuditLogsTable();
+  }).catch(function(err){ toast(err, true); });
+}
+
+function renderAuditLogsTable(){
+  var tbody = document.getElementById('audit-tbody');
+  if(!tbody) return;
+  var searchInput = document.getElementById('audit-search');
+  var moduleSelect = document.getElementById('audit-module-filter');
+  var query = (searchInput ? searchInput.value : '').toLowerCase();
+  var module = moduleSelect ? moduleSelect.value : '';
+  var filtered = allAuditLogs.filter(function(l){
+    if(module && l.Module !== module) return false;
+    if(query){
+      var matchUser = (l.UserName || l.UserID || '').toLowerCase().indexOf(query) > -1;
+      var matchAction = (l.Action || '').toLowerCase().indexOf(query) > -1;
+      var matchMod = (l.Module || '').toLowerCase().indexOf(query) > -1;
+      var matchRec = (l.RecordID || '').toLowerCase().indexOf(query) > -1;
+      var matchDet = (l.Details || l.NewValue || l.OldValue || '').toLowerCase().indexOf(query) > -1;
+      return matchUser || matchAction || matchMod || matchRec || matchDet;
+    }
+    return true;
+  });
+
+  if(!filtered.length){
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">No audit logs found</div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(function(l){
+    var dt = l.Timestamp ? new Date(l.Timestamp).toLocaleString() : '—';
+    var userDisplay = esc(l.UserName || l.UserID || 'System');
+    var details = esc(l.Details || (l.Action + (l.RecordID ? ' ' + l.RecordID : '') + (l.NewValue ? ' (' + l.NewValue + ')' : '')));
+    var isDanger = l.Action && (l.Action.indexOf('DELETE') > -1 || l.Action.indexOf('VOID') > -1);
+    var actionBadge = '<span class="pill ' + (isDanger ? 'bad' : 'ok') + '">' + esc(l.Action || '') + '</span>';
+    return '<tr>' +
+      '<td style="white-space:nowrap;font-size:12px;">' + dt + '</td>' +
+      '<td><b>' + userDisplay + '</b></td>' +
+      '<td>' + esc(l.Module || '—') + '</td>' +
+      '<td>' + actionBadge + '</td>' +
+      '<td style="font-size:12.5px;">' + details + '</td>' +
+      '<td style="font-family:monospace;font-size:11.5px;">' + esc(l.RecordID || '—') + '</td>' +
+    '</tr>';
+  }).join('');
+}
+var auditSearchEl = document.getElementById('audit-search');
+if(auditSearchEl) auditSearchEl.addEventListener('input', renderAuditLogsTable);
+var auditFilterEl = document.getElementById('audit-module-filter');
+if(auditFilterEl) auditFilterEl.addEventListener('change', renderAuditLogsTable);
 </script>
 </body>
 </html>

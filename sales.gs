@@ -128,6 +128,84 @@ function getSaleDetails(userId, saleId) {
   var products = readTable(SHEETS.PRODUCTS).rows;
   var nameById = {}; products.forEach(function (p) { nameById[p.ProductID] = p.ProductName; });
   items.forEach(function (i) { i.ProductName = nameById[i.ProductID] || i.ProductID; });
+  if (sale.DeletedBy) {
+    var deleter = findRowById(SHEETS.USERS, 'UserID', sale.DeletedBy);
+    sale.DeletedByName = deleter ? (deleter.FullName || deleter.Username) : sale.DeletedBy;
+  }
   return ok({ sale: sale, items: items });
+  })();
+}
+
+function deleteSale(userId, saleId, reason) {
+  return safe(function () {
+    var user = requireUser(userId);
+    var canDelete = (user.RoleID === ROLE_IDS.OWNER) || hasPermission(user.RoleID, PERMISSIONS.REFUND);
+    if (!canDelete) return fail('Only the Owner or authorized staff can delete/void a sale.');
+    if (!reason || !reason.trim()) return fail('A reason is required to void/delete a sale.');
+
+    var sale = findRowById(SHEETS.SALES, 'SaleID', saleId);
+    if (!sale) return fail('Sale not found.');
+    if (sale.Status === 'Voided' || sale.Status === 'Deleted') return fail('This sale has already been voided/deleted.');
+
+    var lock = LockService.getScriptLock();
+    lock.waitLock(15000);
+    try {
+      var items = findRows(SHEETS.SALE_ITEMS, function (i) { return i.SaleID === saleId; });
+      var products = readTable(SHEETS.PRODUCTS).rows;
+      var productById = {}; products.forEach(function (p) { productById[p.ProductID] = p; });
+
+      items.forEach(function (item) {
+        var product = productById[item.ProductID];
+        var isPill = product && (product.SellByPill === true || product.SellByPill === 'TRUE');
+        var ppu = isPill ? Number(product.PillsPerUnit) || 1 : 1;
+        var qty = Number(item.Quantity || 0);
+        if (qty <= 0) return;
+
+        if (isPill && ppu > 1) {
+          var inv = findRowById(SHEETS.INVENTORY, 'ProductID', item.ProductID);
+          var currentLoose = inv ? Number(inv.LoosePills || 0) : 0;
+          var totalLoose = currentLoose + qty;
+          var wholeUnits = Math.floor(totalLoose / ppu);
+          var remLoose = totalLoose % ppu;
+
+          if (wholeUnits > 0 && item.BatchID) {
+            var batch = findRowById(SHEETS.BATCHES, 'BatchID', item.BatchID);
+            if (batch) {
+              updateRowById(SHEETS.BATCHES, 'BatchID', item.BatchID, { Quantity: Number(batch.Quantity || 0) + wholeUnits });
+            }
+          }
+          if (inv) {
+            updateRowById(SHEETS.INVENTORY, 'ProductID', item.ProductID, { LoosePills: remLoose, LastUpdated: nowIso() });
+          }
+          recalculateInventory(item.ProductID, item.BatchID, 'Sale Voided', qty, 'SaleVoided', saleId, userId,
+            'Sale ' + saleId + ' voided: ' + reason);
+        } else {
+          if (item.BatchID) {
+            var batch = findRowById(SHEETS.BATCHES, 'BatchID', item.BatchID);
+            if (batch) {
+              updateRowById(SHEETS.BATCHES, 'BatchID', item.BatchID, { Quantity: Number(batch.Quantity || 0) + qty });
+            }
+          }
+          recalculateInventory(item.ProductID, item.BatchID, 'Sale Voided', qty, 'SaleVoided', saleId, userId,
+            'Sale ' + saleId + ' voided: ' + reason);
+        }
+      });
+
+      var paymentMethod = sale.PaymentMethod || 'Cash';
+      var field = paymentMethod === 'Cash' ? 'CashSales' : (paymentMethod === 'Card' ? 'CardSales' : 'MobileMoney');
+      bumpOpenDrawer(sale.CashierID, field, -Number(sale.GrandTotal || 0));
+
+      updateRowById(SHEETS.SALES, 'SaleID', saleId, {
+        Status: 'Voided',
+        DeletedBy: userId,
+        DeletedReason: reason.trim(),
+        DeletedDate: nowIso()
+      });
+
+      logAudit(userId, 'Sales', 'VOID', saleId, { grandTotal: sale.GrandTotal, status: sale.Status }, { status: 'Voided', reason: reason.trim() });
+      return ok({});
+    } finally {
+      lock.releaseLock();
+    }
   })();
 }

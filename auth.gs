@@ -61,6 +61,7 @@ function clearPermissionCache() {
 }
 
 function hasPermission(roleId, permissionId) {
+  if (roleId === ROLE_IDS.OWNER) return true;
   return getPermissionsForRole(roleId).indexOf(permissionId) > -1;
 }
 

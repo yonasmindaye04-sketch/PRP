@@ -60,3 +60,30 @@ function resetUserPassword(actingUserId, targetUserId, newPassword) {
   return ok({});
   })();
 }
+
+function deleteUser(actingUserId, targetUserId) {
+  return safe(function () {
+    authorize(actingUserId, PERMISSIONS.MANAGE_USERS);
+    if (!targetUserId) return fail('User ID is required.');
+    if (targetUserId === actingUserId) return fail("You cannot delete your own account.");
+
+    var targetUser = findRowById(SHEETS.USERS, 'UserID', targetUserId);
+    if (!targetUser) return fail('User not found.');
+
+    // Protect against deleting the only remaining active Owner
+    if (targetUser.RoleID === ROLE_IDS.OWNER) {
+      var otherOwners = findRows(SHEETS.USERS, function (u) {
+        return u.RoleID === ROLE_IDS.OWNER && u.UserID !== targetUserId && u.Active !== false && u.Active !== 'FALSE';
+      });
+      if (!otherOwners.length) {
+        return fail('Cannot delete the only remaining active Owner account.');
+      }
+    }
+
+    var success = deleteRowById(SHEETS.USERS, 'UserID', targetUserId);
+    if (!success) return fail('Failed to delete user.');
+
+    logAudit(actingUserId, 'Users', 'DELETE', targetUserId, { username: targetUser.Username, fullName: targetUser.FullName, roleId: targetUser.RoleID }, null);
+    return ok({});
+  })();
+}

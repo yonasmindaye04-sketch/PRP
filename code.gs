@@ -9,7 +9,7 @@ function doGet(e) {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
-/*initial admin account to create we need to run this function for once*/
+/*initial admin account to create we need to run this function only once*/
 
 function tempCreateAdmin() {
   appendRow(SHEETS.USERS, {
@@ -21,4 +21,17 @@ function tempCreateAdmin() {
     Phone: '', Email: '', Active: true, LastLogin: '', CreatedDate: nowIso()
   });
   Logger.log('Admin created.');
+
+}
+
+
+
+function debugHtml() {
+  try {
+    var out = HtmlService.createHtmlOutputFromFile('Index');
+    Logger.log('Length: ' + out.getContent().length);
+  } catch (e) {
+    Logger.log('ERROR: ' + e.message);
+    Logger.log('Stack: ' + e.stack);
+  }
 }
