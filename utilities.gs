@@ -176,14 +176,19 @@ function reportClientError(payload) {
       LogID: Utilities.getUuid(),
       DateTime: nowIso(),
       UserID: userId,
+      Module: 'Client',
       Action: 'CLIENT_ERROR',
-      Details: JSON.stringify({
+      RecordID: '',
+      OldValue: '',
+      NewValue: JSON.stringify({
         message: payload.message,
         stack: payload.stack,
         context: payload.context,
         userAgent: payload.userAgent,
         url: payload.url
-      })
+      }),
+      IP: '',
+      Device: payload.userAgent || ''
     });
   } catch (e) {
     Logger.log('reportClientError failed: ' + e);

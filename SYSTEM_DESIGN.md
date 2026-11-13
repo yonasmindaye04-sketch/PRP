@@ -5,7 +5,7 @@
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    BROWSER (SPA)                        │
-│  Index.html — ~3,750 lines of vanilla HTML/CSS/JS       │
+│  Index.html — ~4,050 lines of vanilla HTML/CSS/JS       │
 │  No framework, no build step, no external dependencies  │
 │                                                         │
 │  ┌────────────┐  ┌────────────┐  ┌──────────────────┐  │
@@ -105,6 +105,7 @@ Defines every constant the system references:
 - **`STOCK_MOVEMENT_TYPES`** — every ledger type the system can post (`OpeningStock`, `Purchase`, `Sale`, `Return`, `Adjustment`, `DamageLoss`, `TransferOut`, `TransferIn`, `SaleVoided`, `PurchaseDeleted`, `ExpiredWriteOff`)
 - **`MANUAL_ADJUSTMENT_TYPES`** — which movement types a user may post by hand, the direction each allows, and whether it may go negative
 - **`CACHE_TTL_SECONDS`** — 1800 (30 minutes), used for permissions and settings cache
+- **`ERROR_CODES`** — Enum of 11 structured error codes: `VALIDATION_ERROR`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `INSUFFICIENT_STOCK`, `INVALID_STATE`, `RATE_LIMITED`, `INTERNAL_ERROR`, `SHEET_ERROR`, `LOCK_TIMEOUT`. Used by `fail(message, code)` for structured client handling.
 
 Notable schema fields added for new features:
 - **Products**: `DefaultMargin`, `PillsPerUnit`, `SellByPill`, `StoreID` (home store)
@@ -113,6 +114,7 @@ Notable schema fields added for new features:
 - **SaleItems**: `MarginUsed`
 - **Stores**: `StoreID`, `StoreName`, `Code`, `StoreType`, `Address`, `Phone`, `Email`, `Manager`, `OpeningDate`, `IsDefault`, `Active`
 - **StoreTransfers**: `TransferID`, `FromStoreID`, `ToStoreID`, `ProductID`, `Quantity`, `UnitCost`, `TotalValue`, `Reason`, `Status`
+- **Settings**: `MarginPresets` (CSV, e.g., "20,25,35")
 
 ### 2.2 `database.gs` — Database Layer (the swap seam)
 
@@ -158,13 +160,19 @@ Permissions are **data-driven**: Roles, Permissions, and RolePermissions live in
 | `nextId(prefix, sheetName, idField)` | Sequential, human-readable IDs (e.g., `MED000042`). Scans sheet for highest existing number. |
 | `nowIso()` | Current timestamp in ISO format. |
 | `hashPassword(plain)` | SHA-256 hash via `Utilities.computeDigest`. |
-| `logAudit(userId, action, details)` | Writes to AuditLogs sheet with UUID, timestamp, user, action, details. |
+| `logAudit(userId, action, details, userAgent, ip)` | Writes to AuditLogs sheet with UUID, timestamp, user, action, details, **device/user-agent**, and **IP**. |
 | `ok(data)` | Returns `{ success: true, ...data }`. |
-| `fail(message)` | Returns `{ success: false, message: '...' }`. |
+| `fail(message, code)` | Returns `{ success: false, message: '...', code?: ERROR_CODES }`. Optional error code for structured client handling. |
 | `safe(fn)` | Wraps a function body in try/catch. Returns a callable that catches exceptions and returns `fail()` instead of throwing. Used by every module function. |
 | `classifyStock(qty, threshold)` | Returns the four-tier health label (`ok` / `low` / `critical` / `out_of_stock`) for a quantity against a threshold. |
 | `parseDateStart(value)` / `parseDateEnd(value)` | Turn a `YYYY-MM-DD` filter field into a local-day boundary Date, so date-range filters cover whole days. |
 | `todayIsoDate()` | Today as `YYYY-MM-DD` (used by the store bootstrap and date pickers). |
+| `reportClientError(payload)` | Receives client-side JS errors (message, stack, context, userAgent, URL) and logs them to AuditLogs with action `CLIENT_ERROR`. |
+| `archiveAuditLogs(retentionDays)` | Moves AuditLogs rows older than `retentionDays` (default 90) into yearly archive sheets (`AuditLogs_Archive_YYYY`). |
+| `setupArchiveTrigger()` | Creates a daily 2 AM trigger for `archiveAuditLogs`. Run once manually. |
+
+**Error codes** (defined in `constants.gs`):
+`VALIDATION_ERROR`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `INSUFFICIENT_STOCK`, `INVALID_STATE`, `RATE_LIMITED`, `INTERNAL_ERROR`, `SHEET_ERROR`, `LOCK_TIMEOUT`
 
 ### 2.5 `products.gs` — Product Catalog, Batches & Inventory
 
@@ -834,6 +842,8 @@ The app uses a sidebar-based SPA pattern. Clicking a nav button hides all views 
 
 **Catalog scope filter:** the Products toolbar has its own branch selector, so the catalog and its KPI cards can be inspected for a branch other than the one being sold in (or aggregated across all branches). The POS grid always follows the active store — the two never interfere.
 
+**Single-store mode:** while the pharmacy runs one branch, the multi-store controls (top-bar store selector, POS store chip, the store filters in Sales History / Stock Ledger / Products / Stores, "Receiving store", "Home store", "Transfer stock") are hidden with the `.ui-hidden` utility class. `loadStores()` computes `multi = activeStores.length > 1` and toggles them, so the second branch — whenever it is added — brings the whole multi-branch UI back automatically. Deactivated branches are excluded from every operational dropdown (`storeOptionsHtml()` filters on `Active`).
+
 **Request sequencing:** Apps Script round-trips can complete out of order. Guarded loaders (`loadProducts`, `loadSalesHistory`, `loadStockLedger`) take a ticket when they start and only paint the screen if their ticket is still the newest — a slow earlier response can never overwrite a newer one.
 
 ### 7.3 RPC Layer
@@ -991,7 +1001,7 @@ Dashboard metrics are computed by scanning all sales/products/inventory on every
 
 | File | Lines | Role |
 |---|---|---|
-| `constants.gs` | 185 | Configuration & schema (sheet names, headers, roles, 24 permissions, stock health & movement types) |
+| `constants.gs` | 222 | Configuration & schema (sheet names, headers, roles, 24 permissions, stock health & movement types) |
 | `database.gs` | 134 | Database abstraction layer (readTable, appendRow, findRowById, updateRowById, updateRowByIndex, …) |
 | `auth.gs` | 72 | Authentication & authorization |
 | `utilities.gs` | 229 | Shared helpers (safe(), ok(), fail(), logAudit, classifyStock, date helpers, audit archiving) |
@@ -1007,6 +1017,16 @@ Dashboard metrics are computed by scanning all sales/products/inventory on every
 | `settings.gs` | 42 | Settings & business info |
 | `dashboard.gs` | 461 | Analytics & charts (cross-store aggregation) |
 | `code.gs` | 30 | Web app entry point |
-| `Index.html` | ~3,750 | Single-page frontend (14 views, POS with Units+Pills inputs, store switcher, ledger, filters) |
+| `Index.html` | ~4,050 | Single-page frontend (14 views, POS with Units+Pills inputs, store switcher, ledger, filters) |
 | `inventory.gs` | 9 | **Deprecated** — empty placeholder, superseded by `products.gs` |
 | **Total** | **~7,100** | |
+---
+
+## Contact & Developer Info
+
+Developed by **Yonas Mindaye**
+- Telegram: [@yona64](https://t.me/yona64)
+- Phone/WhatsApp: [0910011818](https://wa.me/2510910011818)
+- Email: [yonasmindaye04@gmail.com](mailto:yonasmindaye04@gmail.com)
+- Website: [afro-tech-et.vercel.app](https://afro-tech-et.vercel.app/)
+>

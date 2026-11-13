@@ -645,6 +645,16 @@ The top bar carries a store selector. It sets the **active store**, which scopes
 
 Sales History and the Stock Ledger deliberately default to **All stores**, because the owner wants the full history visible — the store filter is there when you need to narrow it down.
 
+### Running with a single branch
+
+Most pharmacies start with one branch. In that case:
+
+- **Nothing changes behind the scenes.** Every store-aware function falls back to the default store (`STORE000001`, "Main Store") when no store is supplied, so products, purchases, sales, adjustments, returns and every report behave exactly as they did before multi-store support existed.
+- **The branch pickers hide themselves.** The top-bar store selector, the POS store chip, the store filters in Sales History / Stock Ledger / Products / Stores, the "Receiving store" and "Home store" fields and the "Transfer stock" button are all hidden while there is only one branch — there is nothing to pick.
+- **They come back on their own.** Add a second branch from the Stores screen and every one of those controls reappears immediately; no setting, no code change, no restart. Deactivate that branch again and they disappear once more.
+
+A deactivated branch can never be selected for new sales, purchases or adjustments — it stays visible on the Stores screen for its history, marked *Inactive*.
+
 ### The Stores screen
 
 Each branch card shows:
@@ -797,7 +807,7 @@ Opening balances, recounts, damage, expiry write-offs and customer returns all g
 A transfer writes a `TransferOut` on the source and a `TransferIn` on the destination under one TransferID. Both halves are permanent, and the destination receives a new batch carrying the source expiry so FEFO keeps working there.
 
 ### Single-Store Installations Keep Working
-Every store-aware function resolves a missing store id to `DEFAULT_STORE_ID`. Nothing about the behaviour of a one-branch pharmacy changes; branches simply become available when you want them.
+Every store-aware function resolves a missing store id to `DEFAULT_STORE_ID`. Nothing about the behaviour of a one-branch pharmacy changes; branches simply become available when you want them — and the branch pickers only appear once a second branch actually exists.
 
 ### The Owner Sees Everything
 `hasPermission()` short-circuits for the Owner, and the Owner is also handed the full permission list at login, so permission-gated navigation never hides a screen from the person who is allowed to use everything.
@@ -813,3 +823,13 @@ Purchases are never hard-deleted. They are marked `RecordStatus = 'Deleted'` and
 
 ### Permission Gating on Every Function
 No backend function can be called without first checking `authorize(userId, PERMISSION)`. The frontend cannot bypass this because the user has no way to impersonate another `userId` — the `userId` is stored only in the server-side session (via `ScriptProperties` or the session mechanism).
+
+---
+
+## Contact & Developer Info
+
+Developed by **Yonas Mindaye**  
+- Telegram: [@yona64](https://t.me/yona64)
+- Phone/WhatsApp: [0910011818](https://wa.me/2510910011818)
+- Email: [yonasmindaye04@gmail.com](mailto:yonasmindaye04@gmail.com)
+- Website: [afro-tech-et.vercel.app](https://afro-tech-et.vercel.app/)

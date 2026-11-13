@@ -222,6 +222,9 @@ p.panel-sub{margin:-8px 0 12px;}
 }
 
 /* ── Store switcher, stock health, filters, pagination ─────────────────── */
+/* Controls that only make sense once a second branch exists are hidden
+   automatically while the pharmacy runs a single store. */
+.ui-hidden{display:none !important;}
 .topbar-store{margin-left:auto;display:flex;align-items:center;gap:7px;}
 .topbar-store label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;opacity:.85;font-weight:700;}
 .topbar-store select{
@@ -347,7 +350,7 @@ p.panel-sub{margin:-8px 0 12px;}
     <button class="hamburger" id="hamburger-btn">☰</button>
     <div class="brand-mark">Rx</div>
     <div class="topbar-title">Pharmacy ERP</div>
-    <div class="topbar-store">
+    <div class="topbar-store" id="global-store-switcher">
       <label for="global-store-select">Store</label>
       <select id="global-store-select" title="Active store — sales and purchases are recorded against it"></select>
     </div>
@@ -517,7 +520,7 @@ p.panel-sub{margin:-8px 0 12px;}
           <select id="sh-status"><option value="">All statuses</option><option value="Completed">Completed</option><option value="Voided">Voided</option></select>
         </div>
         <div class="field"><label>Cashier</label><select id="sh-cashier"><option value="">All cashiers</option></select></div>
-        <div class="field"><label>Store</label><select id="sh-store"><option value="">All stores</option></select></div>
+        <div class="field" id="sh-store-field"><label>Store</label><select id="sh-store"><option value="">All stores</option></select></div>
         <div class="field"><label>Min total</label><input type="text" id="sh-mintotal" placeholder="0"></div>
         <div class="field"><label>Max total</label><input type="text" id="sh-maxtotal" placeholder="Any"></div>
         <div class="field"><label>Sort by</label>
@@ -593,7 +596,7 @@ p.panel-sub{margin:-8px 0 12px;}
         </div>
         <div class="field"><label>Product</label><select id="lg-product"><option value="">All products</option></select></div>
         <div class="field"><label>Movement type</label><select id="lg-type"><option value="">All types</option></select></div>
-        <div class="field"><label>Store</label><select id="lg-store"><option value="">All stores</option></select></div>
+        <div class="field" id="lg-store-field"><label>Store</label><select id="lg-store"><option value="">All stores</option></select></div>
         <div class="field"><label>From date</label><input type="date" id="lg-from"></div>
         <div class="field"><label>To date</label><input type="date" id="lg-to"></div>
         <div class="filter-actions">
@@ -829,7 +832,7 @@ p.panel-sub{margin:-8px 0 12px;}
 
   <div class="field-grid">
     <div class="field"><label>Product *</label><select id="adj-product"></select></div>
-    <div class="field"><label>Store *</label><select id="adj-store"></select></div>
+    <div class="field" id="adj-store-field"><label>Store *</label><select id="adj-store"></select></div>
   </div>
 
   <div class="field">
@@ -963,7 +966,7 @@ p.panel-sub{margin:-8px 0 12px;}
     <div class="field"><label>Reorder level</label><input type="text" id="pf-reorderlevel"></div>
     <div class="field"><label>Minimum stock</label><input type="text" id="pf-minstock"></div>
     <div class="field"><label>Maximum stock</label><input type="text" id="pf-maxstock"></div>
-    <div class="field"><label>Home store</label><select id="pf-store"></select></div>
+    <div class="field" id="pf-store-field"><label>Home store</label><select id="pf-store"></select></div>
     <div class="field" id="pf-currentstock-field" style="display:none;">
       <label>Current stock</label>
       <div id="pf-currentstock" style="padding:9px 0;font-weight:700;">0</div>
@@ -1040,7 +1043,7 @@ p.panel-sub{margin:-8px 0 12px;}
   <div class="field-grid">
     <div class="field"><label>Supplier</label><select id="pu-supplier"></select></div>
     <div class="field"><label>Invoice number</label><input type="text" id="pu-invoice"></div>
-    <div class="field"><label>Receiving store</label><select id="pu-store"></select></div>
+    <div class="field" id="pu-store-field"><label>Receiving store</label><select id="pu-store"></select></div>
   </div>
   <h3 style="margin-top:10px;">Line items</h3>
   <div id="purchase-lines"></div>
@@ -1259,6 +1262,26 @@ function toast(msg,isError){
 function money(n){ return Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function esc(str){ return String(str==null?'':str).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];}); }
 function can(permId){ return session && (session.roleId === 'ROLE_OWNER' || (session.permissions && session.permissions.indexOf(permId) > -1)); }
+
+// ── Global error handler → reports to server ──────────────────────────────
+window.addEventListener('error', function(e){
+  google.script.run.reportClientError({
+    message: e.message,
+    stack: e.error && e.error.stack,
+    context: 'window.onerror',
+    userAgent: navigator.userAgent,
+    url: window.location.href
+  });
+});
+window.addEventListener('unhandledrejection', function(e){
+  google.script.run.reportClientError({
+    message: e.reason && e.reason.message ? e.reason.message : String(e.reason),
+    stack: e.reason && e.reason.stack,
+    context: 'unhandledrejection',
+    userAgent: navigator.userAgent,
+    url: window.location.href
+  });
+});
 
 // ── Global error handler → reports to server ──────────────────────────────
 window.addEventListener('error', function(e){
@@ -3249,12 +3272,17 @@ function storeNameOf(storeId){
   var found=allStores.filter(function(s){return s.StoreID===storeId;})[0];
   return found?found.StoreName:storeId;
 }
-// <option> markup for every store, with `selected` marked.
+// <option> markup for every ACTIVE store, with `selected` marked.
+// Deactivated branches are kept in the list only where the history matters
+// (the Stores screen), never as an operational target.
 function storeOptionsHtml(selected, includeAll){
   var html=includeAll?'<option value="">All stores</option>':'';
-  return html+allStores.map(function(s){
+  return html+allStores.filter(isActiveStore).map(function(s){
     return '<option value="'+s.StoreID+'"'+(s.StoreID===selected?' selected':'')+'>'+esc(s.StoreName)+'</option>';
   }).join('');
+}
+function isActiveStore(s){
+  return s && s.Active!==false && s.Active!=='FALSE';
 }
 // The user's session is stored server-side; the active store is a client
 // preference that survives a page reload.
@@ -3294,19 +3322,33 @@ function loadStores(){
     var defaultStoreId=res.defaultStoreId;
 
     // Restore (or pick) the active store.
+    var activeStores=allStores.filter(isActiveStore);
     var remembered=recallStore();
-    var valid=allStores.some(function(s){return s.StoreID===remembered;});
+    var valid=activeStores.some(function(s){return s.StoreID===remembered;});
     if(!valid) remembered=defaultStoreId;
     currentStoreId=remembered||defaultStoreId;
 
     var switcher=document.getElementById('global-store-select');
-    switcher.innerHTML=allStores.map(function(s){
+    switcher.innerHTML=activeStores.map(function(s){
       return '<option value="'+s.StoreID+'"'+(s.StoreID===currentStoreId?' selected':'')+'>'+esc(s.StoreName)+'</option>';
     }).join('');
 
     // The POS header shows which branch is selling right now.
     var posChip=document.getElementById('pos-store-chip');
     if(posChip) posChip.textContent='Store: '+storeNameOf(currentStoreId);
+
+    // A single-branch pharmacy does not need branch pickers. The multi-store
+    // controls reappear automatically as soon as a second branch exists.
+    var multi=activeStores.length>1;
+    ['global-store-switcher','pos-store-chip','sh-store-field','lg-store-field',
+     'inventory-store-filter','store-inventory-filter','transfer-stock-btn',
+     'pu-store-field','adj-store-field','pf-store-field'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(!el) return;
+      if(multi) el.classList.remove('ui-hidden');
+      else el.classList.add('ui-hidden');
+    });
+    document.body.classList.toggle('multi-store',multi);
 
     // Every store dropdown in the app.
     // Reports (sales history, stock ledger) default to "All stores" so the
@@ -3330,11 +3372,11 @@ function loadStores(){
     var invStoreSel=document.getElementById('inventory-store-filter');
     if(invStoreSel){
       var previous=invStoreSel.value;
-      invStoreSel.innerHTML='<option value="">All stores</option>'+allStores.map(function(s){
+      invStoreSel.innerHTML='<option value="">All stores</option>'+activeStores.map(function(s){
         return '<option value="'+s.StoreID+'">'+esc(s.StoreName)+'</option>';
       }).join('');
       var keep=(previous && previous!==currentStoreId &&
-                allStores.some(function(s){return s.StoreID===previous;})) ? previous : currentStoreId;
+                activeStores.some(function(s){return s.StoreID===previous;})) ? previous : currentStoreId;
       invStoreSel.value=keep;
       if(keep!==currentStoreId) loadCatalogProducts();
       else { catalogProducts=null; catalogStoreId=''; renderInventoryKpis(); renderInventoryTable(); }
@@ -3346,7 +3388,7 @@ function loadStores(){
     if(document.getElementById('tf-to')){
       var toEl=document.getElementById('tf-to');
       toEl.innerHTML=storeOptionsHtml('',false);
-      var other=allStores.filter(function(s){return s.StoreID!==currentStoreId;})[0];
+      var other=activeStores.filter(function(s){return s.StoreID!==currentStoreId;})[0];
       toEl.value=other?other.StoreID:'';
     }
   }).catch(function(err){ toast(err,true); });
@@ -3700,7 +3742,8 @@ function renderStoreCards(){
   if(!allStores.length){el.innerHTML='<div class="empty-state">No stores yet</div>';return;}
   el.innerHTML=allStores.map(function(s){
     return '<div class="store-card'+(s.IsDefault?' is-default':'')+'">'+
-      '<h4>'+esc(s.StoreName)+(s.IsDefault?' <span class="pill ok">Default</span>':'')+'</h4>'+
+      '<h4>'+esc(s.StoreName)+(s.IsDefault?' <span class="pill ok">Default</span>':'')+
+        (isActiveStore(s)?'':' <span class="pill out_of_stock">Inactive</span>')+'</h4>'+
       '<div class="store-meta">'+
         (s.Code?esc(s.Code)+' &middot; ':'')+esc(s.StoreType||'Retail')+
         (s.Manager?' &middot; '+esc(s.Manager):'')+
@@ -3716,7 +3759,7 @@ function renderStoreCards(){
       '<div style="display:flex;gap:6px;margin-top:11px;flex-wrap:wrap;">'+
         '<button class="mini-btn" onclick="openStoreModal(\''+s.StoreID+'\')">Edit</button>'+
         '<button class="mini-btn" onclick="filterStoreInventory(\''+s.StoreID+'\')">View stock</button>'+
-        (s.IsDefault?'':'<button class="mini-btn" style="color:var(--danger);" onclick="deactivateStore(\''+s.StoreID+'\')">Deactivate</button>')+
+        (s.IsDefault||!isActiveStore(s)?'':'<button class="mini-btn" style="color:var(--danger);" onclick="deactivateStore(\''+s.StoreID+'\')">Deactivate</button>')+
       '</div>'+
     '</div>';
   }).join('');
@@ -3808,7 +3851,7 @@ function openTransferModal(){
   var from=document.getElementById('tf-from'), to=document.getElementById('tf-to');
   from.innerHTML=storeOptionsHtml(currentStoreId,false);
   to.innerHTML=storeOptionsHtml('',false);
-  var other=allStores.filter(function(s){return s.StoreID!==currentStoreId;})[0];
+  var other=allStores.filter(isActiveStore).filter(function(s){return s.StoreID!==currentStoreId;})[0];
   to.value=other?other.StoreID:'';
   document.getElementById('transfer-modal').classList.add('active');
   updateTransferPreview();
