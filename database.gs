@@ -115,6 +115,21 @@ function updateRowById(name, idField, idValue, updates) {
   return true;
 }
 
+// Updates a row by its physical row number. Needed for tables whose natural
+// key is not unique on a single column — e.g. Inventory is keyed by
+// (ProductID, StoreID), so ProductID alone is ambiguous once the system
+// runs more than one store.
+function updateRowByIndex(name, rowIndex, updates) {
+  if (!rowIndex || rowIndex < 2) return false;
+  var sheet = ensureSheet(name);
+  var headers = HEADERS[name];
+  for (var key in updates) {
+    var colIndex = headers.indexOf(key);
+    if (colIndex > -1) sheet.getRange(rowIndex, colIndex + 1).setValue(updates[key]);
+  }
+  return true;
+}
+
 function upsertRow(name, idField, idValue, rowObject) {
   var existing = findRowById(name, idField, idValue);
   if (existing) {

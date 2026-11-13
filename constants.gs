@@ -11,6 +11,8 @@ var APP_NAME = 'Pharmacy ERP';
 var SHEETS = {
   SETTINGS:            'Settings',
   BUSINESS_INFO:       'BusinessInfo',
+  STORES:              'Stores',
+  STORE_TRANSFERS:     'StoreTransfers',
   USERS:               'Users',
   ROLES:               'Roles',
   PERMISSIONS:         'Permissions',
@@ -52,18 +54,25 @@ var HEADERS = {
 
   Categories:    ['CategoryID', 'CategoryName', 'Description', 'Active'],
 
+  Stores: ['StoreID', 'StoreName', 'Code', 'StoreType', 'Address', 'Phone', 'Email',
+           'Manager', 'Phone2', 'OpeningDate', 'IsDefault', 'Active', 'CreatedDate', 'Notes'],
+
+  StoreTransfers: ['TransferID', 'Date', 'ReferenceNumber', 'FromStoreID', 'ToStoreID',
+                   'ProductID', 'ProductName', 'Quantity', 'UnitCost', 'TotalValue',
+                   'Reason', 'Status', 'Notes', 'CreatedBy', 'CreatedDate'],
+
   Products: ['ProductID', 'Barcode', 'ProductName', 'GenericName', 'Brand', 'CategoryID', 'Unit',
              'Strength', 'DosageForm', 'PurchasePrice', 'SellingPrice', 'TaxRate', 'DefaultMargin',
              'PillsPerUnit', 'SellByPill', 'MinimumStock', 'MaximumStock', 'ReorderLevel', 'SupplierID',
-             'Active', 'CreatedDate', 'UpdatedDate', 'CreatedBy'],
+             'Active', 'CreatedDate', 'UpdatedDate', 'CreatedBy', 'StoreID'],
 
   Batches: ['BatchID', 'ProductID', 'BatchNumber', 'ManufacturingDate', 'ExpiryDate', 'Quantity',
-            'PurchasePrice', 'SellingPrice', 'SupplierID'],
+            'PurchasePrice', 'SellingPrice', 'SupplierID', 'StoreID'],
 
-  Inventory: ['ProductID', 'CurrentStock', 'LoosePills', 'LoosePillsBatchID', 'ReservedStock', 'AvailableStock', 'LastUpdated'],
+  Inventory: ['ProductID', 'CurrentStock', 'LoosePills', 'LoosePillsBatchID', 'ReservedStock', 'AvailableStock', 'LastUpdated', 'StoreID'],
 
   StockMovements: ['MovementID', 'Date', 'ProductID', 'BatchID', 'Type', 'Quantity', 'PreviousStock',
-                   'NewStock', 'ReferenceType', 'ReferenceID', 'Remarks', 'UserID'],
+                   'NewStock', 'ReferenceType', 'ReferenceID', 'Remarks', 'UserID', 'StoreID'],
 
   Suppliers: ['SupplierID', 'SupplierName', 'ContactPerson', 'Phone', 'Email', 'Address', 'TaxNumber',
               'PaymentTerms', 'OpeningBalance', 'CurrentBalance', 'Active', 'CreatedDate'],
@@ -72,14 +81,14 @@ var HEADERS = {
 
   Purchases: ['PurchaseID', 'PurchaseDate', 'SupplierID', 'InvoiceNumber', 'TotalAmount', 'Discount',
               'Tax', 'GrandTotal', 'PaymentStatus', 'PaidAmount', 'Balance', 'ReceivedBy', 'Notes',
-              'RecordStatus', 'DeletedBy', 'DeletedReason', 'DeletedDate'],
+              'RecordStatus', 'DeletedBy', 'DeletedReason', 'DeletedDate', 'StoreID'],
 
   PurchaseItems: ['PurchaseItemID', 'PurchaseID', 'ProductID', 'BatchID', 'Quantity', 'PurchasePrice',
                   'SellingPrice', 'Total'],
 
   Sales: ['SaleID', 'SaleDate', 'InvoiceNumber', 'CustomerID', 'CashierID', 'TotalAmount', 'Discount',
           'Tax', 'GrandTotal', 'PaymentMethod', 'AmountReceived', 'ChangeGiven', 'Status',
-          'DeletedBy', 'DeletedReason', 'DeletedDate'],
+          'DeletedBy', 'DeletedReason', 'DeletedDate', 'StoreID'],
 
   SaleItems: ['SaleItemID', 'SaleID', 'ProductID', 'BatchID', 'Quantity', 'UnitPrice', 'MarginUsed', 'Discount', 'Tax', 'Total'],
 
@@ -136,7 +145,63 @@ var PERMISSIONS = {
   VIEW_REPORTS:        'PERM_VIEW_REPORTS',
   MANAGE_USERS:        'PERM_MANAGE_USERS',
   VIEW_AUDIT_LOGS:     'PERM_VIEW_AUDIT_LOGS',
-  MANAGE_SETTINGS:     'PERM_MANAGE_SETTINGS'
+  MANAGE_SETTINGS:     'PERM_MANAGE_SETTINGS',
+  MANAGE_STORES:       'PERM_MANAGE_STORES',
+  VIEW_STOCK_MOVEMENTS:'PERM_VIEW_STOCK_MOVEMENTS',
+  TRANSFER_STOCK:      'PERM_TRANSFER_STOCK'
+};
+
+// ── Store (branch / outlet) defaults ───────────────────────────────────────
+// The system is multi-store aware. A single-store deployment keeps working
+// because every store-aware lookup falls back to DEFAULT_STORE_ID when no
+// store id is supplied.
+//
+// The id follows the nextId('STORE', ...) format (6-digit padded) so newly
+// created stores and the default store share one numbering sequence.
+var DEFAULT_STORE_ID = 'STORE000001';
+var STORE_TYPES = ['Retail', 'Warehouse', 'Depot', 'Clinic'];
+
+// ── Stock health classification (4 tiers, mirroring the Asella Organic
+//    inventory engine) ───────────────────────────────────────────────────────
+// ok            : qty > threshold
+// low           : threshold/2 < qty <= threshold
+// critical      : 0 < qty <= threshold/2
+// out_of_stock  : qty == 0
+var STOCK_HEALTH = {
+  OUT_OF_STOCK: 'out_of_stock',
+  CRITICAL:     'critical',
+  LOW:          'low',
+  OK:           'ok'
+};
+
+// ── Stock movement types ───────────────────────────────────────────────────
+// Every quantity change in the system lands in StockMovements under one of
+// these types — the append-only ledger is the source of truth for "why did
+// the stock number change?".
+var STOCK_MOVEMENT_TYPES = {
+  OPENING:        'OpeningStock',
+  PURCHASE:       'Purchase',
+  SALE:           'Sale',
+  RETURN:         'Return',
+  ADJUSTMENT:     'Adjustment',
+  DAMAGE_LOSS:    'DamageLoss',
+  TRANSFER_OUT:   'TransferOut',
+  TRANSFER_IN:    'TransferIn',
+  SALE_VOIDED:    'SaleVoided',
+  PURCHASE_DELETED:'PurchaseDeleted',
+  EXPIRED_WRITE_OFF:'ExpiredWriteOff'
+};
+
+// Movement types a user may post manually from the Stock Adjustment screen.
+// Keyed by the movement type VALUE (not the constant name) so the client can
+// post the same identifier that ends up in the ledger. The direction each
+// type allows is enforced server-side.
+var MANUAL_ADJUSTMENT_TYPES = {
+  'OpeningStock':     { label: 'Opening Balance',    direction: 'in',  allowNegative: false },
+  'Adjustment':       { label: 'Manual Adjustment',  direction: 'both', allowNegative: false },
+  'DamageLoss':       { label: 'Damage / Loss',      direction: 'out', allowNegative: true },
+  'Return':           { label: 'Customer Return',    direction: 'in',  allowNegative: false },
+  'ExpiredWriteOff':  { label: 'Expired Write-off',  direction: 'out', allowNegative: true }
 };
 
 var CACHE_TTL_SECONDS = 1800; // 30 minutes — used for permissions & settings cache

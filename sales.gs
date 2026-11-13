@@ -12,6 +12,9 @@ function createSale(userId, cart, options) {
   if (!cart || !cart.length) return fail('Cart is empty.');
   options = options || {};
 
+  var storeId = resolveStoreId(options.storeId);
+  if (!storeExists(storeId)) return fail('Store not found.');
+
   var lock = LockService.getScriptLock();
   lock.waitLock(15000);
   try {
@@ -28,16 +31,16 @@ function createSale(userId, cart, options) {
       if (!product) return fail('Product ' + item.productId + ' not found.');
       var qty = Number(item.qty);
       if (qty <= 0) return fail('Invalid quantity for ' + product.ProductName + '.');
-      var inv = findRowById(SHEETS.INVENTORY, 'ProductID', product.ProductID);
+      var inv = findInventoryRow(product.ProductID, storeId);
       var pillsPerUnit = Number(product.PillsPerUnit) || 0;
       var sellByPill = product.SellByPill === true || product.SellByPill === 'TRUE';
 
       if (sellByPill && pillsPerUnit > 0) {
         var availablePills = (inv ? Number(inv.CurrentStock) : 0) * pillsPerUnit + (inv ? Number(inv.LoosePills) || 0 : 0);
-        if (availablePills < qty) return fail('Not enough stock for ' + product.ProductName + ' (have ' + availablePills + ' pills, need ' + qty + ').');
+        if (availablePills < qty) return fail('Not enough stock for ' + product.ProductName + ' at ' + storeLabel(storeId) + ' (have ' + availablePills + ' pills, need ' + qty + ').');
       } else {
         var available = inv ? Number(inv.CurrentStock) : 0;
-        if (available < qty) return fail('Not enough stock for ' + product.ProductName + ' (have ' + available + ', need ' + qty + ').');
+        if (available < qty) return fail('Not enough stock for ' + product.ProductName + ' at ' + storeLabel(storeId) + ' (have ' + available + ', need ' + qty + ').');
       }
 
       var unitPrice = item.unitPrice !== undefined ? Number(item.unitPrice) : Number(product.SellingPrice);
@@ -58,7 +61,8 @@ function createSale(userId, cart, options) {
       SaleID: saleId, SaleDate: nowIso(), InvoiceNumber: saleId, CustomerID: options.customerId || '',
       CashierID: user.UserID, TotalAmount: subtotal, Discount: discount, Tax: totalTax, GrandTotal: grandTotal,
       PaymentMethod: options.paymentMethod || 'Cash', AmountReceived: amountReceived,
-      ChangeGiven: Math.max(0, amountReceived - grandTotal), Status: 'Completed'
+      ChangeGiven: Math.max(0, amountReceived - grandTotal), Status: 'Completed',
+      StoreID: storeId
     });
 
     // Deduct stock FEFO per line, recording which batch(es) supplied it.
@@ -66,8 +70,8 @@ function createSale(userId, cart, options) {
       var pillsPerUnit = Number(li.product.PillsPerUnit) || 0;
       var sellByPill = li.product.SellByPill === true || li.product.SellByPill === 'TRUE';
       var consumed = (sellByPill && pillsPerUnit > 0)
-        ? deductPillsFEFO(li.product.ProductID, li.qty, 'Sale', 'Sale', saleId, userId, '')
-        : deductStockFEFO(li.product.ProductID, li.qty, 'Sale', 'Sale', saleId, userId, '');
+        ? deductPillsFEFO(li.product.ProductID, storeId, li.qty, STOCK_MOVEMENT_TYPES.SALE, 'Sale', saleId, userId, '')
+        : deductStockFEFO(li.product.ProductID, storeId, li.qty, STOCK_MOVEMENT_TYPES.SALE, 'Sale', saleId, userId, '');
       consumed.forEach(function (c) {
         appendRow(SHEETS.SALE_ITEMS, {
           SaleItemID: Utilities.getUuid(), SaleID: saleId, ProductID: li.product.ProductID, BatchID: c.batchId,
@@ -99,23 +103,166 @@ function cartTotalQty(cart) {
 }
 function round2(n) { return Math.round(Number(n || 0) * 100) / 100; }
 
-function getSales(userId, limit) {
+// ============================================================================
+//  Sales history — searchable, filterable, paginated.
+//
+//  filters: {
+//    search        : free text over sale id, invoice, customer, cashier and
+//                    product names sold in the transaction
+//    from, to      : 'YYYY-MM-DD' (inclusive)
+//    paymentMethod : Cash | Card | Mobile Money
+//    status        : Completed | Voided
+//    cashierId     : a single cashier
+//    storeId       : a single store
+//    minTotal, maxTotal : amount range
+//    page, pageSize, sortBy, sortDir
+//  }
+//
+//  A plain number is still accepted as the second argument for backwards
+//  compatibility (it is treated as a limit).
+// ============================================================================
+function getSales(userId, filters, page, pageSize) {
   return safe(function () {
   var user = requireUser(userId);
   var canViewAll = hasPermission(user.RoleID, PERMISSIONS.VIEW_SALES);
   var canViewOwn = hasPermission(user.RoleID, PERMISSIONS.VIEW_OWN_SALES);
   if (!canViewAll && !canViewOwn) return fail('You do not have permission to view sales.');
 
+  // Backwards compatibility: getSales(userId, 100) used to mean "limit 100".
+  if (typeof filters === 'number' || typeof filters === 'string') {
+    filters = { pageSize: Number(filters) || 100 };
+  }
+  filters = filters || {};
+
   var rows = readTable(SHEETS.SALES).rows;
   if (!canViewAll) rows = rows.filter(function (r) { return r.CashierID === userId; });
-  rows.sort(function (a, b) { return new Date(b.SaleDate) - new Date(a.SaleDate); });
-  if (limit) rows = rows.slice(0, limit);
 
   var users = readTable(SHEETS.USERS).rows;
-  var nameById = {}; users.forEach(function (u) { nameById[u.UserID] = u.FullName; });
-  rows.forEach(function (r) { r.CashierName = nameById[r.CashierID] || r.CashierID; });
+  var nameById = {}; users.forEach(function (u) { nameById[u.UserID] = u.FullName || u.Username; });
 
-  return ok({ sales: rows });
+  var customers = readTable(SHEETS.CUSTOMERS).rows;
+  var customerById = {}; customers.forEach(function (c) { customerById[c.CustomerID] = c; });
+
+  var storeNames = getStoreNameMap();
+
+  // Products sold per sale — used by the search box so "paracetamol" finds
+  // the transaction that contained it.
+  var productNames = {};
+  readTable(SHEETS.PRODUCTS).rows.forEach(function (p) { productNames[p.ProductID] = p.ProductName; });
+  var itemNamesBySale = {};
+  readTable(SHEETS.SALE_ITEMS).rows.forEach(function (item) {
+    var name = productNames[item.ProductID] || item.ProductID;
+    if (!itemNamesBySale[item.SaleID]) itemNamesBySale[item.SaleID] = [];
+    if (itemNamesBySale[item.SaleID].indexOf(name) === -1) itemNamesBySale[item.SaleID].push(name);
+  });
+
+  // ── Filters ─────────────────────────────────────────────────────────────
+  if (filters.from) {
+    var from = parseDateStart(filters.from);
+    rows = rows.filter(function (r) { return new Date(r.SaleDate) >= from; });
+  }
+  if (filters.to) {
+    var to = parseDateEnd(filters.to);
+    rows = rows.filter(function (r) { return new Date(r.SaleDate) <= to; });
+  }
+  if (filters.paymentMethod) {
+    var pm = String(filters.paymentMethod);
+    rows = rows.filter(function (r) { return String(r.PaymentMethod || '') === pm; });
+  }
+  if (filters.status) {
+    var wantedStatus = String(filters.status).toLowerCase();
+    rows = rows.filter(function (r) {
+      var st = String(r.Status || 'Completed').toLowerCase();
+      if (wantedStatus === 'completed') return st !== 'voided' && st !== 'deleted' && st !== 'cancelled';
+      return st === wantedStatus;
+    });
+  }
+  if (filters.cashierId) {
+    rows = rows.filter(function (r) { return r.CashierID === filters.cashierId; });
+  }
+  if (filters.storeId) {
+    var sid = resolveStoreId(filters.storeId);
+    rows = rows.filter(function (r) { return resolveStoreId(r.StoreID) === sid; });
+  }
+  if (filters.minTotal !== undefined && filters.minTotal !== '') {
+    var minT = Number(filters.minTotal);
+    rows = rows.filter(function (r) { return Number(r.GrandTotal || 0) >= minT; });
+  }
+  if (filters.maxTotal !== undefined && filters.maxTotal !== '') {
+    var maxT = Number(filters.maxTotal);
+    rows = rows.filter(function (r) { return Number(r.GrandTotal || 0) <= maxT; });
+  }
+  if (filters.search) {
+    var q = String(filters.search).trim().toLowerCase();
+    if (q) {
+      rows = rows.filter(function (r) {
+        var cashier = nameById[r.CashierID] || '';
+        var customer = customerById[r.CustomerID];
+        var customerName = customer ? (customer.FullName || '') : '';
+        var phone = customer ? (customer.Phone || '') : '';
+        var items = (itemNamesBySale[r.SaleID] || []).join(' ');
+        return String(r.SaleID || '').toLowerCase().indexOf(q) > -1 ||
+               String(r.InvoiceNumber || '').toLowerCase().indexOf(q) > -1 ||
+               String(r.CustomerID || '').toLowerCase().indexOf(q) > -1 ||
+               customerName.toLowerCase().indexOf(q) > -1 ||
+               phone.toLowerCase().indexOf(q) > -1 ||
+               cashier.toLowerCase().indexOf(q) > -1 ||
+               items.toLowerCase().indexOf(q) > -1;
+      });
+    }
+  }
+
+  // ── Sort ────────────────────────────────────────────────────────────────
+  var sortBy = String(filters.sortBy || 'date');
+  var sortDir = String(filters.sortDir || 'desc').toLowerCase() === 'asc' ? 1 : -1;
+  rows.sort(function (a, b) {
+    if (sortBy === 'total') return (Number(a.GrandTotal || 0) - Number(b.GrandTotal || 0)) * sortDir;
+    return (new Date(a.SaleDate) - new Date(b.SaleDate)) * sortDir;
+  });
+
+  // ── Enrich + paginate ───────────────────────────────────────────────────
+  var total = rows.length;
+  var totalAmount = 0;
+  rows.forEach(function (r) {
+    r.CashierName = nameById[r.CashierID] || r.CashierID;
+    r.StoreName = storeNames[resolveStoreId(r.StoreID)] || storeLabel(r.StoreID);
+    r.CustomerName = customerById[r.CustomerID] ? customerById[r.CustomerID].FullName : '';
+    r.ItemNames = (itemNamesBySale[r.SaleID] || []).join(', ');
+    totalAmount += Number(r.GrandTotal || 0);
+  });
+
+  var currentPage = Math.max(1, Number(filters.page) || Number(page) || 1);
+  var size = Math.max(1, Math.min(200, Number(filters.pageSize) || Number(pageSize) || 25));
+  var pages = Math.max(1, Math.ceil(total / size));
+  if (currentPage > pages) currentPage = pages;
+
+  var slice = rows.slice((currentPage - 1) * size, currentPage * size);
+
+  return ok({
+    sales: slice,
+    total: total,
+    page: currentPage,
+    pageSize: size,
+    pages: pages,
+    summary: {
+      count: total,
+      totalAmount: round2(totalAmount),
+      from: filters.from || '',
+      to: filters.to || ''
+    }
+  });
+  })();
+}
+
+// A lightweight list of cashiers, for the sales history filter dropdown.
+function getSalesCashiers(userId) {
+  return safe(function () {
+    requireUser(userId);
+    var cashiers = readTable(SHEETS.USERS).rows.map(function (u) {
+      return { UserID: u.UserID, FullName: u.FullName || u.Username, RoleID: u.RoleID };
+    });
+    cashiers.sort(function (a, b) { return String(a.FullName).localeCompare(String(b.FullName)); });
+    return ok({ cashiers: cashiers });
   })();
 }
 
@@ -128,6 +275,13 @@ function getSaleDetails(userId, saleId) {
   var products = readTable(SHEETS.PRODUCTS).rows;
   var nameById = {}; products.forEach(function (p) { nameById[p.ProductID] = p.ProductName; });
   items.forEach(function (i) { i.ProductName = nameById[i.ProductID] || i.ProductID; });
+
+  sale.StoreName = storeLabel(sale.StoreID);
+  var customer = sale.CustomerID ? findRowById(SHEETS.CUSTOMERS, 'CustomerID', sale.CustomerID) : null;
+  sale.CustomerName = customer ? customer.FullName : '';
+  var cashier = sale.CashierID ? findRowById(SHEETS.USERS, 'UserID', sale.CashierID) : null;
+  sale.CashierName = cashier ? (cashier.FullName || cashier.Username) : sale.CashierID;
+
   if (sale.DeletedBy) {
     var deleter = findRowById(SHEETS.USERS, 'UserID', sale.DeletedBy);
     sale.DeletedByName = deleter ? (deleter.FullName || deleter.Username) : sale.DeletedBy;
@@ -153,6 +307,7 @@ function deleteSale(userId, saleId, reason) {
       var items = findRows(SHEETS.SALE_ITEMS, function (i) { return i.SaleID === saleId; });
       var products = readTable(SHEETS.PRODUCTS).rows;
       var productById = {}; products.forEach(function (p) { productById[p.ProductID] = p; });
+      var storeId = resolveStoreId(sale.StoreID);
 
       items.forEach(function (item) {
         var product = productById[item.ProductID];
@@ -162,7 +317,7 @@ function deleteSale(userId, saleId, reason) {
         if (qty <= 0) return;
 
         if (isPill && ppu > 1) {
-          var inv = findRowById(SHEETS.INVENTORY, 'ProductID', item.ProductID);
+          var inv = findInventoryRow(item.ProductID, storeId);
           var currentLoose = inv ? Number(inv.LoosePills || 0) : 0;
           var totalLoose = currentLoose + qty;
           var wholeUnits = Math.floor(totalLoose / ppu);
@@ -175,9 +330,9 @@ function deleteSale(userId, saleId, reason) {
             }
           }
           if (inv) {
-            updateRowById(SHEETS.INVENTORY, 'ProductID', item.ProductID, { LoosePills: remLoose, LastUpdated: nowIso() });
+            updateRowByIndex(SHEETS.INVENTORY, inv._row, { LoosePills: remLoose, LastUpdated: nowIso() });
           }
-          recalculateInventory(item.ProductID, item.BatchID, 'Sale Voided', qty, 'SaleVoided', saleId, userId,
+          recalculateInventory(item.ProductID, storeId, item.BatchID, STOCK_MOVEMENT_TYPES.SALE_VOIDED, qty, 'SaleVoided', saleId, userId,
             'Sale ' + saleId + ' voided: ' + reason);
         } else {
           if (item.BatchID) {
@@ -186,7 +341,7 @@ function deleteSale(userId, saleId, reason) {
               updateRowById(SHEETS.BATCHES, 'BatchID', item.BatchID, { Quantity: Number(batch.Quantity || 0) + qty });
             }
           }
-          recalculateInventory(item.ProductID, item.BatchID, 'Sale Voided', qty, 'SaleVoided', saleId, userId,
+          recalculateInventory(item.ProductID, storeId, item.BatchID, STOCK_MOVEMENT_TYPES.SALE_VOIDED, qty, 'SaleVoided', saleId, userId,
             'Sale ' + saleId + ' voided: ' + reason);
         }
       });

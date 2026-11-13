@@ -6,11 +6,15 @@
 // ============================================================================
 
 // items: [{ productId, quantity, purchasePrice, sellingPrice, expiryDate }]
+// input.storeId decides WHICH store receives the goods.
 function createPurchase(userId, input) {
   return safe(function () {
   var user = authorize(userId, PERMISSIONS.MANAGE_PURCHASES);
   if (!input.supplierId) return fail('Select a supplier.');
   if (!input.items || !input.items.length) return fail('Add at least one line item.');
+
+  var storeId = resolveStoreId(input.storeId);
+  if (!storeExists(storeId)) return fail('Store not found.');
 
   var lock = LockService.getScriptLock();
   lock.waitLock(15000);
@@ -52,11 +56,11 @@ function createPurchase(userId, input) {
       InvoiceNumber: input.invoiceNumber || '', TotalAmount: subtotal, Discount: discount, Tax: tax,
       GrandTotal: grandTotal, PaymentStatus: paidAmount >= grandTotal ? 'Paid' : (paidAmount > 0 ? 'Partial' : 'Unpaid'),
       PaidAmount: paidAmount, Balance: grandTotal - paidAmount, ReceivedBy: userId, Notes: input.notes || '',
-      RecordStatus: 'Active', DeletedBy: '', DeletedReason: '', DeletedDate: ''
+      RecordStatus: 'Active', DeletedBy: '', DeletedReason: '', DeletedDate: '', StoreID: storeId
     });
 
     validated.forEach(function (v) {
-      var batchId = receiveBatch(v.product.ProductID, v.qty, v.purchasePrice, v.sellingPrice, v.expiryDate, input.supplierId, 'Purchase', purchaseId, userId, '');
+      var batchId = receiveBatch(v.product.ProductID, v.qty, v.purchasePrice, v.sellingPrice, v.expiryDate, input.supplierId, 'Purchase', purchaseId, userId, '', storeId);
       appendRow(SHEETS.PURCHASE_ITEMS, {
         PurchaseItemID: Utilities.getUuid(), PurchaseID: purchaseId, ProductID: v.product.ProductID, BatchID: batchId,
         Quantity: v.qty, PurchasePrice: v.purchasePrice, SellingPrice: v.sellingPrice, Total: v.lineTotal
@@ -81,16 +85,74 @@ function createPurchase(userId, input) {
   })();
 }
 
-function getPurchases(userId, limit) {
+// Purchase list with optional filters:
+// { search, from, to, status, storeId, page, pageSize }
+// A plain number is still accepted as the second argument (treated as a limit).
+function getPurchases(userId, filters) {
   return safe(function () {
   authorize(userId, PERMISSIONS.MANAGE_PURCHASES);
+  if (typeof filters === 'number' || typeof filters === 'string') filters = { pageSize: Number(filters) || 100 };
+  filters = filters || {};
+
   var suppliers = readTable(SHEETS.SUPPLIERS).rows;
   var nameById = {}; suppliers.forEach(function (s) { nameById[s.SupplierID] = s.SupplierName; });
+  var storeNames = getStoreNameMap();
+
   var rows = readTable(SHEETS.PURCHASES).rows;
-  rows.forEach(function (r) { r.SupplierName = nameById[r.SupplierID] || r.SupplierID; });
+
+  if (filters.from) {
+    var from = parseDateStart(filters.from);
+    rows = rows.filter(function (r) { return new Date(r.PurchaseDate) >= from; });
+  }
+  if (filters.to) {
+    var to = parseDateEnd(filters.to);
+    rows = rows.filter(function (r) { return new Date(r.PurchaseDate) <= to; });
+  }
+  if (filters.status) {
+    var st = String(filters.status).toLowerCase();
+    rows = rows.filter(function (r) {
+      var record = String(r.RecordStatus || 'Active');
+      var payment = String(r.PaymentStatus || '');
+      if (st === 'active') return record !== 'Deleted';
+      if (st === 'deleted') return record === 'Deleted';
+      if (st === 'paid') return record !== 'Deleted' && payment === 'Paid';
+      if (st === 'partial') return record !== 'Deleted' && payment === 'Partial';
+      if (st === 'unpaid') return record !== 'Deleted' && payment === 'Unpaid';
+      return true;
+    });
+  }
+  if (filters.storeId) {
+    var sid = resolveStoreId(filters.storeId);
+    rows = rows.filter(function (r) { return resolveStoreId(r.StoreID) === sid; });
+  }
+  if (filters.search) {
+    var q = String(filters.search).trim().toLowerCase();
+    if (q) {
+      rows = rows.filter(function (r) {
+        var supplier = nameById[r.SupplierID] || '';
+        return String(r.PurchaseID || '').toLowerCase().indexOf(q) > -1 ||
+               String(r.InvoiceNumber || '').toLowerCase().indexOf(q) > -1 ||
+               String(r.Notes || '').toLowerCase().indexOf(q) > -1 ||
+               supplier.toLowerCase().indexOf(q) > -1;
+      });
+    }
+  }
+
   rows.sort(function (a, b) { return new Date(b.PurchaseDate) - new Date(a.PurchaseDate); });
-  if (limit) rows = rows.slice(0, limit);
-  return ok({ purchases: rows });
+
+  var total = rows.length;
+  var page = Math.max(1, Number(filters.page) || 1);
+  var pageSize = Math.max(1, Math.min(200, Number(filters.pageSize) || 50));
+  var pages = Math.max(1, Math.ceil(total / pageSize));
+  if (page > pages) page = pages;
+  var slice = rows.slice((page - 1) * pageSize, page * pageSize);
+
+  slice.forEach(function (r) {
+    r.SupplierName = nameById[r.SupplierID] || r.SupplierID;
+    r.StoreName = storeNames[resolveStoreId(r.StoreID)] || storeLabel(r.StoreID);
+  });
+
+  return ok({ purchases: slice, total: total, page: page, pageSize: pageSize, pages: pages });
   })();
 }
 
@@ -122,6 +184,7 @@ function getPurchaseDetails(userId, purchaseId) {
   var receiver = findRowById(SHEETS.USERS, 'UserID', purchase.ReceivedBy);
   purchase.SupplierName = supplier ? supplier.SupplierName : purchase.SupplierID;
   purchase.ReceivedByName = receiver ? receiver.FullName : purchase.ReceivedBy;
+  purchase.StoreName = storeLabel(purchase.StoreID);
   if (supplier) {
     purchase.SupplierPhone = supplier.Phone || '';
     purchase.SupplierEmail = supplier.Email || '';
@@ -164,6 +227,7 @@ function deletePurchase(userId, purchaseId, reason) {
   try {
     var items = findRows(SHEETS.PURCHASE_ITEMS, function (i) { return i.PurchaseID === purchaseId; });
     var partialReversalProducts = [];
+    var storeId = resolveStoreId(purchase.StoreID);
 
     items.forEach(function (item) {
       var batch = findRowById(SHEETS.BATCHES, 'BatchID', item.BatchID);
@@ -174,7 +238,7 @@ function deletePurchase(userId, purchaseId, reason) {
       if (reduceBy <= 0) return;
 
       updateRowById(SHEETS.BATCHES, 'BatchID', batch.BatchID, { Quantity: currentQty - reduceBy });
-      recalculateInventory(item.ProductID, batch.BatchID, 'Purchase Deleted', -reduceBy, 'PurchaseDeleted', purchaseId, userId,
+      recalculateInventory(item.ProductID, storeId, batch.BatchID, STOCK_MOVEMENT_TYPES.PURCHASE_DELETED, -reduceBy, 'PurchaseDeleted', purchaseId, userId,
         'Purchase ' + purchaseId + ' deleted: ' + reason);
 
       if (reduceBy < purchasedQty) {

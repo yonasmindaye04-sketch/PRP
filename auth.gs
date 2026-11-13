@@ -51,6 +51,12 @@ function getRolePermissionsMap() {
 }
 
 function getPermissionsForRole(roleId) {
+  // The Owner bypasses every check in hasPermission(), so the client should
+  // be handed the complete permission list too — otherwise permission-gated
+  // UI would hide screens the Owner is actually allowed to use.
+  if (roleId === ROLE_IDS.OWNER) {
+    return readTable(SHEETS.PERMISSIONS).rows.map(function (p) { return p.PermissionID; });
+  }
   return getRolePermissionsMap()[roleId] || [];
 }
 

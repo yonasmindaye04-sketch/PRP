@@ -20,19 +20,21 @@ function createReturn(userId, saleId, productId, qty, reason) {
   var product = findRowById(SHEETS.PRODUCTS, 'ProductID', productId);
   var refundAmount = round2(Number(saleItem.UnitPrice) * returnQty);
   var isResalable = reason !== 'Damaged' && reason !== 'Expired';
+  // Returned goods go back to the store the original sale was made from.
+  var storeId = resolveStoreId(sale.StoreID);
 
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
     if (isResalable) {
       // Put it back as its own batch so expiry tracking on the return isn't lost.
-      receiveBatch(productId, returnQty, Number(product.PurchasePrice) || 0, Number(product.SellingPrice) || 0, '', '', 'Return', saleId, userId, 'Customer return');
+      receiveBatch(productId, returnQty, Number(product.PurchasePrice) || 0, Number(product.SellingPrice) || 0, '', '', STOCK_MOVEMENT_TYPES.RETURN, saleId, userId, 'Customer return', storeId);
     } else {
       // Log the movement without adding sellable stock back.
       appendRow(SHEETS.STOCK_MOVEMENTS, {
         MovementID: Utilities.getUuid(), Date: nowIso(), ProductID: productId, BatchID: saleItem.BatchID,
         Type: reason, Quantity: 0, PreviousStock: '', NewStock: '', ReferenceType: 'Return', ReferenceID: saleId,
-        Remarks: 'Returned but not resalable (' + reason + ')', UserID: userId
+        Remarks: 'Returned but not resalable (' + reason + ')', UserID: userId, StoreID: storeId
       });
     }
 

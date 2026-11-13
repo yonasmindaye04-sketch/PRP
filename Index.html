@@ -221,6 +221,101 @@ p.panel-sub{margin:-8px 0 12px;}
   #receipt-print-area{display:block;position:absolute;top:0;left:0;width:100%;}
 }
 
+/* ── Store switcher, stock health, filters, pagination ─────────────────── */
+.topbar-store{margin-left:auto;display:flex;align-items:center;gap:7px;}
+.topbar-store label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;opacity:.85;font-weight:700;}
+.topbar-store select{
+  padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.35);
+  background:rgba(255,255,255,.14);color:#fff;font-size:12.5px;font-weight:600;max-width:190px;
+}
+.topbar-store select option{color:#111;background:#fff;}
+
+/* Stock health badges (4 tiers) */
+.pill.critical{background:#ffe8d6;color:#b34700;}
+.pill.out_of_stock,.pill.out-of-stock{background:var(--danger-tint);color:var(--danger);}
+.pill.adjust{background:#eef4ff;color:#2b4d8f;}
+
+/* Filter bar shared by Sales History / Stock Ledger / Purchases */
+.filter-bar{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:14px;
+}
+.filter-bar .field{margin:0;}
+.filter-bar .field label{font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
+.filter-bar .field input,.filter-bar .field select{padding:8px 10px;font-size:13px;}
+.filter-bar .filter-actions{display:flex;gap:8px;align-items:center;grid-column:1/-1;flex-wrap:wrap;}
+.filter-summary{
+  display:flex;gap:18px;align-items:center;flex-wrap:wrap;padding:10px 14px;margin-bottom:12px;
+  background:var(--primary-tint);border-radius:10px;font-size:13px;color:var(--primary-dark);font-weight:600;
+}
+.filter-summary .fs-item{display:flex;gap:6px;align-items:baseline;}
+.filter-summary .fs-item b{font-size:15px;}
+.filter-chip{
+  display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);
+  border-radius:99px;padding:3px 10px;font-size:11.5px;font-weight:600;color:var(--ink-soft);
+}
+.filter-chip button{border:none;background:none;cursor:pointer;color:var(--danger);font-size:13px;line-height:1;padding:0;}
+
+/* Pagination */
+.pager{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-top:1px solid var(--line);flex-wrap:wrap;}
+.pager-info{font-size:12.5px;color:var(--ink-soft);}
+.pager-buttons{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.pager-buttons button{min-width:32px;width:auto;padding:5px 10px;font-size:12px;font-weight:600;border:1px solid var(--line);background:#fff;border-radius:7px;cursor:pointer;color:var(--ink);}
+.pager-buttons button:hover:not(:disabled){border-color:var(--primary);color:var(--primary-dark);}
+.pager-buttons button.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.pager-buttons button:disabled{opacity:.4;cursor:not-allowed;}
+
+/* Adjustment type picker (Asella style) */
+.adj-type-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;}
+.adj-type{
+  display:flex;align-items:center;gap:8px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;
+  background:#fff;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;text-align:left;transition:all .15s;
+}
+.adj-type:hover{border-color:var(--primary);}
+.adj-type.active{background:var(--primary-tint);border-color:var(--primary);color:var(--primary-dark);}
+.adj-type .adj-icon{
+  width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;
+  background:var(--surface);font-size:14px;font-weight:700;flex-shrink:0;
+}
+.adj-type.active .adj-icon{background:var(--primary);color:#fff;}
+.dir-toggle{display:flex;gap:8px;}
+.dir-toggle button{flex:1;padding:10px;border-radius:9px;border:1.5px solid var(--line);background:#fff;font-size:13px;font-weight:700;cursor:pointer;color:var(--ink-soft);}
+.dir-toggle button.in.active{background:var(--primary);border-color:var(--primary);color:#fff;}
+.dir-toggle button.out.active{background:var(--danger);border-color:var(--danger);color:#fff;}
+.qty-preview{
+  margin-top:7px;font-size:12.5px;color:var(--ink-soft);padding:9px 12px;border-radius:9px;
+  background:var(--surface);border:1px solid var(--line);line-height:1.6;
+}
+.qty-preview b{color:var(--ink);}
+.qty-preview .warn{color:var(--danger);font-weight:700;}
+.qty-preview .good{color:var(--primary-dark);font-weight:700;}
+
+/* Store cards */
+.store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:16px;}
+.store-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;}
+.store-card.is-default{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary) inset;}
+.store-card h4{margin:0 0 3px;font-size:14px;display:flex;align-items:center;gap:7px;}
+.store-card .store-meta{font-size:11.5px;color:var(--ink-soft);margin-bottom:10px;line-height:1.6;}
+.store-card .store-stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;font-size:12px;}
+.store-card .store-stats .k{color:var(--ink-soft);}
+.store-card .store-stats .v{font-weight:700;text-align:right;}
+
+/* Movement type badges */
+.mv-type{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:700;}
+.mv-in{background:#e3f6ea;color:#1b7a3d;}
+.mv-out{background:#ffe3e3;color:#b3261e;}
+.mv-flat{background:#eef0f2;color:#55606a;}
+.qty-in{color:#1b7a3d;font-weight:700;}
+.qty-out{color:#b3261e;font-weight:700;}
+
+@media(max-width:860px){
+  .filter-bar{grid-template-columns:1fr 1fr;}
+  .topbar-store select{max-width:120px;}
+}
+@media(max-width:480px){
+  .filter-bar{grid-template-columns:1fr;}
+}
+
 </style>
 </head>
 <body>
@@ -252,6 +347,10 @@ p.panel-sub{margin:-8px 0 12px;}
     <button class="hamburger" id="hamburger-btn">☰</button>
     <div class="brand-mark">Rx</div>
     <div class="topbar-title">Pharmacy ERP</div>
+    <div class="topbar-store">
+      <label for="global-store-select">Store</label>
+      <select id="global-store-select" title="Active store — sales and purchases are recorded against it"></select>
+    </div>
   </div>
   <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
   <aside class="sidebar" id="sidebar">
@@ -264,6 +363,8 @@ p.panel-sub{margin:-8px 0 12px;}
 
     <div class="nav-section">Inventory</div>
     <button class="nav-item" data-view="inventory" data-perm="PERM_VIEW_PRODUCTS"><span class="dot"></span><span class="label">Products</span></button>
+    <button class="nav-item" data-view="stockLedger" data-perm="PERM_VIEW_STOCK_MOVEMENTS"><span class="dot"></span><span class="label">Stock Ledger</span></button>
+    <button class="nav-item" data-view="stores" data-perm="PERM_MANAGE_STORES"><span class="dot"></span><span class="label">Stores</span></button>
     <button class="nav-item" data-view="purchases" data-perm="PERM_MANAGE_PURCHASES"><span class="dot"></span><span class="label">Purchases</span></button>
     <button class="nav-item" data-view="suppliers" data-perm="PERM_MANAGE_SUPPLIERS"><span class="dot"></span><span class="label">Suppliers</span></button>
 
@@ -365,7 +466,9 @@ p.panel-sub{margin:-8px 0 12px;}
 
     <!-- POS -->
     <section class="view" id="view-pos">
-      <div class="view-header"><div><h2>Sales (POS)</h2><p>Tap a product to add it to the cart</p></div></div>
+      <div class="view-header"><div><h2>Sales (POS)</h2><p>Tap a product to add it to the cart</p></div>
+        <span class="filter-chip" id="pos-store-chip">Store: —</span>
+      </div>
       <div class="pos-layout">
         <div>
           <div class="toolbar">
@@ -393,10 +496,49 @@ p.panel-sub{margin:-8px 0 12px;}
 
     <!-- SALES HISTORY -->
     <section class="view" id="view-salesHistory">
-      <div class="view-header"><div><h2>Sales History</h2><p>Recent transactions — click a row to view/return items</p></div></div>
+      <div class="view-header"><div><h2>Sales History</h2><p>Every transaction — filter, search and drill down</p></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn small secondary" id="sales-history-refresh">Refresh</button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-bar">
+        <div class="field" style="grid-column:span 2;">
+          <label>Search</label>
+          <input type="search" id="sh-search" placeholder="Sale ID, invoice, customer, cashier or product…">
+        </div>
+        <div class="field"><label>From date</label><input type="date" id="sh-from"></div>
+        <div class="field"><label>To date</label><input type="date" id="sh-to"></div>
+        <div class="field"><label>Payment method</label>
+          <select id="sh-payment"><option value="">All methods</option><option>Cash</option><option>Card</option><option>Mobile Money</option></select>
+        </div>
+        <div class="field"><label>Status</label>
+          <select id="sh-status"><option value="">All statuses</option><option value="Completed">Completed</option><option value="Voided">Voided</option></select>
+        </div>
+        <div class="field"><label>Cashier</label><select id="sh-cashier"><option value="">All cashiers</option></select></div>
+        <div class="field"><label>Store</label><select id="sh-store"><option value="">All stores</option></select></div>
+        <div class="field"><label>Min total</label><input type="text" id="sh-mintotal" placeholder="0"></div>
+        <div class="field"><label>Max total</label><input type="text" id="sh-maxtotal" placeholder="Any"></div>
+        <div class="field"><label>Sort by</label>
+          <select id="sh-sort">
+            <option value="date">Date</option>
+            <option value="total">Amount</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button class="btn small" id="sh-apply">Apply filters</button>
+          <button class="btn small secondary" id="sh-clear">Clear</button>
+          <div id="sh-active-chips" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+        </div>
+      </div>
+
+      <div class="filter-summary" id="sh-summary"></div>
+
       <div class="panel" style="padding:0;">
-        <table><thead><tr><th>Sale ID</th><th>Date</th><th>Cashier</th><th>Payment</th><th>Total</th><th>Status</th><th></th></tr></thead>
+        <table><thead><tr><th>Sale ID</th><th>Date</th><th>Cashier</th><th>Store</th><th>Customer</th><th>Payment</th><th>Total</th><th>Status</th><th></th></tr></thead>
         <tbody id="sales-tbody"></tbody></table>
+        <div class="pager" id="sh-pager"></div>
       </div>
     </section>
 
@@ -406,6 +548,7 @@ p.panel-sub{margin:-8px 0 12px;}
         <div><h2>Products</h2><p>Catalog &amp; live stock (from batches)</p></div>
         <div style="display:flex;gap:8px;">
           <button class="btn small secondary" id="manage-categories-btn">Categories</button>
+          <button class="btn small secondary" id="adjust-stock-btn">Adjust stock</button>
           <button class="btn small" id="add-product-btn">+ Add product</button>
         </div>
       </div>
@@ -419,12 +562,100 @@ p.panel-sub{margin:-8px 0 12px;}
           <option value="">All stock status</option>
           <option value="in_stock">In stock</option>
           <option value="low_stock">Low stock</option>
+          <option value="critical_stock">Critical stock</option>
           <option value="out_of_stock">Out of stock</option>
+        </select>
+        <select id="inventory-store-filter" style="margin-left: 10px; max-width: 200px;">
+          <option value="">All stores</option>
         </select>
       </div>
       <div class="panel" style="padding:0;">
         <table><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr></thead>
         <tbody id="inventory-tbody"></tbody></table>
+      </div>
+    </section>
+
+    <!-- STOCK LEDGER -->
+    <section class="view" id="view-stockLedger">
+      <div class="view-header">
+        <div><h2>Stock Ledger</h2><p>Every stock movement — opening balances, purchases, sales, adjustments and transfers</p></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn small secondary" id="ledger-refresh-btn">Refresh</button>
+          <button class="btn small" id="ledger-adjust-btn">Adjust stock</button>
+        </div>
+      </div>
+      <div class="cards" id="ledger-kpi-cards" style="margin-bottom:16px;"></div>
+
+      <div class="filter-bar">
+        <div class="field" style="grid-column:span 2;">
+          <label>Search</label>
+          <input type="search" id="lg-search" placeholder="Product, batch, reason, reference or user…">
+        </div>
+        <div class="field"><label>Product</label><select id="lg-product"><option value="">All products</option></select></div>
+        <div class="field"><label>Movement type</label><select id="lg-type"><option value="">All types</option></select></div>
+        <div class="field"><label>Store</label><select id="lg-store"><option value="">All stores</option></select></div>
+        <div class="field"><label>From date</label><input type="date" id="lg-from"></div>
+        <div class="field"><label>To date</label><input type="date" id="lg-to"></div>
+        <div class="filter-actions">
+          <button class="btn small" id="lg-apply">Apply filters</button>
+          <button class="btn small secondary" id="lg-clear">Clear</button>
+          <div id="lg-active-chips" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="padding:0;">
+        <table>
+          <thead><tr>
+            <th>Date</th><th>Product</th><th>Type</th><th>Change</th><th>Stock after</th>
+            <th>Store</th><th>Reference</th><th>Remarks</th><th>By</th>
+          </tr></thead>
+          <tbody id="ledger-tbody"></tbody>
+        </table>
+        <div class="pager" id="lg-pager"></div>
+      </div>
+    </section>
+
+    <!-- STORES -->
+    <section class="view" id="view-stores">
+      <div class="view-header">
+        <div><h2>Stores</h2><p>Branches, outlets and warehouses — each keeps its own stock</p></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn small secondary" id="transfer-stock-btn">Transfer stock</button>
+          <button class="btn small" id="add-store-btn">+ Add store</button>
+        </div>
+      </div>
+      <div class="store-grid" id="store-cards"></div>
+
+      <div class="panel" style="padding:0;">
+        <div class="panel-head" style="padding:16px 16px 0;">
+          <div><h3>Store Stock</h3><p class="panel-sub">What each branch is holding right now</p></div>
+          <select id="store-inventory-filter"><option value="">All stores</option></select>
+        </div>
+        <table><thead><tr><th>Product</th><th>Category</th><th>Stock</th><th>Health</th><th>Value</th><th></th></tr></thead>
+        <tbody id="store-inventory-tbody"></tbody></table>
+      </div>
+
+      <div class="panel" style="padding:0;">
+        <div class="panel-head" style="padding:16px 16px 0;">
+          <div><h3>Store Transfers</h3><p class="panel-sub">Stock moved between branches</p></div>
+        </div>
+        <table><thead><tr><th>Ref</th><th>Date</th><th>Product</th><th>Qty</th><th>From</th><th>To</th><th>Reason</th></tr></thead>
+        <tbody id="store-transfers-tbody"></tbody></table>
+        <div class="pager" id="store-transfers-pager"></div>
+      </div>
+
+      <div class="panel" style="padding:0;">
+        <div class="panel-head" style="padding:16px 16px 0;">
+          <div><h3>Sales by Store</h3><p class="panel-sub">Revenue performance per branch</p></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="date" id="sr-from" style="padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:12px;">
+            <span style="font-size:12px;color:var(--ink-soft);">→</span>
+            <input type="date" id="sr-to" style="padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:12px;">
+            <button class="mini-btn" id="sr-apply">Apply</button>
+          </div>
+        </div>
+        <table><thead><tr><th>Store</th><th>Transactions</th><th>Revenue</th><th>Voided</th></tr></thead>
+        <tbody id="store-report-tbody"></tbody></table>
       </div>
     </section>
 
@@ -584,6 +815,112 @@ p.panel-sub{margin:-8px 0 12px;}
 </div>
 
 <!-- ══════════════ MODALS ══════════════ -->
+<div class="modal-overlay" id="product-history-modal"><div class="modal wide">
+  <h3>Stock history</h3>
+  <div class="modal-body" id="ph-body"></div>
+  <div class="modal-actions">
+    <button class="btn secondary" id="product-history-close">Close</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="adjust-modal"><div class="modal wide">
+  <h3 id="adjust-modal-title">Adjust stock</h3>
+  <div id="adjust-modal-msg"></div>
+
+  <div class="field-grid">
+    <div class="field"><label>Product *</label><select id="adj-product"></select></div>
+    <div class="field"><label>Store *</label><select id="adj-store"></select></div>
+  </div>
+
+  <div class="field">
+    <label>Adjustment type *</label>
+    <div class="adj-type-grid" id="adj-type-grid">
+      <button type="button" class="adj-type" data-type="OpeningStock"><span class="adj-icon">+</span>Opening Balance</button>
+      <button type="button" class="adj-type active" data-type="Adjustment"><span class="adj-icon">~</span>Manual Adjustment</button>
+      <button type="button" class="adj-type" data-type="Return"><span class="adj-icon">&#8635;</span>Customer Return</button>
+      <button type="button" class="adj-type" data-type="DamageLoss"><span class="adj-icon">!</span>Damage / Loss</button>
+      <button type="button" class="adj-type" data-type="ExpiredWriteOff"><span class="adj-icon">&#10005;</span>Expired Write-off</button>
+    </div>
+    <small style="color:var(--ink-soft);font-size:11px;">The type and reason are written to the stock ledger for accountability.</small>
+  </div>
+
+  <div class="field" id="adj-direction-field">
+    <label>Direction *</label>
+    <div class="dir-toggle">
+      <button type="button" class="in active" id="adj-dir-in">&#8593; Add stock</button>
+      <button type="button" class="out" id="adj-dir-out">&#8595; Remove stock</button>
+    </div>
+  </div>
+
+  <div class="field-grid">
+    <div class="field"><label>Quantity *</label><input type="number" id="adj-qty" min="1" step="1" placeholder="0" oninput="updateAdjPreview()"></div>
+    <div class="field"><label>Cost price per unit</label><input type="text" id="adj-cost" placeholder="Catalog cost" oninput="updateAdjPreview()"></div>
+  </div>
+  <div class="qty-preview" id="adj-preview"></div>
+
+  <div class="field-grid">
+    <div class="field"><label>Batch expiry date</label><input type="text" id="adj-expiry" placeholder="YYYY-MM-DD"></div>
+    <div class="field"><label>Batch number</label><input type="text" id="adj-batch" placeholder="optional"></div>
+  </div>
+
+  <div class="field"><label>Reason * <span style="font-weight:400;color:var(--ink-soft);">(appears in the audit log)</span></label>
+    <input type="text" id="adj-reason" placeholder="e.g. Monthly recount, expired units removed…">
+  </div>
+  <div class="field"><label>Notes <span style="font-weight:400;color:var(--ink-soft);">(optional)</span></label>
+    <input type="text" id="adj-notes" placeholder="Additional context…">
+  </div>
+
+  <div class="modal-actions">
+    <button class="btn secondary" id="adjust-modal-cancel">Cancel</button>
+    <button class="btn" id="adjust-modal-save">Save adjustment</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="store-modal"><div class="modal">
+  <h3 id="store-modal-title">Add store</h3>
+  <div id="store-modal-msg"></div>
+  <div class="field"><label>Store name *</label><input type="text" id="sf-store-name"></div>
+  <div class="field-grid">
+    <div class="field"><label>Code</label><input type="text" id="sf-store-code" placeholder="e.g. MAIN"></div>
+    <div class="field"><label>Type</label>
+      <select id="sf-store-type"><option>Retail</option><option>Warehouse</option><option>Depot</option><option>Clinic</option></select>
+    </div>
+  </div>
+  <div class="field-grid">
+    <div class="field"><label>Manager</label><input type="text" id="sf-store-manager"></div>
+    <div class="field"><label>Phone</label><input type="text" id="sf-store-phone"></div>
+  </div>
+  <div class="field-grid">
+    <div class="field"><label>Email</label><input type="text" id="sf-store-email"></div>
+    <div class="field"><label>Opening date</label><input type="text" id="sf-store-opened" placeholder="YYYY-MM-DD"></div>
+  </div>
+  <div class="field"><label>Address</label><input type="text" id="sf-store-address"></div>
+  <div class="modal-actions">
+    <button class="btn secondary" id="store-modal-cancel">Cancel</button>
+    <button class="btn" id="store-modal-save">Save store</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="transfer-modal"><div class="modal">
+  <h3>Transfer stock between stores</h3>
+  <div id="transfer-modal-msg"></div>
+  <div class="field-grid">
+    <div class="field"><label>From store *</label><select id="tf-from"></select></div>
+    <div class="field"><label>To store *</label><select id="tf-to"></select></div>
+  </div>
+  <div class="field"><label>Product *</label><select id="tf-product"></select></div>
+  <div class="field-grid">
+    <div class="field"><label>Quantity *</label><input type="number" id="tf-qty" min="1" step="1" placeholder="0" oninput="updateTransferPreview()"></div>
+    <div class="field"><label>Reference number</label><input type="text" id="tf-ref" placeholder="optional"></div>
+  </div>
+  <div class="qty-preview" id="tf-preview"></div>
+  <div class="field"><label>Reason *</label><input type="text" id="tf-reason" placeholder="e.g. Rebalancing branches"></div>
+  <div class="modal-actions">
+    <button class="btn secondary" id="transfer-modal-cancel">Cancel</button>
+    <button class="btn" id="transfer-modal-save">Transfer stock</button>
+  </div>
+</div></div>
+
 <div class="modal-overlay" id="product-modal"><div class="modal wide">
   <h3 id="product-modal-title">Add product</h3>
   <div id="product-modal-msg"></div>
@@ -626,8 +963,22 @@ p.panel-sub{margin:-8px 0 12px;}
     <div class="field"><label>Reorder level</label><input type="text" id="pf-reorderlevel"></div>
     <div class="field"><label>Minimum stock</label><input type="text" id="pf-minstock"></div>
     <div class="field"><label>Maximum stock</label><input type="text" id="pf-maxstock"></div>
-    <div class="field" id="pf-openingqty-field"><label>Opening stock</label><input type="text" id="pf-openingqty"></div>
+    <div class="field"><label>Home store</label><select id="pf-store"></select></div>
+    <div class="field" id="pf-currentstock-field" style="display:none;">
+      <label>Current stock</label>
+      <div id="pf-currentstock" style="padding:9px 0;font-weight:700;">0</div>
+      <small style="color:var(--ink-soft);font-size:11px;">Stock changes only through purchases, sales, transfers or adjustments.</small>
+    </div>
+    <div class="field" id="pf-openingqty-field">
+      <label>Opening stock</label>
+      <input type="text" id="pf-openingqty" placeholder="0">
+      <small style="color:var(--ink-soft);font-size:11px;">The quantity already on the shelf when the product is first created.</small>
+    </div>
     <div class="field" id="pf-expiry-field"><label>Batch expiry date</label><input type="text" id="pf-expiry" placeholder="YYYY-MM-DD"></div>
+  </div>
+  <div id="pf-adjust-hint" style="display:none;margin-bottom:12px;padding:11px 13px;border-radius:9px;background:var(--primary-tint);color:var(--primary-dark);font-size:12.5px;line-height:1.6;">
+    Need to record an opening balance, recount, damage or expiry write-off for this product?
+    <button class="mini-btn" onclick="openAdjustModal(document.getElementById('pf-store').value ? editingProductId : editingProductId, 'OpeningStock')" style="margin-left:6px;">Adjust stock</button>
   </div>
   <div class="modal-actions">
     <button class="btn secondary" id="product-modal-cancel">Cancel</button>
@@ -689,6 +1040,7 @@ p.panel-sub{margin:-8px 0 12px;}
   <div class="field-grid">
     <div class="field"><label>Supplier</label><select id="pu-supplier"></select></div>
     <div class="field"><label>Invoice number</label><input type="text" id="pu-invoice"></div>
+    <div class="field"><label>Receiving store</label><select id="pu-store"></select></div>
   </div>
   <h3 style="margin-top:10px;">Line items</h3>
   <div id="purchase-lines"></div>
@@ -826,12 +1178,50 @@ p.panel-sub{margin:-8px 0 12px;}
 <script>
 var session = null;
 var allProducts = [], allCategories = [], allSuppliers = [], allCustomers = [], allRoles = [], allPurchases = [];
+var allStores = [];
 var cart = [];
 var editingProductId = null;
 var purchaseLineCount = 0;
 var currentSaleDetailsId = null;
 var cachedSettings = null, cachedBusiness = null;
 var marginPresets = [20, 25, 35];
+
+// ── Store / stock state ───────────────────────────────────────────────────
+// currentStoreId is the branch the user is working in. POS sales, purchases
+// and stock adjustments are all recorded against it.
+var currentStoreId = '';
+var defaultLowStockThreshold = 10;
+var salesHistoryState = { page: 1, pageSize: 25, filters: {} };
+var ledgerState = { page: 1, pageSize: 25, filters: {} };
+var storeTransfersState = { page: 1, pageSize: 25 };
+var adjState = { type: 'Adjustment', direction: 'in' };
+// One-shot load flags for dropdowns whose markup already holds a placeholder.
+var salesCashiersLoaded = false;
+var ledgerTypesLoaded = false;
+
+// The movement types offered in the Stock Ledger filter and the adjustment
+// picker. Kept in sync with MANUAL_ADJUSTMENT_TYPES in constants.gs.
+var MOVEMENT_TYPES = [
+  { value: 'OpeningStock',     label: 'Opening Balance' },
+  { value: 'Purchase',         label: 'Purchase Received' },
+  { value: 'Sale',             label: 'Sale' },
+  { value: 'Return',           label: 'Return' },
+  { value: 'Adjustment',       label: 'Manual Adjustment' },
+  { value: 'DamageLoss',       label: 'Damage / Loss' },
+  { value: 'ExpiredWriteOff',  label: 'Expired Write-off' },
+  { value: 'TransferIn',       label: 'Transfer In' },
+  { value: 'TransferOut',      label: 'Transfer Out' },
+  { value: 'SaleVoided',       label: 'Sale Voided' },
+  { value: 'PurchaseDeleted',  label: 'Purchase Deleted' }
+];
+// Which types may be posted manually, and in which direction.
+var ADJ_TYPE_CONFIG = {
+  OpeningStock:    { direction: 'in' },
+  Adjustment:      { direction: 'both' },
+  Return:          { direction: 'in' },
+  DamageLoss:      { direction: 'out' },
+  ExpiredWriteOff: { direction: 'out' }
+};
 
 function call(fn){
   var args = Array.prototype.slice.call(arguments,1);
@@ -932,12 +1322,14 @@ function enterApp(){
       addProdBtn.style.display = can('PERM_CREATE_PRODUCT') ? 'inline-block' : 'none';
     }
 
+    loadStores();
     loadDashboard();
     loadCategories();
     loadSuppliers();
     loadCustomers();
     loadProducts();
     loadMarginPresets();
+    loadSystemDefaults();
   } catch (err) {
     document.getElementById('login-screen').style.display='flex';
     document.getElementById('app-shell').classList.remove('active');
@@ -958,6 +1350,8 @@ document.querySelectorAll('.nav-item[data-view]').forEach(function(btn){
     if(view==='pos') loadProducts();
     if(view==='inventory') loadProducts();
     if(view==='salesHistory') loadSalesHistory();
+    if(view==='stockLedger') loadStockLedger();
+    if(view==='stores') loadStoresView();
     if(view==='purchases') loadPurchases();
     if(view==='suppliers') loadSuppliers(true);
     if(view==='customers') loadCustomers(true);
@@ -1400,9 +1794,38 @@ function loadCustomers(renderTable){
   });
 }
 
+// ── Request sequencing ────────────────────────────────────────────────────
+// Google Apps Script round-trips are slow and can complete out of order.
+// Each guarded loader takes a ticket when it starts and only paints the
+// screen if it is still the newest request — otherwise a slow earlier
+// response would overwrite a newer, more accurate one.
+function makeRequestGuard(){
+  var seq = 0;
+  return function(){
+    var ticket = ++seq;
+    return function(){ return ticket === seq; };
+  };
+}
+var salesHistoryGuard = makeRequestGuard();
+var ledgerGuard = makeRequestGuard();
+var productsGuard = makeRequestGuard();
+var storesGuard = makeRequestGuard();
+var catalogGuard = makeRequestGuard();
+
+// The Products view can be scoped to a different branch than the one the POS
+// is working in (the POS always follows the active store). When
+// catalogProducts is null the catalog simply reuses the active store's data.
+var catalogProducts = null;
+var catalogStoreId = '';
+
 // ── Products (POS + Inventory) ───────────────────────────────────────────
+// Products are always loaded for the store the user is working in, so the
+// POS can only sell what that branch actually holds.
 function loadProducts(){
-  call('getProducts',session.userId).then(function(res){
+  var storeId = currentStoreId || '';
+  var isCurrent = productsGuard();
+  call('getProducts',session.userId,storeId).then(function(res){
+    if(!isCurrent()) return; // a newer request superseded this one
     if(!res.success) return toast(res.message,true);
     allProducts=res.products;
     renderInventoryKpis();
@@ -1414,7 +1837,23 @@ function loadProducts(){
       document.body.appendChild(dl);
     }
     dl.innerHTML = allProducts.map(function(p){ return '<option value="'+esc(p.ProductName)+'">'; }).join('');
+    populateProductSelectors();
   }).catch(function(err){toast(err,true);});
+}
+// Fills every product <select> that appears in a modal.
+function populateProductSelectors(){
+  var opts = allProducts.map(function(p){
+    var stock = p.SellByPill&&p.PillsPerUnit>0 ? p.DisplayStock : p.CurrentStock;
+    return '<option value="'+p.ProductID+'">'+esc(p.ProductName)+' — '+stock+' in stock</option>';
+  }).join('');
+  ['adj-product','tf-product','lg-product'].forEach(function(id){
+    var sel=document.getElementById(id);
+    if(!sel) return;
+    var keep=sel.value;
+    if(id==='lg-product') sel.innerHTML='<option value="">All products</option>'+opts;
+    else sel.innerHTML='<option value="">— Select a product —</option>'+opts;
+    if(keep) sel.value=keep;
+  });
 }
 function loadMarginPresets(){
   call('getSettings',session.userId).then(function(res){
@@ -1586,7 +2025,8 @@ document.getElementById('pos-checkout-btn').addEventListener('click',function(){
   var options={
     discount:Number(document.getElementById('pos-discount').value)||0,
     paymentMethod:document.getElementById('pos-payment').value,
-    customerId:document.getElementById('pos-customer').value
+    customerId:document.getElementById('pos-customer').value,
+    storeId:currentStoreId
   };
   return call('createSale',session.userId,payload,options).then(function(res){
     if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
@@ -1599,46 +2039,67 @@ document.getElementById('pos-checkout-btn').addEventListener('click',function(){
 });
 
 // ── Inventory KPI cards & table ───────────────────────────────────────────
+// ── Inventory KPI cards & table ───────────────────────────────────────────
+// Four-tier stock health (ok / low / critical / out of stock) — the same
+// classification the Asella Organic inventory engine uses.
+function stockHealth(qty, threshold){
+  var q = Number(qty)||0, t = Number(threshold)||0;
+  if(q <= 0) return 'out_of_stock';
+  if(t > 0 && q <= t/2) return 'critical';
+  if(t > 0 && q <= t) return 'low';
+  return 'ok';
+}
+function healthPill(health){
+  if(health==='out_of_stock') return '<span class="pill bad">Out of stock</span>';
+  if(health==='critical') return '<span class="pill critical">Critical</span>';
+  if(health==='low') return '<span class="pill low">Low stock</span>';
+  return '<span class="pill ok">In stock</span>';
+}
+// A product's own reorder level wins; otherwise the global threshold applies.
+function thresholdFor(p){
+  var rl = p && p.ReorderLevel;
+  return (rl!==undefined && rl!=='' && Number(rl)>0) ? Number(rl) : (Number(defaultLowStockThreshold)||0);
+}
+
 function renderInventoryKpis(){
   var container = document.getElementById('inventory-kpi-cards');
   if(!container || !allProducts) return;
-  var totalProducts = allProducts.length;
+  var list = catalogProducts || allProducts;
+  var totalProducts = list.length;
   var inStockCount = 0;
   var totalUnits = 0;
   var outOfStockCount = 0;
   var lowStockCount = 0;
+  var criticalCount = 0;
   var totalCost = 0;
   var totalRetail = 0;
-  var defaultLow = Number(document.getElementById('s-lowstock') ? document.getElementById('s-lowstock').value : 0) || 0;
 
-  allProducts.forEach(function(p){
+  list.forEach(function(p){
     var stock = Number(p.CurrentStock) || 0;
     var costPrice = Number(p.PurchasePrice) || 0;
     var sellPrice = Number(p.SellingPrice) || 0;
-    var threshold = (p.ReorderLevel !== undefined && p.ReorderLevel !== '' && Number(p.ReorderLevel) > 0) ? Number(p.ReorderLevel) : defaultLow;
+    var health = stockHealth(stock, thresholdFor(p));
 
     totalUnits += stock;
-    if(stock > 0){
-      inStockCount++;
-      totalCost += stock * costPrice;
-      totalRetail += stock * sellPrice;
-      if(stock <= threshold){
-        lowStockCount++;
-      }
-    } else {
-      outOfStockCount++;
-    }
+    if(stock > 0) inStockCount++;
+    totalCost += stock * costPrice;
+    totalRetail += stock * sellPrice;
+    if(health==='out_of_stock') outOfStockCount++;
+    else if(health==='critical') criticalCount++;
+    else if(health==='low') lowStockCount++;
   });
 
   var marginPct = totalRetail > 0 ? (((totalRetail - totalCost) / totalRetail) * 100).toFixed(1) : 0;
   var availabilityPct = totalProducts > 0 ? ((inStockCount / totalProducts) * 100).toFixed(0) : 0;
+  var scopeId = catalogProducts ? catalogStoreId : currentStoreId;
+  var storeLabelText = scopeId ? storeNameOf(scopeId) : 'all stores';
 
   container.innerHTML =
     '<div class="card"><div class="label">Total Products</div><div class="value">' + totalProducts + '</div><div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">' + totalUnits.toLocaleString() + ' units on hand</div></div>' +
     '<div class="card"><div class="label">Products Available</div><div class="value">' + inStockCount + '</div><div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">' + availabilityPct + '% catalog available</div></div>' +
-    '<div class="card"><div class="label">Inventory Cost Value</div><div class="value">$' + money(totalCost) + '</div><div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">Total investment at cost</div></div>' +
-    '<div class="card"><div class="label">Potential Retail Value</div><div class="value">$' + money(totalRetail) + '</div><div style="font-size:11.5px;color:var(--primary-dark);margin-top:4px;font-weight:600;">Est. profit margin ' + marginPct + '%</div></div>' +
-    '<div class="card ' + (lowStockCount > 0 ? 'warn' : '') + '"><div class="label">Low Stock Alerts</div><div class="value">' + lowStockCount + '</div><div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">At or below reorder level</div></div>' +
+    '<div class="card"><div class="label">Inventory Cost Value</div><div class="value">$' + money(totalCost) + '</div><div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">Investment at cost &middot; ' + esc(storeLabelText) + '</div></div>' +
+    '<div class="card"><div class="label">Potential Retail Value</div><div class="value">$' + money(totalRetail) + '</div><div style="font-size:11.5px;color:var(--ink-dark,#1c2b26);margin-top:4px;font-weight:600;color:var(--primary-dark);">Est. profit margin ' + marginPct + '%</div></div>' +
+    '<div class="card ' + (lowStockCount + criticalCount > 0 ? 'warn' : '') + '"><div class="label">Low Stock Alerts</div><div class="value">' + (lowStockCount + criticalCount) + '</div><div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">' + lowStockCount + ' low &middot; ' + criticalCount + ' critical</div></div>' +
     '<div class="card ' + (outOfStockCount > 0 ? 'danger' : '') + '"><div class="label">Out of Stock</div><div class="value">' + outOfStockCount + '</div><div style="font-size:11.5px;color:var(--danger);margin-top:4px;font-weight:600;">Immediate restock needed</div></div>';
 }
 
@@ -1647,35 +2108,61 @@ function renderInventoryTable(){
   var filter=(document.getElementById('inventory-search').value||'').toLowerCase();
   var catFilter=document.getElementById('inventory-category-filter').value;
   var stockFilter=document.getElementById('inventory-stock-filter').value;
-  var defaultLowStock=Number(document.getElementById('s-lowstock').value||0);
 
-  var list=allProducts.filter(function(p){
+  var source=catalogProducts||allProducts;
+  var list=source.filter(function(p){
     if(filter && p.ProductName.toLowerCase().indexOf(filter)===-1 && (p.GenericName||'').toLowerCase().indexOf(filter)===-1) return false;
     if(catFilter && p.CategoryID!==catFilter) return false;
-    
-    var threshold = (p.ReorderLevel !== undefined && p.ReorderLevel !== '' && Number(p.ReorderLevel) > 0) ? Number(p.ReorderLevel) : defaultLowStock;
-    if(stockFilter==='out_of_stock' && p.CurrentStock>0) return false;
-    if(stockFilter==='low_stock' && (p.CurrentStock<=0 || p.CurrentStock>threshold)) return false;
-    if(stockFilter==='in_stock' && p.CurrentStock<=threshold) return false;
-    
+
+    var health = stockHealth(p.CurrentStock, thresholdFor(p));
+    if(stockFilter==='out_of_stock' && health!=='out_of_stock') return false;
+    if(stockFilter==='critical_stock' && health!=='critical') return false;
+    if(stockFilter==='low_stock' && health!=='low') return false;
+    if(stockFilter==='in_stock' && health!=='ok') return false;
+
     return true;
   });
 
   if(!list.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state">No products found</div></td></tr>';return;}
   tbody.innerHTML=list.map(function(p){
-    var threshold = (p.ReorderLevel !== undefined && p.ReorderLevel !== '' && Number(p.ReorderLevel) > 0) ? Number(p.ReorderLevel) : defaultLowStock;
-    var stock = Number(p.CurrentStock) || 0;
-    var statusPill = stock <= 0 ? '<span class="pill bad">Out of stock</span>' : (stock <= threshold ? '<span class="pill low">Low stock</span>' : '<span class="pill ok">In stock</span>');
+    var health = stockHealth(p.CurrentStock, thresholdFor(p));
+    var statusPill = healthPill(health);
+    var stockText = Number(p.CurrentStock)||0;
+    if(p.SellByPill && Number(p.PillsPerUnit)>0) stockText += ' units / '+p.DisplayStock+' pills';
     var actions='';
     if(can('PERM_EDIT_PRODUCT')) actions+='<button onclick="openProductModal(\''+p.ProductID+'\')">Edit</button>';
+    if(can('PERM_ADJUST_STOCK')) actions+='<button onclick="openAdjustModal(\''+p.ProductID+'\',\'Adjustment\')">Adjust</button>';
+    if(can('PERM_VIEW_STOCK_MOVEMENTS')) actions+='<button onclick="openProductHistory(\''+p.ProductID+'\')">Ledger</button>';
     if(can('PERM_DELETE_PRODUCT')) actions+='<button class="danger" onclick="removeProduct(\''+p.ProductID+'\')">Delete</button>';
-    return '<tr><td>'+esc(p.ProductName)+'</td><td>'+esc(p.CategoryName)+'</td><td>$'+money(p.SellingPrice)+'</td><td>'+stock+'</td>'+
+    return '<tr><td>'+esc(p.ProductName)+'</td><td>'+esc(p.CategoryName)+'</td><td>$'+money(p.SellingPrice)+'</td><td>'+stockText+'</td>'+
       '<td>'+statusPill+'</td><td class="row-actions">'+actions+'</td></tr>';
   }).join('');
 }
 document.getElementById('inventory-search').addEventListener('input',renderInventoryTable);
 document.getElementById('inventory-category-filter').addEventListener('change',renderInventoryTable);
 document.getElementById('inventory-stock-filter').addEventListener('change',renderInventoryTable);
+document.getElementById('inventory-store-filter').addEventListener('change',loadCatalogProducts);
+
+// Loads the catalog for the branch picked in the Products toolbar. The POS
+// always follows the active store, so this only affects the catalog table and
+// its KPI cards.
+function loadCatalogProducts(){
+  var sel=document.getElementById('inventory-store-filter');
+  var scope=sel?sel.value:'';
+  if(scope===currentStoreId){
+    catalogProducts=null; catalogStoreId='';
+    renderInventoryKpis(); renderInventoryTable();
+    return;
+  }
+  catalogStoreId=scope;
+  var isCurrent=catalogGuard();
+  call('getProducts',session.userId,scope||'').then(function(res){
+    if(!isCurrent()) return; // a newer request superseded this one
+    if(!res.success) return toast(res.message,true);
+    catalogProducts=res.products;
+    renderInventoryKpis(); renderInventoryTable();
+  }).catch(function(err){toast(err,true);});
+}
 
 function openProductModal(productId){
   editingProductId=productId||null;
@@ -1701,8 +2188,23 @@ function openProductModal(productId){
   document.getElementById('pf-maxstock').value=product?product.MaximumStock:'';
   document.getElementById('pf-openingqty').value='';
   document.getElementById('pf-expiry').value='';
+
+  // Home store — defaults to the store the user is working in.
+  var storeSel=document.getElementById('pf-store');
+  storeSel.innerHTML=storeOptionsHtml(currentStoreId);
+  storeSel.value=product?(product.StoreID||currentStoreId):(currentStoreId||'');
+
+  // Opening stock is only offered when the product is created — after that,
+  // stock moves through the Adjust Stock screen so every change is logged.
   document.getElementById('pf-openingqty-field').style.display=product?'none':'block';
   document.getElementById('pf-expiry-field').style.display=product?'none':'block';
+  document.getElementById('pf-currentstock-field').style.display=product?'block':'none';
+  document.getElementById('pf-adjust-hint').style.display=product?'block':'none';
+  if(product){
+    var stockTxt=Number(product.CurrentStock)||0;
+    if(product.SellByPill&&Number(product.PillsPerUnit)>0) stockTxt+=' units / '+product.DisplayStock+' pills';
+    document.getElementById('pf-currentstock').textContent=stockTxt+' @ '+storeNameOf(storeSel.value);
+  }
   document.getElementById('product-modal').classList.add('active');
   updatePillPreview();
 }
@@ -1765,7 +2267,8 @@ document.getElementById('product-modal-save').addEventListener('click',function(
     minimumStock:document.getElementById('pf-minstock').value,
     maximumStock:document.getElementById('pf-maxstock').value,
     openingStock:document.getElementById('pf-openingqty').value,
-    expiryDate:document.getElementById('pf-expiry').value.trim()
+    expiryDate:document.getElementById('pf-expiry').value.trim(),
+    storeId:document.getElementById('pf-store').value
   };
   if(!payload.productName||payload.sellingPrice===''){msgEl.innerHTML='<div class="msg error">Name and selling price are required.</div>';return;}
   var promise=editingProductId?call('updateProduct',session.userId,payload):call('createProduct',session.userId,payload);
@@ -2202,7 +2705,8 @@ document.getElementById('purchase-modal-save').addEventListener('click',function
   var payload={
     supplierId:supplierId, invoiceNumber:document.getElementById('pu-invoice').value.trim(), items:items,
     discount:Number(document.getElementById('pu-discount').value)||0, tax:Number(document.getElementById('pu-tax').value)||0,
-    paidAmount:Number(document.getElementById('pu-paid').value)||0
+    paidAmount:Number(document.getElementById('pu-paid').value)||0,
+    storeId:document.getElementById('pu-store').value||currentStoreId
   };
   return call('createPurchase',session.userId,payload).then(function(res){
     if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
@@ -2212,24 +2716,6 @@ document.getElementById('purchase-modal-save').addEventListener('click',function
   }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
   });
 });
-
-// ── Sales history + returns ───────────────────────────────────────────────
-function loadSalesHistory(){
-  call('getSales',session.userId,100).then(function(res){
-    var tbody=document.getElementById('sales-tbody');
-    if(!res.success){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state">'+res.message+'</div></td></tr>';return;}
-    if(!res.sales.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state">No sales yet</div></td></tr>';return;}
-    tbody.innerHTML=res.sales.map(function(s){
-      var isVoided = String(s.Status || '').toLowerCase() === 'voided';
-      var statusPill = isVoided ? '<span class="pill bad">Voided</span>' : '<span class="pill ok">Completed</span>';
-      var canDelete = !isVoided && (session.roleId === 'ROLE_OWNER' || can('PERM_REFUND') || can('PERM_MANAGE_USERS'));
-      var delBtn = canDelete ? '<button class="danger" onclick="deleteSalePrompt(\''+s.SaleID+'\')">Delete</button>' : '';
-      return '<tr style="'+(isVoided?'opacity:0.65;background:#fafafa;':'')+'"><td>'+s.SaleID+'</td><td>'+new Date(s.SaleDate).toLocaleString()+'</td><td>'+esc(s.CashierName)+'</td>'+
-        '<td>'+esc(s.PaymentMethod)+'</td><td>$'+money(s.GrandTotal)+'</td><td>'+statusPill+'</td>'+
-        '<td class="row-actions"><button onclick="openSaleDetails(\''+s.SaleID+'\')">View</button>'+delBtn+'</td></tr>';
-    }).join('');
-  }).catch(function(err){toast(err,true);});
-}
 function openSaleDetails(saleId){
   currentSaleDetailsId=saleId;
   document.getElementById('sd-sale-id').textContent=saleId;
@@ -2752,6 +3238,771 @@ var auditSearchEl = document.getElementById('audit-search');
 if(auditSearchEl) auditSearchEl.addEventListener('input', renderAuditLogsTable);
 var auditFilterEl = document.getElementById('audit-module-filter');
 if(auditFilterEl) auditFilterEl.addEventListener('change', renderAuditLogsTable);
+
+// ============================================================================
+//  STORES · STOCK LEDGER · STOCK ADJUSTMENTS · SALES HISTORY FILTERING
+// ============================================================================
+
+// ── Small shared helpers ──────────────────────────────────────────────────
+function storeNameOf(storeId){
+  if(!storeId) return 'All stores';
+  var found=allStores.filter(function(s){return s.StoreID===storeId;})[0];
+  return found?found.StoreName:storeId;
+}
+// <option> markup for every store, with `selected` marked.
+function storeOptionsHtml(selected, includeAll){
+  var html=includeAll?'<option value="">All stores</option>':'';
+  return html+allStores.map(function(s){
+    return '<option value="'+s.StoreID+'"'+(s.StoreID===selected?' selected':'')+'>'+esc(s.StoreName)+'</option>';
+  }).join('');
+}
+// The user's session is stored server-side; the active store is a client
+// preference that survives a page reload.
+function rememberStore(id){
+  currentStoreId=id||'';
+  try{ localStorage.setItem('pharma.activeStore', currentStoreId); }catch(e){}
+}
+function recallStore(){
+  try{ return localStorage.getItem('pharma.activeStore')||''; }catch(e){ return ''; }
+}
+
+// ── System defaults (global low-stock threshold) ──────────────────────────
+// The threshold is needed by the Products filters on every screen, so it is
+// fetched once at login instead of depending on the Settings tab being open.
+function loadSystemDefaults(){
+  call('getSettings',session.userId).then(function(res){
+    if(!res.success) return;
+    cachedSettings=res.settings||{};
+    cachedBusiness=res.business||{};
+    var t=Number(cachedSettings.LowStockAlertThreshold);
+    if(!isNaN(t)) defaultLowStockThreshold=t;
+    var presets=cachedSettings.MarginPresets;
+    if(presets){
+      var p=presets.split(',').map(function(s){return Number(s.trim());}).filter(function(n){return !isNaN(n)&&n>0;});
+      if(p.length) marginPresets=p;
+    }
+    renderInventoryKpis();
+    renderInventoryTable();
+  }).catch(function(){});
+}
+
+// ── Stores ────────────────────────────────────────────────────────────────
+function loadStores(){
+  return call('getStores',session.userId).then(function(res){
+    if(!res.success) return;
+    allStores=res.stores||[];
+    var defaultStoreId=res.defaultStoreId;
+
+    // Restore (or pick) the active store.
+    var remembered=recallStore();
+    var valid=allStores.some(function(s){return s.StoreID===remembered;});
+    if(!valid) remembered=defaultStoreId;
+    currentStoreId=remembered||defaultStoreId;
+
+    var switcher=document.getElementById('global-store-select');
+    switcher.innerHTML=allStores.map(function(s){
+      return '<option value="'+s.StoreID+'"'+(s.StoreID===currentStoreId?' selected':'')+'>'+esc(s.StoreName)+'</option>';
+    }).join('');
+
+    // The POS header shows which branch is selling right now.
+    var posChip=document.getElementById('pos-store-chip');
+    if(posChip) posChip.textContent='Store: '+storeNameOf(currentStoreId);
+
+    // Every store dropdown in the app.
+    // Reports (sales history, stock ledger) default to "All stores" so the
+    // FULL history is always visible; operational dropdowns (purchases,
+    // adjustments, transfers) default to the store being worked in.
+    ['sh-store','lg-store','store-inventory-filter'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(!el) return;
+      el.innerHTML=storeOptionsHtml('',true);
+      el.value='';
+    });
+    ['adj-store','pu-store'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(!el) return;
+      el.innerHTML=storeOptionsHtml(currentStoreId,false);
+      el.value=currentStoreId;
+    });
+
+    // The Products toolbar can look at any branch (the POS always follows the
+    // active store). Default it to the branch being worked in.
+    var invStoreSel=document.getElementById('inventory-store-filter');
+    if(invStoreSel){
+      var previous=invStoreSel.value;
+      invStoreSel.innerHTML='<option value="">All stores</option>'+allStores.map(function(s){
+        return '<option value="'+s.StoreID+'">'+esc(s.StoreName)+'</option>';
+      }).join('');
+      var keep=(previous && previous!==currentStoreId &&
+                allStores.some(function(s){return s.StoreID===previous;})) ? previous : currentStoreId;
+      invStoreSel.value=keep;
+      if(keep!==currentStoreId) loadCatalogProducts();
+      else { catalogProducts=null; catalogStoreId=''; renderInventoryKpis(); renderInventoryTable(); }
+    }
+    if(document.getElementById('tf-from')){
+      document.getElementById('tf-from').innerHTML=storeOptionsHtml(currentStoreId,false);
+      document.getElementById('tf-from').value=currentStoreId;
+    }
+    if(document.getElementById('tf-to')){
+      var toEl=document.getElementById('tf-to');
+      toEl.innerHTML=storeOptionsHtml('',false);
+      var other=allStores.filter(function(s){return s.StoreID!==currentStoreId;})[0];
+      toEl.value=other?other.StoreID:'';
+    }
+  }).catch(function(err){ toast(err,true); });
+}
+document.getElementById('global-store-select').addEventListener('change',function(){
+  rememberStore(this.value);
+  cart=[]; renderCart();
+  loadProducts();
+  loadStockLedger();
+  // The catalog follows the branch being worked in unless the user picked a
+  // different one in the Products toolbar.
+  var invStoreSel=document.getElementById('inventory-store-filter');
+  if(invStoreSel && invStoreSel.value!==this.value){
+    invStoreSel.value=this.value;
+    loadCatalogProducts();
+  }
+  toast('Working in '+storeNameOf(this.value)+'.');
+});
+
+// ── Stock adjustment modal ────────────────────────────────────────────────
+function openAdjustModal(productId, movementType){
+  var modal=document.getElementById('adjust-modal');
+  document.getElementById('adjust-modal-msg').innerHTML='';
+  document.getElementById('adjust-modal-title').textContent='Adjust stock';
+
+  // Product list + selection
+  populateProductSelectors();
+  document.getElementById('adj-product').value=productId||'';
+
+  // Store list + selection — when the catalog is scoped to a specific
+  // branch, that branch is the natural target for the adjustment.
+  var adjStore=catalogStoreId || currentStoreId;
+  var storeSel=document.getElementById('adj-store');
+  storeSel.innerHTML=storeOptionsHtml(adjStore,false);
+  storeSel.value=adjStore||'';
+
+  // Type
+  adjState.type=movementType||'Adjustment';
+  adjState.direction=(ADJ_TYPE_CONFIG[adjState.type]||{direction:'both'}).direction==='out'?'out':'in';
+  Array.prototype.forEach.call(document.querySelectorAll('.adj-type'),function(btn){
+    btn.classList.toggle('active', btn.getAttribute('data-type')===adjState.type);
+  });
+  syncAdjDirectionUI();
+
+  document.getElementById('adj-qty').value='';
+  document.getElementById('adj-reason').value='';
+  document.getElementById('adj-notes').value='';
+  document.getElementById('adj-batch').value='';
+  document.getElementById('adj-expiry').value='';
+  document.getElementById('adj-cost').value='';
+
+  modal.classList.add('active');
+  updateAdjPreview();
+}
+function syncAdjDirectionUI(){
+  var cfg=ADJ_TYPE_CONFIG[adjState.type]||{direction:'both'};
+  var dirField=document.getElementById('adj-direction-field');
+  dirField.style.display=cfg.direction==='both'?'block':'none';
+  document.getElementById('adj-dir-in').classList.toggle('active',adjState.direction==='in');
+  document.getElementById('adj-dir-out').classList.toggle('active',adjState.direction==='out');
+}
+Array.prototype.forEach.call(document.querySelectorAll('.adj-type'),function(btn){
+  btn.addEventListener('click',function(){
+    adjState.type=btn.getAttribute('data-type');
+    Array.prototype.forEach.call(document.querySelectorAll('.adj-type'),function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    var cfg=ADJ_TYPE_CONFIG[adjState.type]||{direction:'both'};
+    adjState.direction = cfg.direction==='out'?'out':(cfg.direction==='in'?'in':'in');
+    syncAdjDirectionUI();
+    updateAdjPreview();
+  });
+});
+document.getElementById('adj-dir-in').addEventListener('click',function(){adjState.direction='in';syncAdjDirectionUI();updateAdjPreview();});
+document.getElementById('adj-dir-out').addEventListener('click',function(){adjState.direction='out';syncAdjDirectionUI();updateAdjPreview();});
+document.getElementById('adj-product').addEventListener('change',updateAdjPreview);
+document.getElementById('adj-store').addEventListener('change',updateAdjPreview);
+
+// Live projection: "42 → 57" plus a warning when the result would go
+// negative. Mirrors the Asella Organic adjustment modal.
+function updateAdjPreview(){
+  var box=document.getElementById('adj-preview');
+  var productId=document.getElementById('adj-product').value;
+  var storeId=document.getElementById('adj-store').value;
+  var qty=Number(document.getElementById('adj-qty').value)||0;
+  var product=allProducts.filter(function(p){return p.ProductID===productId;})[0];
+  if(!product){
+    box.innerHTML='<span style="color:var(--ink-soft);">Select a product to see the stock projection.</span>';
+    return;
+  }
+  var current=Number(product.CurrentStock)||0;
+  var projected = adjState.direction==='out' ? current-qty : current+qty;
+  var cost=document.getElementById('adj-cost').value;
+  if(cost==='' && adjState.direction==='in') cost=Number(product.PurchasePrice)||0;
+
+  var html='<b>'+esc(product.ProductName)+'</b> &middot; '+esc(storeNameOf(storeId))+'<br>'+
+    'Stock now: <b>'+current+'</b> &rarr; after: ';
+  if(projected < 0){
+    html+='<span class="warn">'+projected+' (would go negative)</span>';
+  } else {
+    html+='<span class="good">'+projected+'</span>';
+  }
+  if(adjState.direction==='in' && cost){
+    html+='<br>Value added: <b>$'+money(qty*Number(cost))+'</b> at $'+money(cost)+'/unit';
+  }
+  if(adjState.direction==='out' && qty>current){
+    html+='<br><span class="warn">Only '+current+' unit(s) are on hand here.</span>';
+  }
+  box.innerHTML=html;
+}
+document.getElementById('adjust-modal-cancel').addEventListener('click',function(){
+  document.getElementById('adjust-modal').classList.remove('active');
+});
+document.getElementById('adjust-modal-save').addEventListener('click',function(){
+  var self=this;
+  runGuarded(self,function(){
+    var msgEl=document.getElementById('adjust-modal-msg');
+    msgEl.innerHTML='';
+    var payload={
+      productId:document.getElementById('adj-product').value,
+      storeId:document.getElementById('adj-store').value,
+      movementType:adjState.type,
+      direction:adjState.direction,
+      quantity:document.getElementById('adj-qty').value,
+      reason:document.getElementById('adj-reason').value.trim(),
+      notes:document.getElementById('adj-notes').value.trim(),
+      purchasePrice:document.getElementById('adj-cost').value,
+      expiryDate:document.getElementById('adj-expiry').value.trim(),
+      batchNumber:document.getElementById('adj-batch').value.trim()
+    };
+    if(!payload.productId){msgEl.innerHTML='<div class="msg error">Select a product.</div>';return;}
+    if(!(Number(payload.quantity)>0)){msgEl.innerHTML='<div class="msg error">Enter a quantity greater than zero.</div>';return;}
+    if(payload.reason.length<3){msgEl.innerHTML='<div class="msg error">A reason is required (at least 3 characters).</div>';return;}
+    return call('recordStockAdjustment',session.userId,payload).then(function(res){
+      if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
+      document.getElementById('adjust-modal').classList.remove('active');
+      toast('Stock adjusted — '+res.productName+' is now '+res.newQuantity+'.');
+      loadProducts(); loadStockLedger(); loadDashboard();
+    }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+  });
+});
+var adjustStockBtn=document.getElementById('adjust-stock-btn');
+if(adjustStockBtn) adjustStockBtn.addEventListener('click',function(){openAdjustModal(null,'Adjustment');});
+var ledgerAdjustBtn=document.getElementById('ledger-adjust-btn');
+if(ledgerAdjustBtn) ledgerAdjustBtn.addEventListener('click',function(){openAdjustModal(null,'Adjustment');});
+
+// ── Stock ledger ──────────────────────────────────────────────────────────
+function movementTypeLabel(value){
+  var found=MOVEMENT_TYPES.filter(function(t){return t.value===value;})[0];
+  return found?found.label:String(value||'—');
+}
+function loadStockLedger(){
+  if(!allStores.length) loadStores();
+  var isCurrent = ledgerGuard();
+  // The ledger is a global audit trail: it follows its own store filter
+  // (blank = every store) so the KPI cards and the table always agree.
+  var scopeStoreId=ledgerState.filters.storeId||'';
+  call('getInventorySummary',session.userId,scopeStoreId).then(function(res){
+    if(!isCurrent()) return;
+    if(!res.success) return;
+    var cards=document.getElementById('ledger-kpi-cards');
+    if(cards){
+      cards.innerHTML=
+        '<div class="card"><div class="label">Stock Value</div><div class="value">$'+money(res.totalStockValue)+'</div><div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">'+money(res.totalUnits)+' units on hand</div></div>'+
+        '<div class="card"><div class="label">Healthy Stock</div><div class="value">'+res.okCount+'</div><div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">Above reorder level</div></div>'+
+        '<div class="card warn"><div class="label">Low / Critical</div><div class="value">'+(res.lowCount+res.criticalCount)+'</div><div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">'+res.lowCount+' low &middot; '+res.criticalCount+' critical</div></div>'+
+        '<div class="card danger"><div class="label">Out of Stock</div><div class="value">'+res.outOfStockCount+'</div><div style="font-size:11.5px;color:var(--danger);margin-top:4px;font-weight:600;">Needs restocking</div></div>'+
+        '<div class="card"><div class="label">Movements (30d)</div><div class="value">'+res.movements30d+'</div><div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">'+money(res.unitsIn30d)+' in &middot; '+money(res.unitsOut30d)+' out</div></div>'+
+        '<div class="card"><div class="label">Units Sold (30d)</div><div class="value">'+money(res.unitsSold30d)+'</div><div style="font-size:11.5px;color:var(--ink-soft);margin-top:4px;">'+money(res.unitsReceived30d)+' received</div></div>';
+    }
+  }).catch(function(){});
+
+  // Movement type filter options (loaded once behind an explicit flag —
+  // the markup already contains an "All types" placeholder option).
+  var typeSel=document.getElementById('lg-type');
+  if(typeSel && !ledgerTypesLoaded){
+    ledgerTypesLoaded=true;
+    typeSel.innerHTML='<option value="">All types</option>'+MOVEMENT_TYPES.map(function(t){
+      return '<option value="'+t.value+'">'+esc(t.label)+'</option>';
+    }).join('');
+  }
+
+  var filters=ledgerState.filters;
+  call('getStockMovements',session.userId,{
+    search:filters.search||'', productId:filters.productId||'', type:filters.type||'',
+    storeId:filters.storeId||'', from:filters.from||'', to:filters.to||'',
+    page:ledgerState.page, pageSize:ledgerState.pageSize
+  }).then(function(res){
+    if(!isCurrent()) return; // a newer request superseded this one
+    var tbody=document.getElementById('ledger-tbody');
+    if(!res.success){tbody.innerHTML='<tr><td colspan="9"><div class="empty-state">'+res.message+'</div></td></tr>';return;}
+    if(!res.movements.length){
+      tbody.innerHTML='<tr><td colspan="9"><div class="empty-state">No stock movements match these filters</div></td></tr>';
+    } else {
+      tbody.innerHTML=res.movements.map(function(m){
+        var cls=m.Direction==='in'?'mv-in':(m.Direction==='out'?'mv-out':'mv-flat');
+        var qtyCls=m.Direction==='in'?'qty-in':(m.Direction==='out'?'qty-out':'');
+        var sign=m.Quantity>0?'+':'';
+        return '<tr>'+
+          '<td style="white-space:nowrap;font-size:12px;">'+fmtHumanDate(m.Date)+'</td>'+
+          '<td>'+esc(m.ProductName)+'</td>'+
+          '<td><span class="mv-type '+cls+'">'+esc(movementTypeLabel(m.Type))+'</span></td>'+
+          '<td class="'+qtyCls+'">'+sign+m.Quantity+'</td>'+
+          '<td>'+(m.NewStock===''||m.NewStock===undefined?'—':m.NewStock)+'</td>'+
+          '<td>'+esc(m.StoreName||'')+'</td>'+
+          '<td style="font-size:11.5px;">'+esc(m.ReferenceID||'—')+'</td>'+
+          '<td style="font-size:12px;color:var(--ink-soft);">'+esc(m.Remarks||'—')+'</td>'+
+          '<td style="font-size:12px;">'+esc(m.UserName||'')+'</td>'+
+        '</tr>';
+      }).join('');
+    }
+    renderPager('lg-pager', res, 'ledgerState.page', 'loadStockLedger');
+    renderActiveChips('lg-active-chips', filters, [
+      {key:'search',label:'Search'},
+      {key:'productId',label:'Product',format:function(v){var p=allProducts.filter(function(x){return x.ProductID===v;})[0];return p?p.ProductName:v;}},
+      {key:'type',label:'Type',format:movementTypeLabel},
+      {key:'storeId',label:'Store',format:storeNameOf},
+      {key:'from',label:'From'},
+      {key:'to',label:'To'}
+    ], function(){ ledgerState.filters={}; ledgerState.page=1; syncLedgerInputs(); loadStockLedger(); });
+  }).catch(function(err){toast(err,true);});
+}
+function syncLedgerInputs(){
+  var f=ledgerState.filters;
+  document.getElementById('lg-search').value=f.search||'';
+  document.getElementById('lg-product').value=f.productId||'';
+  document.getElementById('lg-type').value=f.type||'';
+  document.getElementById('lg-store').value=f.storeId||'';
+  document.getElementById('lg-from').value=f.from||'';
+  document.getElementById('lg-to').value=f.to||'';
+}
+document.getElementById('lg-apply').addEventListener('click',function(){
+  ledgerState.filters={
+    search:document.getElementById('lg-search').value.trim(),
+    productId:document.getElementById('lg-product').value,
+    type:document.getElementById('lg-type').value,
+    storeId:document.getElementById('lg-store').value,
+    from:document.getElementById('lg-from').value,
+    to:document.getElementById('lg-to').value
+  };
+  ledgerState.page=1;
+  loadStockLedger();
+});
+document.getElementById('lg-clear').addEventListener('click',function(){
+  ledgerState.filters={}; ledgerState.page=1; syncLedgerInputs(); loadStockLedger();
+});
+var ledgerRefreshBtn=document.getElementById('ledger-refresh-btn');
+if(ledgerRefreshBtn) ledgerRefreshBtn.addEventListener('click',function(){loadStockLedger();});
+document.getElementById('lg-search').addEventListener('keydown',function(e){ if(e.key==='Enter') document.getElementById('lg-apply').click(); });
+
+// Per-product movement history (opened from the Products table).
+function openProductHistory(productId){
+  var product=(catalogProducts||allProducts).filter(function(p){return p.ProductID===productId;})[0];
+  var rows='<tr><td colspan="6" style="padding:18px;text-align:center;color:var(--ink-soft);">Loading…</td></tr>';
+  showModal('product-history-modal','Stock history'+(product?(' — '+product.ProductName):''),
+    '<table><thead><tr><th>Date</th><th>Type</th><th>Change</th><th>Stock after</th><th>Store</th><th>Remarks</th></tr></thead><tbody id="ph-tbody">'+rows+'</tbody></table>');
+  var historyStore=catalogStoreId || currentStoreId;
+  call('getProductStockHistory',session.userId,productId,historyStore||'',100).then(function(res){
+    var tbody=document.getElementById('ph-tbody');
+    if(!res.success){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state">'+res.message+'</div></td></tr>';return;}
+    if(!res.movements.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state">No movements recorded yet</div></td></tr>';return;}
+    tbody.innerHTML=res.movements.map(function(m){
+      var cls=m.Direction==='in'?'mv-in':(m.Direction==='out'?'mv-out':'mv-flat');
+      var qtyCls=m.Direction==='in'?'qty-in':(m.Direction==='out'?'qty-out':'');
+      var sign=m.Quantity>0?'+':'';
+      return '<tr><td style="white-space:nowrap;font-size:12px;">'+fmtHumanDate(m.Date)+'</td>'+
+        '<td><span class="mv-type '+cls+'">'+esc(movementTypeLabel(m.Type))+'</span></td>'+
+        '<td class="'+qtyCls+'">'+sign+m.Quantity+'</td>'+
+        '<td>'+(m.NewStock===''||m.NewStock===undefined?'—':m.NewStock)+'</td>'+
+        '<td>'+esc(m.StoreName||'')+'</td>'+
+        '<td style="font-size:12px;color:var(--ink-soft);">'+esc(m.Remarks||'—')+'</td></tr>';
+    }).join('');
+  }).catch(function(err){ toast(err,true); });
+}
+
+var phClose=document.getElementById('product-history-close');
+if(phClose) phClose.addEventListener('click',function(){
+  document.getElementById('product-history-modal').classList.remove('active');
+});
+
+// ── Generic modal helper (used by the history drill-down) ─────────────────
+function showModal(modalId, title, bodyHtml){
+  var modal=document.getElementById(modalId);
+  if(!modal) return;
+  var h3=modal.querySelector('h3');
+  if(h3) h3.textContent=title;
+  var body=modal.querySelector('.modal-body');
+  if(body) body.innerHTML=bodyHtml;
+  modal.classList.add('active');
+}
+
+// ── Pagination + active-filter chips ──────────────────────────────────────
+// pageKey   : the name of the state property holding the current page
+// reloadName: the name of a global function that re-runs the query
+function renderPager(containerId, res, pageKey, reloadName){
+  var el=document.getElementById(containerId);
+  if(!el) return;
+  var total=res.total||0, page=res.page||1, pages=res.pages||1, size=res.pageSize||25;
+  var from=total?((page-1)*size+1):0, to=Math.min(page*size,total);
+  var btn='';
+  btn+='<button'+(page<=1?' disabled':'')+' onclick="'+pageKey+'=1;'+reloadName+'();">&laquo; First</button>';
+  btn+='<button'+(page<=1?' disabled':'')+' onclick="'+pageKey+'=Math.max(1,'+pageKey+'-1);'+reloadName+'();">&lsaquo; Prev</button>';
+  var start=Math.max(1,page-2), end=Math.min(pages,start+4);
+  start=Math.max(1,end-4);
+  for(var p=start;p<=end;p++){
+    btn+='<button class="'+(p===page?'active':'')+'" onclick="'+pageKey+'='+p+';'+reloadName+'();">'+p+'</button>';
+  }
+  btn+='<button'+(page>=pages?' disabled':'')+' onclick="'+pageKey+'=Math.min('+pages+','+pageKey+'+1);'+reloadName+'();">Next &rsaquo;</button>';
+  btn+='<button'+(page>=pages?' disabled':'')+' onclick="'+pageKey+'='+pages+';'+reloadName+'();">Last &raquo;</button>';
+  el.innerHTML='<div class="pager-info">Showing <b>'+from+'</b>&ndash;<b>'+to+'</b> of <b>'+total+'</b> record(s)</div>'+
+    '<div class="pager-buttons">'+btn+'</div>';
+}
+function renderActiveChips(containerId, filters, defs, onClear){
+  var el=document.getElementById(containerId);
+  if(!el) return;
+  var chips='';
+  defs.forEach(function(def){
+    var v=filters[def.key];
+    if(v===undefined||v===null||v==='') return;
+    var text=def.format?def.format(v):v;
+    chips+='<span class="filter-chip">'+esc(def.label)+': '+esc(text)+'<button onclick="clearFilter(\''+containerId+'\',\''+def.key+'\')" title="Remove">&times;</button></span>';
+  });
+  el.innerHTML=chips;
+}
+function clearFilter(containerId,key){
+  if(containerId==='lg-active-chips'){
+    ledgerState.filters[key]=''; ledgerState.page=1; syncLedgerInputs(); loadStockLedger();
+  } else if(containerId==='sh-active-chips'){
+    salesHistoryState.filters[key]=''; salesHistoryState.page=1; syncSalesHistoryInputs(); loadSalesHistory();
+  }
+}
+
+// ============================================================================
+//  STORES VIEW · TRANSFERS · SALES HISTORY FILTERING
+// ============================================================================
+
+// ── Stores view ───────────────────────────────────────────────────────────
+function loadStoresView(){
+  if(!allStores.length) loadStores();
+  call('getStores',session.userId).then(function(res){
+    if(!res.success) return;
+    allStores=res.stores||[];
+    renderStoreCards();
+    loadStoreInventory();
+    loadStoreTransfers();
+    loadStoreSalesReport();
+  }).catch(function(err){toast(err,true);});
+}
+function renderStoreCards(){
+  var el=document.getElementById('store-cards');
+  if(!el) return;
+  if(!allStores.length){el.innerHTML='<div class="empty-state">No stores yet</div>';return;}
+  el.innerHTML=allStores.map(function(s){
+    return '<div class="store-card'+(s.IsDefault?' is-default':'')+'">'+
+      '<h4>'+esc(s.StoreName)+(s.IsDefault?' <span class="pill ok">Default</span>':'')+'</h4>'+
+      '<div class="store-meta">'+
+        (s.Code?esc(s.Code)+' &middot; ':'')+esc(s.StoreType||'Retail')+
+        (s.Manager?' &middot; '+esc(s.Manager):'')+
+        (s.Phone?' &middot; '+esc(s.Phone):'')+
+        (s.Address?'<br>'+esc(s.Address):'')+
+      '</div>'+
+      '<div class="store-stats">'+
+        '<div class="k">Products</div><div class="v">'+s.ProductCount+'</div>'+
+        '<div class="k">Units</div><div class="v">'+money(s.UnitCount)+'</div>'+
+        '<div class="k">Stock value</div><div class="v">$'+money(s.StockValue)+'</div>'+
+        '<div class="k">Low / Out</div><div class="v">'+s.LowStockCount+' / '+s.OutOfStockCount+'</div>'+
+      '</div>'+
+      '<div style="display:flex;gap:6px;margin-top:11px;flex-wrap:wrap;">'+
+        '<button class="mini-btn" onclick="openStoreModal(\''+s.StoreID+'\')">Edit</button>'+
+        '<button class="mini-btn" onclick="filterStoreInventory(\''+s.StoreID+'\')">View stock</button>'+
+        (s.IsDefault?'':'<button class="mini-btn" style="color:var(--danger);" onclick="deactivateStore(\''+s.StoreID+'\')">Deactivate</button>')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+function filterStoreInventory(storeId){
+  var sel=document.getElementById('store-inventory-filter');
+  if(sel) sel.value=storeId;
+  loadStoreInventory();
+}
+function loadStoreInventory(){
+  var storeId=document.getElementById('store-inventory-filter').value||'';
+  call('getStoreInventory',session.userId,storeId).then(function(res){
+    var tbody=document.getElementById('store-inventory-tbody');
+    if(!res.success){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state">'+res.message+'</div></td></tr>';return;}
+    if(!res.inventory.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state">No stock recorded for this store yet</div></td></tr>';return;}
+    tbody.innerHTML=res.inventory.map(function(i){
+      var actions='';
+      if(can('PERM_ADJUST_STOCK')) actions+='<button onclick="openAdjustModal(\''+i.ProductID+'\',\'Adjustment\')">Adjust</button>';
+      return '<tr><td>'+esc(i.ProductName)+'</td><td>'+esc(i.CategoryID||'—')+'</td><td>'+i.CurrentStock+'</td>'+
+        '<td>'+healthPill(i.StockHealth)+'</td><td>$'+money(i.StockValue)+'</td>'+
+        '<td class="row-actions">'+actions+'</td></tr>';
+    }).join('');
+  }).catch(function(err){toast(err,true);});
+}
+document.getElementById('store-inventory-filter').addEventListener('change',loadStoreInventory);
+
+// ── Store CRUD ────────────────────────────────────────────────────────────
+function openStoreModal(storeId){
+  var s=storeId?allStores.filter(function(x){return x.StoreID===storeId;})[0]:null;
+  document.getElementById('store-modal-title').textContent=s?'Edit store':'Add store';
+  document.getElementById('store-modal-msg').innerHTML='';
+  document.getElementById('sf-store-name').value=s?s.StoreName:'';
+  document.getElementById('sf-store-code').value=s?(s.Code||''):'';
+  document.getElementById('sf-store-type').value=s?(s.StoreType||'Retail'):'Retail';
+  document.getElementById('sf-store-manager').value=s?(s.Manager||''):'';
+  document.getElementById('sf-store-phone').value=s?(s.Phone||''):'';
+  document.getElementById('sf-store-email').value=s?(s.Email||''):'';
+  document.getElementById('sf-store-opened').value=s?(s.OpeningDate||''):'';
+  document.getElementById('sf-store-address').value=s?(s.Address||''):'';
+  document.getElementById('store-modal').dataset.editing=storeId||'';
+  document.getElementById('store-modal').classList.add('active');
+}
+document.getElementById('add-store-btn').addEventListener('click',function(){openStoreModal(null);});
+document.getElementById('store-modal-cancel').addEventListener('click',function(){
+  document.getElementById('store-modal').classList.remove('active');
+});
+document.getElementById('store-modal-save').addEventListener('click',function(){
+  var self=this;
+  runGuarded(self,function(){
+    var msgEl=document.getElementById('store-modal-msg');
+    var editing=document.getElementById('store-modal').dataset.editing;
+    var payload={
+      storeId:editing||undefined,
+      storeName:document.getElementById('sf-store-name').value.trim(),
+      code:document.getElementById('sf-store-code').value.trim(),
+      storeType:document.getElementById('sf-store-type').value,
+      manager:document.getElementById('sf-store-manager').value.trim(),
+      phone:document.getElementById('sf-store-phone').value.trim(),
+      email:document.getElementById('sf-store-email').value.trim(),
+      openingDate:document.getElementById('sf-store-opened').value.trim(),
+      address:document.getElementById('sf-store-address').value.trim()
+    };
+    if(!payload.storeName){msgEl.innerHTML='<div class="msg error">Store name is required.</div>';return;}
+    var promise=editing?call('updateStore',session.userId,payload):call('createStore',session.userId,payload);
+    return promise.then(function(res){
+      if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
+      document.getElementById('store-modal').classList.remove('active');
+      toast('Store saved.');
+      loadStores().then(function(){ loadStoresView(); });
+    }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+  });
+});
+function deactivateStore(storeId){
+  if(!confirm('Deactivate this store? It will no longer appear when recording sales or purchases.')) return;
+  call('deactivateStore',session.userId,storeId).then(function(res){
+    if(!res.success) return toast(res.message,true);
+    toast('Store deactivated.');
+    loadStores().then(function(){ loadStoresView(); });
+  }).catch(function(err){toast(err,true);});
+}
+
+// ── Transfers ─────────────────────────────────────────────────────────────
+function openTransferModal(){
+  document.getElementById('transfer-modal-msg').innerHTML='';
+  document.getElementById('tf-qty').value='';
+  document.getElementById('tf-reason').value='';
+  document.getElementById('tf-ref').value='';
+  populateProductSelectors();
+  var from=document.getElementById('tf-from'), to=document.getElementById('tf-to');
+  from.innerHTML=storeOptionsHtml(currentStoreId,false);
+  to.innerHTML=storeOptionsHtml('',false);
+  var other=allStores.filter(function(s){return s.StoreID!==currentStoreId;})[0];
+  to.value=other?other.StoreID:'';
+  document.getElementById('transfer-modal').classList.add('active');
+  updateTransferPreview();
+}
+document.getElementById('transfer-stock-btn').addEventListener('click',openTransferModal);
+document.getElementById('transfer-modal-cancel').addEventListener('click',function(){
+  document.getElementById('transfer-modal').classList.remove('active');
+});
+document.getElementById('tf-product').addEventListener('change',updateTransferPreview);
+document.getElementById('tf-from').addEventListener('change',updateTransferPreview);
+function updateTransferPreview(){
+  var box=document.getElementById('tf-preview');
+  var productId=document.getElementById('tf-product').value;
+  var fromId=document.getElementById('tf-from').value;
+  var toId=document.getElementById('tf-to').value;
+  var qty=Number(document.getElementById('tf-qty').value)||0;
+  var product=allProducts.filter(function(p){return p.ProductID===productId;})[0];
+  if(!product){
+    box.innerHTML='<span style="color:var(--ink-soft);">Select a product to see the transfer preview.</span>';
+    return;
+  }
+  var current=Number(product.CurrentStock)||0;
+  var html='<b>'+esc(product.ProductName)+'</b><br>'+
+    'From <b>'+esc(storeNameOf(fromId))+'</b> &rarr; to <b>'+esc(storeNameOf(toId))+'</b><br>'+
+    'Moving <b>'+qty+'</b> unit(s)';
+  if(fromId===toId) html+='<br><span class="warn">Pick two different stores.</span>';
+  else if(qty>current) html+='<br><span class="warn">Only '+current+' unit(s) are on hand in the source store.</span>';
+  box.innerHTML=html;
+}
+document.getElementById('transfer-modal-save').addEventListener('click',function(){
+  var self=this;
+  runGuarded(self,function(){
+    var msgEl=document.getElementById('transfer-modal-msg');
+    msgEl.innerHTML='';
+    var payload={
+      productId:document.getElementById('tf-product').value,
+      fromStoreId:document.getElementById('tf-from').value,
+      toStoreId:document.getElementById('tf-to').value,
+      quantity:document.getElementById('tf-qty').value,
+      reason:document.getElementById('tf-reason').value.trim(),
+      referenceNumber:document.getElementById('tf-ref').value.trim()
+    };
+    if(!payload.productId){msgEl.innerHTML='<div class="msg error">Select a product.</div>';return;}
+    if(!(Number(payload.quantity)>0)){msgEl.innerHTML='<div class="msg error">Enter a quantity greater than zero.</div>';return;}
+    if(payload.fromStoreId===payload.toStoreId){msgEl.innerHTML='<div class="msg error">Choose two different stores.</div>';return;}
+    if(payload.reason.length<3){msgEl.innerHTML='<div class="msg error">A reason is required for every transfer.</div>';return;}
+    return call('transferStock',session.userId,payload).then(function(res){
+      if(!res.success){msgEl.innerHTML='<div class="msg error">'+res.message+'</div>';return;}
+      document.getElementById('transfer-modal').classList.remove('active');
+      toast('Transferred '+res.quantity+' unit(s).');
+      loadProducts(); loadStoresView(); loadStockLedger();
+    }).catch(function(err){msgEl.innerHTML='<div class="msg error">'+err+'</div>';});
+  });
+});
+function loadStoreTransfers(){
+  call('getStoreTransfers',session.userId,{page:storeTransfersState.page,pageSize:storeTransfersState.pageSize}).then(function(res){
+    var tbody=document.getElementById('store-transfers-tbody');
+    if(!res.success){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state">'+res.message+'</div></td></tr>';return;}
+    if(!res.transfers.length){tbody.innerHTML='<tr><td colspan="7"><div class="empty-state">No transfers recorded yet</div></td></tr>';return;}
+    tbody.innerHTML=res.transfers.map(function(t){
+      return '<tr><td style="font-size:12px;">'+esc(t.ReferenceNumber||t.TransferID)+'</td>'+
+        '<td style="white-space:nowrap;font-size:12px;">'+fmtHumanDate(t.Date)+'</td>'+
+        '<td>'+esc(t.ProductName)+'</td><td>'+t.Quantity+'</td>'+
+        '<td>'+esc(t.FromStoreName)+'</td><td>'+esc(t.ToStoreName)+'</td>'+
+        '<td style="font-size:12px;color:var(--ink-soft);">'+esc(t.Reason||'')+'</td></tr>';
+    }).join('');
+    renderPager('store-transfers-pager',res,'storeTransfersState.page','loadStoreTransfers');
+  }).catch(function(err){toast(err,true);});
+}
+function loadStoreSalesReport(){
+  var from=document.getElementById('sr-from').value;
+  var to=document.getElementById('sr-to').value;
+  call('getStoreSalesReport',session.userId,from,to).then(function(res){
+    var tbody=document.getElementById('store-report-tbody');
+    if(!res.success){tbody.innerHTML='<tr><td colspan="4"><div class="empty-state">'+res.message+'</div></td></tr>';return;}
+    if(!res.report.length){tbody.innerHTML='<tr><td colspan="4"><div class="empty-state">No sales in this period</div></td></tr>';return;}
+    tbody.innerHTML=res.report.map(function(r){
+      return '<tr><td>'+esc(r.storeName)+'</td><td>'+r.transactions+'</td>'+
+        '<td>$'+money(r.revenue)+'</td><td>'+r.voided+'</td></tr>';
+    }).join('');
+  }).catch(function(err){toast(err,true);});
+}
+document.getElementById('sr-apply').addEventListener('click',loadStoreSalesReport);
+
+// ============================================================================
+//  SALES HISTORY — filtering, search and pagination
+// ============================================================================
+function syncSalesHistoryInputs(){
+  var f=salesHistoryState.filters;
+  document.getElementById('sh-search').value=f.search||'';
+  document.getElementById('sh-from').value=f.from||'';
+  document.getElementById('sh-to').value=f.to||'';
+  document.getElementById('sh-payment').value=f.paymentMethod||'';
+  document.getElementById('sh-status').value=f.status||'';
+  document.getElementById('sh-cashier').value=f.cashierId||'';
+  document.getElementById('sh-store').value=f.storeId||'';
+  document.getElementById('sh-mintotal').value=f.minTotal||'';
+  document.getElementById('sh-maxtotal').value=f.maxTotal||'';
+  document.getElementById('sh-sort').value=f.sortBy||'date';
+}
+function loadSalesHistory(){
+  var isCurrent = salesHistoryGuard();
+  // Cashier dropdown. The markup already contains an "All cashiers" option,
+  // so the list is loaded once behind an explicit flag rather than by
+  // counting options.
+  var cashierSel=document.getElementById('sh-cashier');
+  if(cashierSel && !salesCashiersLoaded){
+    salesCashiersLoaded=true;
+    call('getSalesCashiers',session.userId).then(function(res){
+      if(!res.success) return;
+      allCashiers=res.cashiers||[];
+      cashierSel.innerHTML='<option value="">All cashiers</option>'+allCashiers.map(function(c){
+        return '<option value="'+c.UserID+'">'+esc(c.FullName)+'</option>';
+      }).join('');
+    }).catch(function(){ salesCashiersLoaded=false; });
+  }
+  var f=salesHistoryState.filters;
+  call('getSales',session.userId,{
+    search:f.search||'', from:f.from||'', to:f.to||'',
+    paymentMethod:f.paymentMethod||'', status:f.status||'',
+    cashierId:f.cashierId||'', storeId:f.storeId||'',
+    minTotal:f.minTotal||'', maxTotal:f.maxTotal||'',
+    sortBy:f.sortBy||'date',
+    page:salesHistoryState.page, pageSize:salesHistoryState.pageSize
+  }).then(function(res){
+    if(!isCurrent()) return; // a newer request superseded this one
+    var tbody=document.getElementById('sales-tbody');
+    if(!res.success){tbody.innerHTML='<tr><td colspan="9"><div class="empty-state">'+res.message+'</div></td></tr>';return;}
+    if(!res.sales.length){
+      tbody.innerHTML='<tr><td colspan="9"><div class="empty-state">No sales match these filters</div></td></tr>';
+    } else {
+      tbody.innerHTML=res.sales.map(function(s){
+        var isVoided = String(s.Status || '').toLowerCase() === 'voided';
+        var statusPill = isVoided ? '<span class="pill bad">Voided</span>' : '<span class="pill ok">Completed</span>';
+        var canDelete = !isVoided && (session.roleId === 'ROLE_OWNER' || can('PERM_REFUND') || can('PERM_MANAGE_USERS'));
+        var delBtn = canDelete ? '<button class="danger" onclick="deleteSalePrompt(\''+s.SaleID+'\')">Delete</button>' : '';
+        var customer = s.CustomerName ? esc(s.CustomerName) : '<span style="color:var(--ink-soft);">Walk-in</span>';
+        return '<tr style="'+(isVoided?'opacity:0.65;background:#fafafa;':'')+'"><td>'+s.SaleID+'</td>'+
+          '<td style="white-space:nowrap;font-size:12px;">'+new Date(s.SaleDate).toLocaleString()+'</td>'+
+          '<td>'+esc(s.CashierName)+'</td><td>'+esc(s.StoreName||'')+'</td>'+
+          '<td>'+customer+'</td>'+
+          '<td>'+esc(s.PaymentMethod)+'</td><td>$'+money(s.GrandTotal)+'</td><td>'+statusPill+'</td>'+
+          '<td class="row-actions"><button onclick="openSaleDetails(\''+s.SaleID+'\')">View</button>'+delBtn+'</td></tr>';
+      }).join('');
+    }
+    // Summary strip.
+    var summary=document.getElementById('sh-summary');
+    if(summary){
+      summary.innerHTML='<div class="fs-item"><b>'+res.summary.count+'</b> transaction(s)</div>'+
+        '<div class="fs-item">Total <b>$'+money(res.summary.totalAmount)+'</b></div>'+
+        (res.summary.from||res.summary.to?'<div class="fs-item">'+esc(res.summary.from||'…')+' → '+esc(res.summary.to||'…')+'</div>':'');
+    }
+    renderPager('sh-pager',res,'salesHistoryState.page','loadSalesHistory');
+    renderActiveChips('sh-active-chips',f,[
+      {key:'search',label:'Search'},
+      {key:'from',label:'From'},
+      {key:'to',label:'To'},
+      {key:'paymentMethod',label:'Payment'},
+      {key:'status',label:'Status'},
+      {key:'cashierId',label:'Cashier',format:function(v){var c=allCashiers.filter(function(x){return x.UserID===v;})[0];return c?c.FullName:v;}},
+      {key:'storeId',label:'Store',format:storeNameOf},
+      {key:'minTotal',label:'Min'},
+      {key:'maxTotal',label:'Max'}
+    ],function(){ salesHistoryState.filters={}; salesHistoryState.page=1; syncSalesHistoryInputs(); loadSalesHistory(); });
+  }).catch(function(err){toast(err,true);});
+}
+var allCashiers=[];
+function applySalesHistoryFilters(){
+  salesHistoryState.filters={
+    search:document.getElementById('sh-search').value.trim(),
+    from:document.getElementById('sh-from').value,
+    to:document.getElementById('sh-to').value,
+    paymentMethod:document.getElementById('sh-payment').value,
+    status:document.getElementById('sh-status').value,
+    cashierId:document.getElementById('sh-cashier').value,
+    storeId:document.getElementById('sh-store').value,
+    minTotal:document.getElementById('sh-mintotal').value.trim(),
+    maxTotal:document.getElementById('sh-maxtotal').value.trim(),
+    sortBy:document.getElementById('sh-sort').value
+  };
+  salesHistoryState.page=1;
+  loadSalesHistory();
+}
+document.getElementById('sh-apply').addEventListener('click',applySalesHistoryFilters);
+document.getElementById('sh-clear').addEventListener('click',function(){
+  salesHistoryState.filters={}; salesHistoryState.page=1; syncSalesHistoryInputs(); loadSalesHistory();
+});
+document.getElementById('sales-history-refresh').addEventListener('click',function(){loadSalesHistory();});
+document.getElementById('sh-search').addEventListener('keydown',function(e){ if(e.key==='Enter') applySalesHistoryFilters(); });
+['sh-from','sh-to','sh-payment','sh-status','sh-cashier','sh-store','sh-mintotal','sh-maxtotal','sh-sort'].forEach(function(id){
+  var el=document.getElementById(id);
+  if(el) el.addEventListener('change',applySalesHistoryFilters);
+});
+
 </script>
 </body>
 </html>

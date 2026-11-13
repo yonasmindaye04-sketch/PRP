@@ -101,6 +101,52 @@ function ok(data) {
   return out;
 }
 
+// ── Stock health classification ────────────────────────────────────────────
+// Four tiers, mirroring the Asella Organic inventory engine:
+//   out_of_stock : qty == 0
+//   critical     : 0 < qty <= threshold / 2
+//   low          : threshold / 2 < qty <= threshold
+//   ok           : qty > threshold
+function classifyStock(qty, threshold) {
+  var q = Number(qty) || 0;
+  var t = Number(threshold) || 0;
+  if (q <= 0) return STOCK_HEALTH.OUT_OF_STOCK;
+  if (t > 0 && q <= t / 2) return STOCK_HEALTH.CRITICAL;
+  if (t > 0 && q <= t) return STOCK_HEALTH.LOW;
+  if (t <= 0) return STOCK_HEALTH.OK;
+  return STOCK_HEALTH.OK;
+}
+
+// ── Date-range helpers ─────────────────────────────────────────────────────
+// Parses 'YYYY-MM-DD' (or a full ISO string) as a LOCAL date at 00:00:00.
+function parseDateStart(value) {
+  if (value === undefined || value === null || value === '') return new Date(0);
+  if (Object.prototype.toString.call(value) === '[object Date]') {
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate(), 0, 0, 0, 0);
+  }
+  var m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(value));
+  if (!m) return new Date(0);
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 0, 0, 0, 0);
+}
+
+// Same, but covering the whole day (23:59:59.999) so a single-day range
+// behaves like an inclusive filter.
+function parseDateEnd(value) {
+  if (value === undefined || value === null || value === '') return new Date();
+  if (Object.prototype.toString.call(value) === '[object Date]') {
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate(), 23, 59, 59, 999);
+  }
+  var m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(value));
+  if (!m) return new Date();
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 23, 59, 59, 999);
+}
+
+// 'YYYY-MM-DD' for today, in the script's timezone.
+function todayIsoDate() {
+  var d = new Date();
+  return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+}
+
 function fail(message, code) {
   var out = { success: false, message: message };
   if (code) out.code = code;

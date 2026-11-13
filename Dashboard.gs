@@ -21,7 +21,11 @@ function getDashboardSummary(userId) {
 
   var settings = getSettingsMap();
   var defaultLowStock = Number(settings.LowStockAlertThreshold || 0);
-  var stockByProduct = {}; inventory.forEach(function (inv) { stockByProduct[inv.ProductID] = Number(inv.CurrentStock); });
+  // Inventory is keyed by (ProductID, StoreID) — sum across stores.
+  var stockByProduct = {};
+  inventory.forEach(function (inv) {
+    stockByProduct[inv.ProductID] = (stockByProduct[inv.ProductID] || 0) + Number(inv.CurrentStock || 0);
+  });
   var lowStockCount = products.filter(function (p) {
     var threshold = (p.ReorderLevel !== undefined && p.ReorderLevel !== '' && Number(p.ReorderLevel) > 0) ? Number(p.ReorderLevel) : defaultLowStock;
     return (stockByProduct[p.ProductID] || 0) <= threshold;
@@ -447,7 +451,9 @@ function computeDashboardSnapshot_(products, batches) {
   var settings = getSettingsMap();
   var defaultLowStock = Number(settings.LowStockAlertThreshold || 0);
   var stockByProduct = {};
-  readTable(SHEETS.INVENTORY).rows.forEach(function (inv) { stockByProduct[inv.ProductID] = Number(inv.CurrentStock); });
+  readTable(SHEETS.INVENTORY).rows.forEach(function (inv) {
+    stockByProduct[inv.ProductID] = (stockByProduct[inv.ProductID] || 0) + Number(inv.CurrentStock || 0);
+  });
   var lowStockCount = activeProducts.filter(function (p) {
     var threshold = (p.ReorderLevel !== undefined && p.ReorderLevel !== '' && Number(p.ReorderLevel) > 0) ? Number(p.ReorderLevel) : defaultLowStock;
     return (stockByProduct[p.ProductID] || 0) <= threshold;
