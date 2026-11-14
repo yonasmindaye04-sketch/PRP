@@ -27,8 +27,9 @@ input,select{font-family:inherit;}
 .login-card h1{font-size:15px;font-weight:600;color:var(--ink-soft);margin:0 0 18px;}
 .field{margin-bottom:14px;}
 .field label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:5px;font-weight:600;}
-.field input,.field select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fbfdfc;}
+.field input,.field select{width:100%;height:40px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fbfdfc;}
 .field input:focus,.field select:focus{outline:2px solid var(--primary);outline-offset:0;border-color:var(--primary);}
+.field-hint{font-size:11.5px;color:var(--ink-soft);margin-top:5px;line-height:1.45;}
 .btn{border:none;border-radius:8px;padding:11px 16px;font-size:14px;font-weight:600;background:var(--primary);color:#fff;width:100%;transition:background .15s;}
 .btn:hover{background:var(--primary-dark);}
 .btn.secondary{background:var(--primary-tint);color:var(--primary-dark);}
@@ -57,13 +58,14 @@ input,select{font-family:inherit;}
 .logout-btn{background:rgba(255,255,255,.1);color:#fff;border:none;border-radius:8px;padding:8px 10px;font-size:13px;width:100%;font-weight:600;}
 .logout-btn:hover{background:rgba(255,255,255,.18);}
 
-.main{flex:1;padding:24px 30px;overflow-y:auto;max-height:100vh;}
-.view{display:none;}
+.main{flex:1;min-width:0;width:100%;padding:24px 30px;overflow-x:hidden;overflow-y:auto;max-height:100vh;}
+.view{display:none;min-width:0;}
 .view.active{display:block;animation:fadein .15s ease;}
 @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
 .view-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
 .view-header h2{margin:0;font-size:19px;font-weight:700;}
 .view-header p{margin:2px 0 0;color:var(--ink-soft);font-size:13px;}
+.header-actions{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;}
 
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:22px;}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;}
@@ -81,8 +83,9 @@ input,select{font-family:inherit;}
 .panel-note{font-size:12.5px;color:var(--ink-soft);}
 
 table{width:100%;border-collapse:collapse;font-size:13px;}
-th{text-align:left;color:var(--ink-soft);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;}
-td{padding:9px 10px;border-bottom:1px solid var(--line);}
+th{text-align:left;color:var(--ink-soft);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle;}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle;}
+th.num,td.num{text-align:right;font-variant-numeric:tabular-nums;}
 tr:last-child td{border-bottom:none;}
 .pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;}
 .pill.low{background:var(--warn-tint);color:var(--warn);}
@@ -92,7 +95,10 @@ tr:last-child td{border-bottom:none;}
 .row-actions button.danger{color:var(--danger);}
 
 .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
-.toolbar input[type=text],.toolbar input[type=search]{padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;min-width:200px;background:#fbfdfc;}
+.toolbar input[type=text],.toolbar input[type=search],.toolbar select{height:38px;padding:8px 11px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:#fbfdfc;color:var(--ink);}
+.toolbar input[type=text],.toolbar input[type=search]{min-width:200px;}
+.toolbar select{min-width:140px;max-width:220px;}
+.toolbar>input[type=text],.toolbar>input[type=search]{flex:1 1 220px;max-width:320px;}
 .btn.small{width:auto;padding:8px 14px;font-size:12.5px;}
 
 .pos-layout{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;align-items:start;}
@@ -120,8 +126,11 @@ tr:last-child td{border-bottom:none;}
 .modal.wide{width:620px;}
 .modal.xwide{width:780px;}
 .modal h3{margin:0 0 14px;font-size:15.5px;}
-.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.modal-actions{display:flex;gap:10px;margin-top:14px;}
+.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px;align-items:start;}
+.field-grid>.field{margin-bottom:0;}
+.modal-actions{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:18px;flex-wrap:wrap;}
+.modal-actions .btn{width:auto;flex:1 1 120px;}
+.modal-actions .btn[style*="margin-left:auto"]{flex:0 0 auto;}
 
 .empty-state{text-align:center;color:var(--ink-soft);font-size:13px;padding:26px 10px;}
 .toast{position:fixed;bottom:22px;right:22px;background:var(--ink);color:#fff;padding:12px 18px;border-radius:8px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:99;display:none;max-width:340px;}
@@ -135,8 +144,8 @@ tr:last-child td{border-bottom:none;}
 .line-item-row select,.line-item-row input{padding:8px 9px;border:1px solid var(--line);border-radius:7px;font-size:12.5px;width:100%;}
 .line-item-row .li-remove{flex-shrink:0;width:30px;height:34px;border:1px solid var(--line);background:#fff;border-radius:7px;color:var(--danger);font-weight:700;}
 .mini-btn{border:1px solid var(--line);background:#fff;border-radius:7px;padding:8px 10px;font-size:12px;}
-.tabs{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--line);}
-.tab{padding:9px 14px;font-size:13px;font-weight:600;color:var(--ink-soft);background:none;border:none;border-bottom:2px solid transparent;}
+.tabs{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--line);overflow-x:auto;overscroll-behavior-x:contain;}
+.tab{flex:0 0 auto;padding:9px 14px;font-size:13px;font-weight:600;color:var(--ink-soft);background:none;border:none;border-bottom:2px solid transparent;white-space:nowrap;}
 .tab.active{color:var(--primary-dark);border-bottom-color:var(--primary);}
 
 .charts-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:16px;}
@@ -160,14 +169,15 @@ tr:last-child td{border-bottom:none;}
 .period-custom input[type=date]{padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;background:#fbfdfc;color:var(--ink);}
 .period-arrow{color:var(--ink-soft);}
 .period-active{margin-left:auto;font-size:12.5px;color:var(--ink-soft);font-weight:600;white-space:nowrap;}
+.period-active:empty{display:none;}
 
 /* ── Dashboard: best-selling products ──────────────────────────────────── */
 .panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
 .panel-head h3{margin:0;}
 .panel-sub{margin:2px 0 0;font-size:12px;color:var(--ink-soft);}
 .panel-head select{padding:6px 9px;border:1px solid var(--line);border-radius:7px;font-size:12px;background:#fbfdfc;font-weight:600;}
-p.panel-sub{margin:-8px 0 12px;}
-.table-scroll{overflow-x:auto;}
+p.panel-sub{margin:2px 0 12px;}
+.table-scroll{max-width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;}
 .bestsellers td.num,.bestsellers th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
 .bestsellers td.qty{font-weight:700;}
 .rank-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--primary-tint);color:var(--primary-dark);font-weight:700;font-size:11px;flex-shrink:0;}
@@ -203,7 +213,21 @@ p.panel-sub{margin:-8px 0 12px;}
 }
 @media(max-width:480px){
   .cards{grid-template-columns:1fr 1fr;}
-  .view-header{flex-direction:column;align-items:flex-start;}
+  .view-header{flex-direction:column;align-items:flex-start;gap:12px;}
+  .header-actions{width:100%;justify-content:flex-start;}
+  .toolbar>input[type=text],.toolbar>input[type=search],.toolbar>select{width:100%;min-width:0;max-width:none;flex-basis:100%;}
+  .period-active{width:auto;margin-left:auto;}
+  .topbar{gap:8px;padding-left:10px;padding-right:10px;}
+  .topbar-title{font-size:14px;white-space:nowrap;}
+  .topbar-store{gap:5px;}
+  .topbar-store label{display:none;}
+  .topbar-store select{width:105px;max-width:105px;}
+}
+@media(max-width:360px){
+  .cards{grid-template-columns:1fr;}
+  .topbar-title{display:none;}
+  .modal-actions{flex-direction:column;align-items:stretch;}
+  .modal-actions .btn{width:100%;flex-basis:auto;}
 }
 
 /* ── Receipt (print only) ─────────────────────────────────────────────── */
@@ -244,9 +268,11 @@ p.panel-sub{margin:-8px 0 12px;}
   background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:14px;
 }
 .filter-bar .field{margin:0;}
+.filter-bar .filter-search{grid-column:span 2;}
 .filter-bar .field label{font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
-.filter-bar .field input,.filter-bar .field select{padding:8px 10px;font-size:13px;}
-.filter-bar .filter-actions{display:flex;gap:8px;align-items:center;grid-column:1/-1;flex-wrap:wrap;}
+.filter-bar .field input,.filter-bar .field select{height:38px;padding:8px 10px;font-size:13px;}
+.filter-bar .filter-actions{display:flex;gap:8px;align-items:center;justify-content:flex-start;grid-column:1/-1;width:100%;flex-wrap:wrap;}
+.filter-bar .filter-actions .btn{width:auto;}
 .filter-summary{
   display:flex;gap:18px;align-items:center;flex-wrap:wrap;padding:10px 14px;margin-bottom:12px;
   background:var(--primary-tint);border-radius:10px;font-size:13px;color:var(--primary-dark);font-weight:600;
@@ -299,7 +325,7 @@ p.panel-sub{margin:-8px 0 12px;}
 .store-card.is-default{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary) inset;}
 .store-card h4{margin:0 0 3px;font-size:14px;display:flex;align-items:center;gap:7px;}
 .store-card .store-meta{font-size:11.5px;color:var(--ink-soft);margin-bottom:10px;line-height:1.6;}
-.store-card .store-stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;font-size:12px;}
+.store-card .store-stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;font-size:12px;align-items:baseline;}
 .store-card .store-stats .k{color:var(--ink-soft);}
 .store-card .store-stats .v{font-weight:700;text-align:right;}
 
@@ -312,11 +338,12 @@ p.panel-sub{margin:-8px 0 12px;}
 .qty-out{color:#b3261e;font-weight:700;}
 
 @media(max-width:860px){
-  .filter-bar{grid-template-columns:1fr 1fr;}
+  .filter-bar{grid-template-columns:repeat(2,minmax(0,1fr));}
   .topbar-store select{max-width:120px;}
 }
 @media(max-width:480px){
-  .filter-bar{grid-template-columns:1fr;}
+  .filter-bar{grid-template-columns:minmax(0,1fr);}
+  .filter-bar .filter-search{grid-column:1/-1;}
 }
 
 </style>
@@ -500,14 +527,14 @@ p.panel-sub{margin:-8px 0 12px;}
     <!-- SALES HISTORY -->
     <section class="view" id="view-salesHistory">
       <div class="view-header"><div><h2>Sales History</h2><p>Every transaction — filter, search and drill down</p></div>
-        <div style="display:flex;gap:8px;">
+        <div class="header-actions">
           <button class="btn small secondary" id="sales-history-refresh">Refresh</button>
         </div>
       </div>
 
       <!-- Filters -->
       <div class="filter-bar">
-        <div class="field" style="grid-column:span 2;">
+        <div class="field filter-search">
           <label>Search</label>
           <input type="search" id="sh-search" placeholder="Sale ID, invoice, customer, cashier or product…">
         </div>
@@ -539,8 +566,10 @@ p.panel-sub{margin:-8px 0 12px;}
       <div class="filter-summary" id="sh-summary"></div>
 
       <div class="panel" style="padding:0;">
-        <table><thead><tr><th>Sale ID</th><th>Date</th><th>Cashier</th><th>Store</th><th>Customer</th><th>Payment</th><th>Total</th><th>Status</th><th></th></tr></thead>
-        <tbody id="sales-tbody"></tbody></table>
+        <div class="table-scroll">
+          <table><thead><tr><th>Sale ID</th><th>Date</th><th>Cashier</th><th>Store</th><th>Customer</th><th>Payment</th><th>Total</th><th>Status</th><th></th></tr></thead>
+          <tbody id="sales-tbody"></tbody></table>
+        </div>
         <div class="pager" id="sh-pager"></div>
       </div>
     </section>
@@ -549,7 +578,7 @@ p.panel-sub{margin:-8px 0 12px;}
     <section class="view" id="view-inventory">
       <div class="view-header">
         <div><h2>Products</h2><p>Catalog &amp; live stock (from batches)</p></div>
-        <div style="display:flex;gap:8px;">
+        <div class="header-actions">
           <button class="btn small secondary" id="manage-categories-btn">Categories</button>
           <button class="btn small secondary" id="adjust-stock-btn">Adjust stock</button>
           <button class="btn small" id="add-product-btn">+ Add product</button>
@@ -558,23 +587,25 @@ p.panel-sub{margin:-8px 0 12px;}
       <div class="cards" id="inventory-kpi-cards" style="margin-bottom:16px;"></div>
       <div class="toolbar">
         <input type="search" id="inventory-search" placeholder="Search products…">
-        <select id="inventory-category-filter" style="margin-left: 10px; max-width: 200px;">
+        <select id="inventory-category-filter">
           <option value="">All categories</option>
         </select>
-        <select id="inventory-stock-filter" style="margin-left: 10px; max-width: 200px;">
+        <select id="inventory-stock-filter">
           <option value="">All stock status</option>
           <option value="in_stock">In stock</option>
           <option value="low_stock">Low stock</option>
           <option value="critical_stock">Critical stock</option>
           <option value="out_of_stock">Out of stock</option>
         </select>
-        <select id="inventory-store-filter" style="margin-left: 10px; max-width: 200px;">
+        <select id="inventory-store-filter">
           <option value="">All stores</option>
         </select>
       </div>
       <div class="panel" style="padding:0;">
-        <table><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr></thead>
-        <tbody id="inventory-tbody"></tbody></table>
+        <div class="table-scroll">
+          <table><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr></thead>
+          <tbody id="inventory-tbody"></tbody></table>
+        </div>
       </div>
     </section>
 
@@ -582,7 +613,7 @@ p.panel-sub{margin:-8px 0 12px;}
     <section class="view" id="view-stockLedger">
       <div class="view-header">
         <div><h2>Stock Ledger</h2><p>Every stock movement — opening balances, purchases, sales, adjustments and transfers</p></div>
-        <div style="display:flex;gap:8px;">
+        <div class="header-actions">
           <button class="btn small secondary" id="ledger-refresh-btn">Refresh</button>
           <button class="btn small" id="ledger-adjust-btn">Adjust stock</button>
         </div>
@@ -590,7 +621,7 @@ p.panel-sub{margin:-8px 0 12px;}
       <div class="cards" id="ledger-kpi-cards" style="margin-bottom:16px;"></div>
 
       <div class="filter-bar">
-        <div class="field" style="grid-column:span 2;">
+        <div class="field filter-search">
           <label>Search</label>
           <input type="search" id="lg-search" placeholder="Product, batch, reason, reference or user…">
         </div>
@@ -607,13 +638,15 @@ p.panel-sub{margin:-8px 0 12px;}
       </div>
 
       <div class="panel" style="padding:0;">
-        <table>
-          <thead><tr>
-            <th>Date</th><th>Product</th><th>Type</th><th>Change</th><th>Stock after</th>
-            <th>Store</th><th>Reference</th><th>Remarks</th><th>By</th>
-          </tr></thead>
-          <tbody id="ledger-tbody"></tbody>
-        </table>
+        <div class="table-scroll">
+          <table>
+            <thead><tr>
+              <th>Date</th><th>Product</th><th>Type</th><th>Change</th><th>Stock after</th>
+              <th>Store</th><th>Reference</th><th>Remarks</th><th>By</th>
+            </tr></thead>
+            <tbody id="ledger-tbody"></tbody>
+          </table>
+        </div>
         <div class="pager" id="lg-pager"></div>
       </div>
     </section>
@@ -622,7 +655,7 @@ p.panel-sub{margin:-8px 0 12px;}
     <section class="view" id="view-stores">
       <div class="view-header">
         <div><h2>Stores</h2><p>Branches, outlets and warehouses — each keeps its own stock</p></div>
-        <div style="display:flex;gap:8px;">
+        <div class="header-actions">
           <button class="btn small secondary" id="transfer-stock-btn">Transfer stock</button>
           <button class="btn small" id="add-store-btn">+ Add store</button>
         </div>
@@ -634,16 +667,20 @@ p.panel-sub{margin:-8px 0 12px;}
           <div><h3>Store Stock</h3><p class="panel-sub">What each branch is holding right now</p></div>
           <select id="store-inventory-filter"><option value="">All stores</option></select>
         </div>
-        <table><thead><tr><th>Product</th><th>Category</th><th>Stock</th><th>Health</th><th>Value</th><th></th></tr></thead>
-        <tbody id="store-inventory-tbody"></tbody></table>
+        <div class="table-scroll">
+          <table><thead><tr><th>Product</th><th>Category</th><th>Stock</th><th>Health</th><th>Value</th><th></th></tr></thead>
+          <tbody id="store-inventory-tbody"></tbody></table>
+        </div>
       </div>
 
       <div class="panel" style="padding:0;">
         <div class="panel-head" style="padding:16px 16px 0;">
           <div><h3>Store Transfers</h3><p class="panel-sub">Stock moved between branches</p></div>
         </div>
-        <table><thead><tr><th>Ref</th><th>Date</th><th>Product</th><th>Qty</th><th>From</th><th>To</th><th>Reason</th></tr></thead>
-        <tbody id="store-transfers-tbody"></tbody></table>
+        <div class="table-scroll">
+          <table><thead><tr><th>Ref</th><th>Date</th><th>Product</th><th>Qty</th><th>From</th><th>To</th><th>Reason</th></tr></thead>
+          <tbody id="store-transfers-tbody"></tbody></table>
+        </div>
         <div class="pager" id="store-transfers-pager"></div>
       </div>
 
@@ -657,8 +694,10 @@ p.panel-sub{margin:-8px 0 12px;}
             <button class="mini-btn" id="sr-apply">Apply</button>
           </div>
         </div>
-        <table><thead><tr><th>Store</th><th>Transactions</th><th>Revenue</th><th>Voided</th></tr></thead>
-        <tbody id="store-report-tbody"></tbody></table>
+        <div class="table-scroll">
+          <table><thead><tr><th>Store</th><th>Transactions</th><th>Revenue</th><th>Voided</th></tr></thead>
+          <tbody id="store-report-tbody"></tbody></table>
+        </div>
       </div>
     </section>
 
@@ -669,8 +708,10 @@ p.panel-sub{margin:-8px 0 12px;}
         <button class="btn small" id="add-purchase-btn">+ New purchase</button>
       </div>
       <div class="panel" style="padding:0;">
-        <table><thead><tr><th>Purchase ID</th><th>Date</th><th>Supplier</th><th>Grand Total</th><th>Status</th><th>Balance</th><th></th></tr></thead>
-        <tbody id="purchases-tbody"></tbody></table>
+        <div class="table-scroll">
+          <table><thead><tr><th>Purchase ID</th><th>Date</th><th>Supplier</th><th>Grand Total</th><th>Status</th><th>Balance</th><th></th></tr></thead>
+          <tbody id="purchases-tbody"></tbody></table>
+        </div>
       </div>
     </section>
 
@@ -681,8 +722,10 @@ p.panel-sub{margin:-8px 0 12px;}
         <button class="btn small" id="add-supplier-btn">+ Add supplier</button>
       </div>
       <div class="panel" style="padding:0;">
-        <table><thead><tr><th>Name</th><th>Contact</th><th>Phone</th><th>Balance</th><th></th></tr></thead>
-        <tbody id="suppliers-tbody"></tbody></table>
+        <div class="table-scroll">
+          <table><thead><tr><th>Name</th><th>Contact</th><th>Phone</th><th>Balance</th><th></th></tr></thead>
+          <tbody id="suppliers-tbody"></tbody></table>
+        </div>
       </div>
     </section>
 
@@ -693,8 +736,10 @@ p.panel-sub{margin:-8px 0 12px;}
         <button class="btn small" id="add-customer-btn">+ Add customer</button>
       </div>
       <div class="panel" style="padding:0;">
-        <table><thead><tr><th>Name</th><th>Phone</th><th>Loyalty pts</th><th>Credit balance</th><th></th></tr></thead>
-        <tbody id="customers-tbody"></tbody></table>
+        <div class="table-scroll">
+          <table><thead><tr><th>Name</th><th>Phone</th><th>Loyalty pts</th><th>Credit balance</th><th></th></tr></thead>
+          <tbody id="customers-tbody"></tbody></table>
+        </div>
       </div>
     </section>
 
@@ -708,15 +753,15 @@ p.panel-sub{margin:-8px 0 12px;}
       </div>
       <div class="finance-tab" id="finance-expenses">
         <div class="toolbar"><button class="btn small" id="add-expense-btn">+ Add expense</button></div>
-        <div class="panel" style="padding:0;"><table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Method</th></tr></thead><tbody id="expenses-tbody"></tbody></table></div>
+        <div class="panel" style="padding:0;"><div class="table-scroll"><table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Method</th></tr></thead><tbody id="expenses-tbody"></tbody></table></div></div>
       </div>
       <div class="finance-tab" id="finance-income" style="display:none;">
         <div class="toolbar"><button class="btn small" id="add-income-btn">+ Add income</button></div>
-        <div class="panel" style="padding:0;"><table><thead><tr><th>Date</th><th>Source</th><th>Description</th><th>Amount</th></tr></thead><tbody id="income-tbody"></tbody></table></div>
+        <div class="panel" style="padding:0;"><div class="table-scroll"><table><thead><tr><th>Date</th><th>Source</th><th>Description</th><th>Amount</th></tr></thead><tbody id="income-tbody"></tbody></table></div></div>
       </div>
       <div class="finance-tab" id="finance-payments" style="display:none;">
         <div class="toolbar"><button class="btn small" id="add-payment-btn">+ Record payment</button></div>
-        <div class="panel" style="padding:0;"><table><thead><tr><th>Date</th><th>Supplier</th><th>Amount</th><th>Method</th></tr></thead><tbody id="payments-tbody"></tbody></table></div>
+        <div class="panel" style="padding:0;"><div class="table-scroll"><table><thead><tr><th>Date</th><th>Supplier</th><th>Amount</th><th>Method</th></tr></thead><tbody id="payments-tbody"></tbody></table></div></div>
       </div>
     </section>
 
@@ -726,8 +771,10 @@ p.panel-sub{margin:-8px 0 12px;}
       <div class="panel" id="drawer-panel"></div>
       <div class="panel" id="shift-history-panel" style="display:none;">
         <h3>Shift History <span style="font-weight:400;color:var(--ink-soft);font-size:12.5px;">— all cashiers</span></h3>
-        <table><thead><tr><th>Date</th><th>Cashier</th><th>Opened</th><th>Closed</th><th>Expected</th><th>Counted</th><th>Difference</th><th></th></tr></thead>
-        <tbody id="shift-history-tbody"></tbody></table>
+        <div class="table-scroll">
+          <table><thead><tr><th>Date</th><th>Cashier</th><th>Opened</th><th>Closed</th><th>Expected</th><th>Counted</th><th>Difference</th><th></th></tr></thead>
+          <tbody id="shift-history-tbody"></tbody></table>
+        </div>
       </div>
     </section>
 
@@ -738,8 +785,10 @@ p.panel-sub{margin:-8px 0 12px;}
         <button class="btn small" id="add-user-btn">+ Add user</button>
       </div>
       <div class="panel" style="padding:0;">
-        <table><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Last login</th><th></th></tr></thead>
-        <tbody id="users-tbody"></tbody></table>
+        <div class="table-scroll">
+          <table><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Last login</th><th></th></tr></thead>
+          <tbody id="users-tbody"></tbody></table>
+        </div>
       </div>
     </section>
 
@@ -751,7 +800,7 @@ p.panel-sub{margin:-8px 0 12px;}
       </div>
       <div class="toolbar">
         <input type="search" id="audit-search" placeholder="Search by user, action, module, or details…">
-        <select id="audit-module-filter" style="margin-left: 10px; max-width: 200px;">
+        <select id="audit-module-filter">
           <option value="">All modules</option>
           <option value="Sales">Sales</option>
           <option value="Products">Products</option>
@@ -764,19 +813,21 @@ p.panel-sub{margin:-8px 0 12px;}
         </select>
       </div>
       <div class="panel" style="padding:0;">
-        <table>
-          <thead>
-            <tr>
-              <th>Timestamp</th>
-              <th>Staff / User</th>
-              <th>Module</th>
-              <th>Action</th>
-              <th>Details / Reason</th>
-              <th>Record ID</th>
-            </tr>
-          </thead>
-          <tbody id="audit-tbody"></tbody>
-        </table>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Staff / User</th>
+                <th>Module</th>
+                <th>Action</th>
+                <th>Details / Reason</th>
+                <th>Record ID</th>
+              </tr>
+            </thead>
+            <tbody id="audit-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -856,8 +907,8 @@ p.panel-sub{margin:-8px 0 12px;}
   </div>
 
   <div class="field-grid">
-    <div class="field"><label>Quantity *</label><input type="number" id="adj-qty" min="1" step="1" placeholder="0" oninput="updateAdjPreview()"></div>
-    <div class="field"><label>Cost price per unit</label><input type="text" id="adj-cost" placeholder="Catalog cost" oninput="updateAdjPreview()"></div>
+    <div class="field"><label>Quantity *</label><input type="number" id="adj-qty" min="1" step="1" placeholder="0" oninput="onAdjQtyInput()"></div>
+    <div class="field"><label>Cost price per unit</label><input type="text" id="adj-cost" placeholder="Auto-filled from the product" oninput="onAdjCostInput()"><div class="field-hint" id="adj-cost-hint">Type a quantity and the product's current unit cost is filled in automatically — type over it if the price differs.</div></div>
   </div>
   <div class="qty-preview" id="adj-preview"></div>
 
@@ -1197,7 +1248,7 @@ var defaultLowStockThreshold = 10;
 var salesHistoryState = { page: 1, pageSize: 25, filters: {} };
 var ledgerState = { page: 1, pageSize: 25, filters: {} };
 var storeTransfersState = { page: 1, pageSize: 25 };
-var adjState = { type: 'Adjustment', direction: 'in' };
+var adjState = { type: 'Adjustment', direction: 'in', costAuto: true };
 // One-shot load flags for dropdowns whose markup already holds a placeholder.
 var salesCashiersLoaded = false;
 var ledgerTypesLoaded = false;
@@ -1550,8 +1601,8 @@ function loadDashboard(){
     var el=document.getElementById('dashboard-expiring');
     if(!res.success){el.innerHTML='';return;}
     if(!res.batches.length){el.innerHTML='<div class="empty-state">No batches expiring soon</div>';return;}
-    el.innerHTML='<table><thead><tr><th>Product</th><th>Batch</th><th>Qty</th><th>Expiry</th></tr></thead><tbody>'+
-      res.batches.map(function(b){return '<tr><td>'+esc(b.ProductName)+'</td><td>'+b.BatchNumber+'</td><td>'+b.Quantity+'</td><td>'+b.ExpiryDate+'</td></tr>';}).join('')+'</tbody></table>';
+    el.innerHTML='<div class="table-scroll"><table><thead><tr><th>Product</th><th>Batch</th><th>Qty</th><th>Expiry</th></tr></thead><tbody>'+
+      res.batches.map(function(b){return '<tr><td>'+esc(b.ProductName)+'</td><td>'+b.BatchNumber+'</td><td>'+b.Quantity+'</td><td>'+b.ExpiryDate+'</td></tr>';}).join('')+'</tbody></table></div>';
   });
 
   // Explicitly-labelled period-over-period comparison — its labels
@@ -1617,7 +1668,7 @@ function renderDashboardStockAlerts(){
   var start = dashboardLowStockPage * dashboardLowStockPageSize;
   var paged = filtered.slice(start, start + dashboardLowStockPageSize);
 
-  el.innerHTML = '<table><thead><tr><th>Product &amp; Category</th><th style="width:130px;">Current Stock</th><th style="width:100px;">Reorder Level</th></tr></thead><tbody>' +
+  el.innerHTML = '<div class="table-scroll"><table><thead><tr><th>Product &amp; Category</th><th style="width:130px;">Current Stock</th><th style="width:100px;">Reorder Level</th></tr></thead><tbody>' +
     paged.map(function(p){
       var stock = Number(p.CurrentStock) || 0;
       var isOut = stock <= 0;
@@ -1628,7 +1679,7 @@ function renderDashboardStockAlerts(){
         '<td>' + pill + '</td>' +
         '<td style="color:var(--ink-soft);">' + (p.ReorderLevel || '—') + '</td>' +
       '</tr>';
-    }).join('') + '</tbody></table>';
+    }).join('') + '</tbody></table></div>';
 
   if(pagEl){
     var prevDisabled = dashboardLowStockPage <= 0 ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : '';
@@ -2503,14 +2554,14 @@ function openPurchaseDetails(purchaseId){
       document.getElementById('pd-notes').innerHTML='<div class="panel" style="margin-bottom:0;"><h3 style="font-size:13px;margin-bottom:6px;">Notes</h3><div style="font-size:12.5px;">'+esc(pur.Notes)+'</div></div>';
     }
 
-    document.getElementById('pd-items').innerHTML='<table><thead><tr><th>Product</th><th>Batch</th><th>Expiry</th><th>Qty</th><th>Unit cost</th><th>Sell price</th><th>Total</th></tr></thead><tbody>'+
+    document.getElementById('pd-items').innerHTML='<div class="table-scroll"><table><thead><tr><th>Product</th><th>Batch</th><th>Expiry</th><th>Qty</th><th>Unit cost</th><th>Sell price</th><th>Total</th></tr></thead><tbody>'+
       items.map(function(i){
         var detail=[i.Strength,i.DosageForm,i.Unit].filter(Boolean).join(' | ');
         return '<tr><td>'+esc(i.ProductName)+(detail?'<br><span style="color:var(--ink-soft);font-size:11px;">'+esc(detail)+'</span>':'')+'</td>'+
           '<td>'+esc(i.BatchNumber||'—')+'</td>'+
           '<td>'+(i.ExpiryDate?esc(i.ExpiryDate):'<span style="color:var(--ink-soft);">—</span>')+'</td>'+
           '<td>'+i.Quantity+'</td><td>$'+money(i.PurchasePrice)+'</td><td>$'+money(i.SellingPrice)+'</td><td>$'+money(i.Total)+'</td></tr>';
-      }).join('')+'</tbody></table>';
+      }).join('')+'</tbody></table></div>';
 
     document.getElementById('pd-totals').innerHTML=
       '<div class="panel" style="margin-bottom:0;padding:12px 14px;">'+
@@ -2526,7 +2577,7 @@ function openPurchaseDetails(purchaseId){
       var payRows=payments.map(function(p){
         return '<tr><td>'+new Date(p.Date).toLocaleDateString()+'</td><td>$'+money(p.Amount)+'</td><td>'+esc(p.Method)+'</td><td>'+esc(p.Reference||'—')+'</td><td>'+esc(p.ReceivedByName||p.ReceivedBy)+'</td></tr>';
       }).join('');
-      document.getElementById('pd-payments').innerHTML='<div class="panel" style="margin-bottom:0;padding:0;"><table><thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Reference</th><th>Recorded by</th></tr></thead><tbody>'+payRows+'</tbody></table></div>';
+      document.getElementById('pd-payments').innerHTML='<div class="panel" style="margin-bottom:0;padding:0;"><div class="table-scroll"><table><thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Reference</th><th>Recorded by</th></tr></thead><tbody>'+payRows+'</tbody></table></div></div>';
     } else {
       document.getElementById('pd-payments').innerHTML='<div class="panel" style="margin-bottom:0;"><div class="empty-state">No payments recorded yet</div></div>';
     }
@@ -2765,11 +2816,11 @@ function openSaleDetails(saleId){
       delModalBtn.style.display = 'inline-block';
       delModalBtn.onclick = function(){ deleteSalePrompt(saleId); };
     }
-    el.innerHTML='<table><thead><tr><th>Product</th><th>Qty</th><th>Unit price</th><th>Total</th>'+(!isVoided && can('PERM_REFUND')?'<th></th>':'')+'</tr></thead><tbody>'+
+    el.innerHTML='<div class="table-scroll"><table><thead><tr><th>Product</th><th>Qty</th><th>Unit price</th><th>Total</th>'+(!isVoided && can('PERM_REFUND')?'<th></th>':'')+'</tr></thead><tbody>'+
       res.items.map(function(i){
         var returnBtn=(!isVoided && can('PERM_REFUND'))?'<button onclick="promptReturn(\''+saleId+'\',\''+i.ProductID+'\',\''+esc(i.ProductName)+'\','+i.Quantity+')">Return</button>':'';
         return '<tr><td>'+esc(i.ProductName)+'</td><td>'+i.Quantity+'</td><td>$'+money(i.UnitPrice)+'</td><td>$'+money(i.Total)+'</td>'+(!isVoided && can('PERM_REFUND')?'<td class="row-actions">'+returnBtn+'</td>':'')+'</tr>';
-      }).join('')+'</tbody></table>';
+      }).join('')+'</tbody></table></div>';
   });
 }
 document.getElementById('sale-details-close').addEventListener('click',function(){document.getElementById('sale-details-modal').classList.remove('active');});
@@ -3242,7 +3293,11 @@ function renderAuditLogsTable(){
   }
 
   tbody.innerHTML = filtered.map(function(l){
-    var dt = l.Timestamp ? new Date(l.Timestamp).toLocaleString() : '—';
+    // The sheet column is DateTime (Timestamp is kept as a fallback for rows
+    // written by an older build).
+    var rawTs = l.DateTime || l.Timestamp || l.Date || '';
+    var parsed = rawTs ? new Date(rawTs) : null;
+    var dt = (parsed && !isNaN(parsed.getTime())) ? parsed.toLocaleString() : '—';
     var userDisplay = esc(l.UserName || l.UserID || 'System');
     var details = esc(l.Details || (l.Action + (l.RecordID ? ' ' + l.RecordID : '') + (l.NewValue ? ' (' + l.NewValue + ')' : '')));
     var isDanger = l.Action && (l.Action.indexOf('DELETE') > -1 || l.Action.indexOf('VOID') > -1);
@@ -3440,7 +3495,55 @@ function openAdjustModal(productId, movementType){
   document.getElementById('adj-expiry').value='';
   document.getElementById('adj-cost').value='';
 
+  // A fresh adjustment starts in "auto cost" mode: the unit cost follows the
+  // product's current data until the user types a price of their own.
+  adjState.costAuto=true;
+  var costHint=document.getElementById('adj-cost-hint');
+  if(costHint) costHint.textContent="Type a quantity and the product's current unit cost is filled in automatically — type over it if the price differs.";
+
   modal.classList.add('active');
+  fillAdjCostFromProduct();
+  updateAdjPreview();
+}
+
+// ── Auto-filled cost price per unit ────────────────────────────────────────
+// The cost price follows the product's current data (the catalog cost, which
+// is refreshed on every purchase). Typing a quantity fills it in; the user can
+// still override it by hand, and clearing the field re-arms the auto-fill.
+function currentUnitCost(productId){
+  var p=allProducts.filter(function(x){return x.ProductID===productId;})[0];
+  if(!p) return '';
+  var cost=Number(p.PurchasePrice)||0;
+  return cost>0?String(cost):'';
+}
+function fillAdjCostFromProduct(){
+  if(!adjState.costAuto) return;
+  var productId=document.getElementById('adj-product').value;
+  var field=document.getElementById('adj-cost');
+  var hint=document.getElementById('adj-cost-hint');
+  var cost=currentUnitCost(productId);
+  if(cost===''){
+    if(field.value==='') field.placeholder='No cost on file';
+    if(hint) hint.textContent='This product has no cost price on file — enter the unit cost manually.';
+    return;
+  }
+  field.value=cost;
+  if(hint) hint.textContent="Filled from the product's current cost ("+money(cost)+'/unit). Type over it if this price differs.';
+}
+function onAdjQtyInput(){
+  var qty=Number(document.getElementById('adj-qty').value)||0;
+  if(qty>0) fillAdjCostFromProduct();
+  updateAdjPreview();
+}
+function onAdjCostInput(){
+  var val=document.getElementById('adj-cost').value.trim();
+  var auto=currentUnitCost(document.getElementById('adj-product').value);
+  var sameAsCatalog=(auto!=='' && (val===auto || val===String(Number(auto))));
+  // Stay in auto mode while the field still holds the catalog cost or is
+  // empty; a hand-typed price takes over until it is cleared.
+  adjState.costAuto=(val==='' || sameAsCatalog);
+  var hint=document.getElementById('adj-cost-hint');
+  if(hint && !adjState.costAuto) hint.textContent='Using your cost price instead of the product cost.';
   updateAdjPreview();
 }
 function syncAdjDirectionUI(){
@@ -3463,7 +3566,12 @@ Array.prototype.forEach.call(document.querySelectorAll('.adj-type'),function(btn
 });
 document.getElementById('adj-dir-in').addEventListener('click',function(){adjState.direction='in';syncAdjDirectionUI();updateAdjPreview();});
 document.getElementById('adj-dir-out').addEventListener('click',function(){adjState.direction='out';syncAdjDirectionUI();updateAdjPreview();});
-document.getElementById('adj-product').addEventListener('change',updateAdjPreview);
+document.getElementById('adj-product').addEventListener('change',function(){
+  // A different product means a different cost — start from its current data.
+  adjState.costAuto=true;
+  fillAdjCostFromProduct();
+  updateAdjPreview();
+});
 document.getElementById('adj-store').addEventListener('change',updateAdjPreview);
 
 // Live projection: "42 → 57" plus a warning when the result would go
@@ -3481,7 +3589,7 @@ function updateAdjPreview(){
   var current=Number(product.CurrentStock)||0;
   var projected = adjState.direction==='out' ? current-qty : current+qty;
   var cost=document.getElementById('adj-cost').value;
-  if(cost==='' && adjState.direction==='in') cost=Number(product.PurchasePrice)||0;
+  if(cost==='') cost=Number(product.PurchasePrice)||0;
 
   var html='<b>'+esc(product.ProductName)+'</b> &middot; '+esc(storeNameOf(storeId))+'<br>'+
     'Stock now: <b>'+current+'</b> &rarr; after: ';
@@ -3492,6 +3600,8 @@ function updateAdjPreview(){
   }
   if(adjState.direction==='in' && cost){
     html+='<br>Value added: <b>$'+money(qty*Number(cost))+'</b> at $'+money(cost)+'/unit';
+  } else if(adjState.direction==='out' && cost && qty>0){
+    html+='<br>Value removed: <b>$'+money(qty*Number(cost))+'</b> at $'+money(cost)+'/unit';
   }
   if(adjState.direction==='out' && qty>current){
     html+='<br><span class="warn">Only '+current+' unit(s) are on hand here.</span>';
@@ -3643,7 +3753,7 @@ function openProductHistory(productId){
   var product=(catalogProducts||allProducts).filter(function(p){return p.ProductID===productId;})[0];
   var rows='<tr><td colspan="6" style="padding:18px;text-align:center;color:var(--ink-soft);">Loading…</td></tr>';
   showModal('product-history-modal','Stock history'+(product?(' — '+product.ProductName):''),
-    '<table><thead><tr><th>Date</th><th>Type</th><th>Change</th><th>Stock after</th><th>Store</th><th>Remarks</th></tr></thead><tbody id="ph-tbody">'+rows+'</tbody></table>');
+    '<div class="table-scroll"><table><thead><tr><th>Date</th><th>Type</th><th>Change</th><th>Stock after</th><th>Store</th><th>Remarks</th></tr></thead><tbody id="ph-tbody">'+rows+'</tbody></table></div>');
   var historyStore=catalogStoreId || currentStoreId;
   call('getProductStockHistory',session.userId,productId,historyStore||'',100).then(function(res){
     var tbody=document.getElementById('ph-tbody');

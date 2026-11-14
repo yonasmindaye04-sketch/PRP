@@ -113,7 +113,7 @@ function startShift(userId, openingBalance) {
   if (existing) return fail('You already have a shift in progress, started ' + new Date(existing.OpenedAt || existing.Date).toLocaleString() + '.');
   var id = nextId('DRW', SHEETS.CASH_DRAWER, 'DrawerID');
   appendRow(SHEETS.CASH_DRAWER, {
-    DrawerID: id, Date: today(), CashierID: userId, OpeningBalance: Number(openingBalance) || 0,
+    DrawerID: id, Date: todayIsoDate(), CashierID: userId, OpeningBalance: Number(openingBalance) || 0,
     CashSales: 0, CardSales: 0, MobileMoney: 0, Expenses: 0, ClosingBalance: '', Difference: '', ClosedBy: '',
     OpenedAt: nowIso(), ClosedAt: ''
   });
